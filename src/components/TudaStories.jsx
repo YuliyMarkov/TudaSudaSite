@@ -8,11 +8,11 @@ function TudaStories() {
 
   const uiText = {
     ru: {
-      title: "Гид по городу",
+      title: "Новости и статьи",
       loadMore: "Смотреть все",
     },
     uz: {
-      title: "Shahar bo‘yicha gid",
+      title: "Yangiliklar va maqolalar",
       loadMore: "Barchasini ko‘rish",
     },
   };

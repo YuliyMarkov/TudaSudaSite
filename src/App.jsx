@@ -11,12 +11,12 @@ import ContactsPage from "./pages/ContactsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 
 import AllCinemaPage from "./pages/AllCinemaPage";
-import AllTheatrePage from "./pages/AllTheatrePage";
-import AllPlacesPage from "./pages/AllPlacesPage";
 import AllConcertsPage from "./pages/AllConcertsPage";
+import AllTheatrePage from "./pages/AllTheatrePage";
 import AllExhibitionsPage from "./pages/AllExhibitionsPage";
 import AllKidsPage from "./pages/AllKidsPage";
 import AllRestaurantsPage from "./pages/AllRestaurantsPage";
+import AllPlacesPage from "./pages/AllPlacesPage";
 import AllStoriesPage from "./pages/AllStoriesPage";
 
 import MoviePage from "./pages/MoviePage";
@@ -52,13 +52,13 @@ function App() {
         <Route path="/:lang/kids" element={<AllKidsPage />} />
         <Route path="/:lang/restaurants" element={<AllRestaurantsPage />} />
         <Route path="/:lang/places" element={<AllPlacesPage />} />
+        <Route path="/:lang/stories" element={<AllStoriesPage />} />
 
         <Route path="/:lang/movies/:slug" element={<MoviePage />} />
 
         <Route path="/:lang/about" element={<AboutPage />} />
         <Route path="/:lang/contacts" element={<ContactsPage />} />
         <Route path="/:lang/privacy" element={<PrivacyPage />} />
-        <Route path="/:lang/stories" element={<AllStoriesPage />} />
 
         <Route path="*" element={<Navigate to="/ru" replace />} />
       </Routes>

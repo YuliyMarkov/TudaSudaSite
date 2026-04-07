@@ -93,6 +93,7 @@ function Header() {
         places: "Места",
       },
       socialsTitle: "Мы в соцсетях",
+      socialsLabel: "Социальные сети",
       searchPlaceholder: "Поиск по сайту...",
       searchButton: "Поиск",
       searchToggle: "Открыть поиск",
@@ -115,6 +116,7 @@ function Header() {
         places: "Joylar",
       },
       socialsTitle: "Biz ijtimoiy tarmoqlarda",
+      socialsLabel: "Ijtimoiy tarmoqlar",
       searchPlaceholder: "Sayt bo‘ylab qidirish...",
       searchButton: "Qidirish",
       searchToggle: "Qidiruvni ochish",
@@ -130,13 +132,21 @@ function Header() {
   const t = uiText[language] || uiText.ru;
 
   const categoryItems = [
-    { slug: "cinema", emoji: "🎬", label: t.categories.cinema },
-    { slug: "concerts", emoji: "🎤", label: t.categories.concerts },
-    { slug: "theater", emoji: "🎭", label: t.categories.theater },
-    { slug: "exhibitions", emoji: "🖼️", label: t.categories.exhibitions },
-    { slug: "kids", emoji: "🧸", label: t.categories.kids },
-    { slug: "restaurants", emoji: "🍽️", label: t.categories.restaurants },
-    { slug: "places", emoji: "📍", label: t.categories.places },
+    { to: `/${language}/cinema`, emoji: "🎬", label: t.categories.cinema },
+    { to: `/${language}/concerts`, emoji: "🎤", label: t.categories.concerts },
+    { to: `/${language}/theatre`, emoji: "🎭", label: t.categories.theater },
+    {
+      to: `/${language}/exhibitions`,
+      emoji: "🖼️",
+      label: t.categories.exhibitions,
+    },
+    { to: `/${language}/kids`, emoji: "🧸", label: t.categories.kids },
+    {
+      to: `/${language}/restaurants`,
+      emoji: "🍽️",
+      label: t.categories.restaurants,
+    },
+    { to: `/${language}/places`, emoji: "📍", label: t.categories.places },
   ];
 
   useEffect(() => {
@@ -311,7 +321,7 @@ function Header() {
               </svg>
             </button>
 
-            <div className="socials" aria-label="Социальные сети">
+            <div className="socials" aria-label={t.socialsLabel}>
               <a
                 href="https://t.me/+zBdfoNGygiw3MzYy"
                 className="social"
@@ -454,8 +464,8 @@ function Header() {
           <div className="category-nav-list">
             {categoryItems.map((item) => (
               <Link
-                key={item.slug}
-                to={`/${language}/category/${item.slug}`}
+                key={item.to}
+                to={item.to}
                 className="category-chip"
                 onClick={closeMenu}
               >

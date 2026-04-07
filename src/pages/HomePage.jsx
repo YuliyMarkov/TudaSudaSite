@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import FeaturedEvents from "../components/FeaturedEvents";
-import NewsFeed from "../components/NewsFeed";
 import ReelsSection from "../components/ReelsSection";
-import MoreNews from "../components/MoreNews";
+import TudaStories from "../components/TudaStories";
 import AdBlock from "../components/AdBlock";
 import Loader from "../components/Loader";
 import { useLanguage } from "../context/useLanguage";
@@ -14,7 +13,6 @@ import PlacesSection from "../components/PlacesSection";
 
 function HomePage({ onOpenReel }) {
   const { language } = useLanguage();
-
   const [loading, setLoading] = useState(true);
 
   const seoContent = {
@@ -59,14 +57,21 @@ function HomePage({ onOpenReel }) {
       <div className="container">
         <FeaturedEvents />
         <UpcomingCalendar />
+
         <AdBlock />
+
         <CinemaSection />
         <TheatreSection />
+
         <AdBlock />
+
         <ReelsSection onOpenReel={onOpenReel} />
+
         <PlacesSection />
+
         <AdBlock />
-        <MoreNews />
+
+        <TudaStories />
       </div>
     </main>
   );

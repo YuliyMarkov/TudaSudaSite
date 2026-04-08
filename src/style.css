@@ -6398,3 +6398,62 @@ body.dark-theme .all-theatre-badge {
   line-height: 1.6;
   opacity: 0.9;
 }
+
+.story-page {
+  padding: 36px 0 72px;
+}
+
+.story-page-top {
+  margin-bottom: 24px;
+}
+
+.story-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.story-page-article {
+  display: grid;
+  gap: 28px;
+}
+
+.story-page-cover {
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.story-page-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.story-page-content {
+  max-width: 860px;
+}
+
+.story-page-content h1 {
+  margin: 0 0 20px;
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.08;
+}
+
+.story-page-content p {
+  margin: 0 0 18px;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .story-page {
+    padding: 24px 0 56px;
+  }
+
+  .story-page-content p {
+    font-size: 16px;
+    line-height: 1.65;
+  }
+}

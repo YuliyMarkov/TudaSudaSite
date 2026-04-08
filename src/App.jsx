@@ -18,6 +18,7 @@ import AllKidsPage from "./pages/AllKidsPage";
 import AllRestaurantsPage from "./pages/AllRestaurantsPage";
 import AllPlacesPage from "./pages/AllPlacesPage";
 import AllStoriesPage from "./pages/AllStoriesPage";
+import StoryPage from "./pages/StoryPage";
 
 import MoviePage from "./pages/MoviePage";
 
@@ -53,6 +54,7 @@ function App() {
         <Route path="/:lang/restaurants" element={<AllRestaurantsPage />} />
         <Route path="/:lang/places" element={<AllPlacesPage />} />
         <Route path="/:lang/stories" element={<AllStoriesPage />} />
+        <Route path="/:lang/stories/:slug" element={<StoryPage />} />
 
         <Route path="/:lang/movies/:slug" element={<MoviePage />} />
 

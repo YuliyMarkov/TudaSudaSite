@@ -7680,6 +7680,15 @@ body.dark-theme .all-cinema-today-section .upcoming-calendar-date.active {
     box-shadow 0.2s ease;
 }
 
+.upcoming-calendar-dates .upcoming-calendar-date:first-child {
+  margin-left: 5px;
+}
+
+.upcoming-calendar-dates .upcoming-calendar-date:last-child {
+  margin-right: 5px;
+}
+
+
 .upcoming-calendar-date:hover {
   transform: scale(1.04);
   z-index: 3;

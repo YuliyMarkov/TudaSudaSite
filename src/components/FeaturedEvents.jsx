@@ -5,6 +5,31 @@ import { featuredEvents } from "../data/homePageData";
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 
+function getEventLink(language, event) {
+  switch (event.linkType) {
+    case "movies":
+      return `/${language}/movies/${event.slug}`;
+    case "stories":
+      return `/${language}/stories/${event.slug}`;
+    case "cinema":
+      return `/${language}/cinema`;
+    case "concerts":
+      return `/${language}/concerts`;
+    case "theatre":
+      return `/${language}/theatre`;
+    case "exhibitions":
+      return `/${language}/exhibitions`;
+    case "kids":
+      return `/${language}/kids`;
+    case "restaurants":
+      return `/${language}/restaurants`;
+    case "places":
+      return `/${language}/places`;
+    default:
+      return `/${language}`;
+  }
+}
+
 function FeaturedEvents() {
   const { language } = useLanguage();
 
@@ -62,8 +87,11 @@ function FeaturedEvents() {
 
     if (Math.abs(diff) < swipeThreshold) return;
 
-    if (diff > 0) goToNext();
-    else goToPrev();
+    if (diff > 0) {
+      goToNext();
+    } else {
+      goToPrev();
+    }
   };
 
   const getSlidePosition = (index) => {
@@ -169,6 +197,7 @@ function FeaturedEvents() {
               const alt = getLocalizedValue(event.alt, language);
               const videoSrc = event.video || event.videoEmbed;
               const hasVideo = Boolean(videoSrc);
+              const href = getEventLink(language, event);
 
               return (
                 <article
@@ -185,7 +214,7 @@ function FeaturedEvents() {
                   }}
                 >
                   <Link
-                    to={`/${language}/news/${event.slug}`}
+                    to={href}
                     className="event-slide-link"
                     aria-label={`${t.open}: ${title}`}
                     onClick={(e) => {
@@ -202,7 +231,7 @@ function FeaturedEvents() {
                         className="event-slide-poster"
                       />
 
-                      {hasVideo && (
+                      {hasVideo ? (
                         <video
                           ref={(el) => {
                             videoRefs.current[index] = el;
@@ -213,12 +242,12 @@ function FeaturedEvents() {
                           playsInline
                           preload="metadata"
                         />
-                      )}
+                      ) : null}
                     </div>
 
                     <div className="event-slide-overlay">
                       <h3>{title}</h3>
-                      {subtitle && <p>{subtitle}</p>}
+                      {subtitle ? <p>{subtitle}</p> : null}
                     </div>
                   </Link>
                 </article>

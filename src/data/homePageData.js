@@ -57,49 +57,75 @@ const makeSingleEvent = ({
 
 export const featuredEvents = [
   {
-    slug: "tashkent-traffic-control",
+    slug: "event-polina-gagarina",
+    linkType: "stories",
     poster: "/Previews/Gagarina.webp",
     videoEmbed:
       "https://videodelivery.net/a98fca651bad8b255ebdb31bacf47c27/manifest/video.m3u8",
-    alt: t("Главное событие"),
-    title: t("Концерт Полины Гагариной в Ташкенте"),
-    subtitle: t("15 мая, билеты - от 100 000 сумов"),
+    alt: t("Главное событие", "Asosiy tadbir"),
+    title: t(
+      "Концерт Полины Гагариной в Ташкенте",
+      "Polina Gagarinaning Toshkentdagi konserti"
+    ),
+    subtitle: t(
+      "16 апреля, билеты — от 100 000 сумов",
+      "16-aprel, chiptalar — 100 000 so‘mdan"
+    ),
   },
   {
-    slug: "weather-warning-uzbekistan",
+    slug: "magic-city",
+    linkType: "places",
     poster: "/Previews/Safari.webp",
     videoEmbed:
       "https://videodelivery.net/1888e1c905022d48837f10fddf60c8a7/manifest/video.m3u8",
-    alt: t("Главное событие"),
-    title: t("Magic Safari в Ташкенте снова открыт для посетителей"),
-    subtitle: t("Вход - от 100 000 сумов"),
+    alt: t("Главное событие", "Asosiy tadbir"),
+    title: t(
+      "Magic Safari в Ташкенте снова открыт для посетителей",
+      "Toshkentdagi Magic Safari yana tashrif buyuruvchilar uchun ochildi"
+    ),
+    subtitle: t("Вход — от 100 000 сумов", "Kirish — 100 000 so‘mdan"),
   },
   {
-    slug: "weather-warning-uzbekistan",
+    slug: "event-ruki-vverh",
+    linkType: "stories",
     poster: "/Previews/RukiVverkh.webp",
     videoEmbed:
       "https://videodelivery.net/45e872288da7c19ecfb8650aec841bfd/manifest/video.m3u8",
-    alt: t("Главное событие"),
-    title: t("Концерт Руки Вверх! на Humo Arena"),
-    subtitle: t("15 мая, билеты - от 100 000 сумов"),
+    alt: t("Главное событие", "Asosiy tadbir"),
+    title: t(
+      "Концерт Руки Вверх! на Humo Arena",
+      "Ruki Vverx! konserti Humo Arena’da"
+    ),
+    subtitle: t(
+      "18 мая, билеты — от 100 000 сумов",
+      "18-may, chiptalar — 100 000 so‘mdan"
+    ),
   },
   {
-    slug: "tashkent-airport-schedule",
+    slug: "avatar-3-fire-and-ash",
+    linkType: "movies",
     poster: "/Previews/Avatar3.webp",
     videoEmbed:
       "https://videodelivery.net/86996c1eba3ff3684d4972f49ed913f6/manifest/video.m3u8",
-    alt: t("Главное событие"),
-    title: t("Аватар 3: Пепел и пламя - уже в кино"),
-    subtitle: t("Билеты - от 60 000 сумов"),
+    alt: t("Главное событие", "Asosiy tadbir"),
+    title: t(
+      "Аватар 3: Пепел и пламя — уже в кино",
+      "Avatar 3: Kul va alanga — allaqachon kinoda"
+    ),
+    subtitle: t("Билеты — от 60 000 сумов", "Chiptalar — 60 000 so‘mdan"),
   },
   {
-    slug: "tashkent-airport-schedule",
+    slug: "event-jony-april",
+    linkType: "stories",
     poster: "/Previews/JONY.webp",
     videoEmbed:
       "https://videodelivery.net/488b09cede1261f1c480b50f9c30b5a2/manifest/video.m3u8",
-    alt: t("Главное событие"),
-    title: t("Концерт JONY в Ташкенте"),
-    subtitle: t("15 мая, билеты - от 100 000 сумов"),
+    alt: t("Главное событие", "Asosiy tadbir"),
+    title: t("Концерт JONY в Ташкенте", "JONY ning Toshkentdagi konserti"),
+    subtitle: t(
+      "17 апреля, билеты — от 100 000 сумов",
+      "17-aprel, chiptalar — 100 000 so‘mdan"
+    ),
   },
 ];
 

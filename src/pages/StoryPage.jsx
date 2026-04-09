@@ -12,14 +12,14 @@ function normalizeContent(content, language, fallbackText = "") {
   }
 
   if (Array.isArray(content)) {
-    return content;
+    return content.filter(Boolean);
   }
 
   if (typeof content === "object") {
     const localized = content[language] ?? content.ru ?? content.uz;
 
     if (Array.isArray(localized)) {
-      return localized;
+      return localized.filter(Boolean);
     }
 
     if (typeof localized === "string" && localized.trim()) {
@@ -39,7 +39,6 @@ function StoryPage() {
   const { language } = useLanguage();
 
   const currentLang = lang || language || "ru";
-
   const story = allStoriesData.find((item) => item.slug === slug);
 
   if (!story) {
@@ -47,29 +46,30 @@ function StoryPage() {
   }
 
   const title = getLocalizedValue(story.title, currentLang);
-  const text = getLocalizedValue(story.text, currentLang);
-  const description = text || title;
-
-  const contentParagraphs = normalizeContent(
-    story.content,
-    currentLang,
-    text
-  );
+  const shortText = getLocalizedValue(story.text, currentLang);
+  const paragraphs = normalizeContent(story.content, currentLang, shortText);
 
   const uiText = {
     ru: {
-      back: "← Назад к материалам",
+      back: "← Назад ко всем материалам",
+      news: "Новость",
+      articles: "Статья",
     },
     uz: {
-      back: "← Materiallarga qaytish",
+      back: "← Barcha materiallarga qaytish",
+      news: "Yangilik",
+      articles: "Maqola",
     },
   };
 
   const t = uiText[currentLang] || uiText.ru;
 
+  const storyTypeLabel =
+    story.type === "news" ? t.news : story.type === "articles" ? t.articles : "";
+
   return (
     <>
-      <Seo title={title} description={description} />
+      <Seo title={title} description={shortText || title} />
 
       <main className="story-page">
         <div className="container">
@@ -87,15 +87,19 @@ function StoryPage() {
             ) : null}
 
             <div className="story-page-content">
+              {storyTypeLabel ? (
+                <div className="story-page-type">{storyTypeLabel}</div>
+              ) : null}
+
               <h1>{title}</h1>
 
-              {contentParagraphs.length > 0 ? (
-                contentParagraphs.map((paragraph, index) => (
+              {shortText ? <div className="story-page-lead">{shortText}</div> : null}
+
+              <div className="story-page-body">
+                {paragraphs.map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
-                ))
-              ) : (
-                <p>{description}</p>
-              )}
+                ))}
+              </div>
             </div>
           </article>
         </div>

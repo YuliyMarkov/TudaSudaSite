@@ -26,19 +26,22 @@ function TudaStories() {
       </div>
 
       <div className="more-news-grid">
-        {moreNewsInitial.map((item, index) => {
+        {moreNewsInitial.slice(0, 6).map((item) => {
           const title = getLocalizedValue(item.title, language);
           const text = getLocalizedValue(item.text, language);
 
           return (
-            <article className="more-news-card" key={index}>
+            <article className="more-news-card" key={item.slug}>
               <Link
                 to={`/${language}/stories/${item.slug}`}
                 className="more-news-card-link"
               >
                 <img src={item.image} alt={title} />
-                <h3>{title}</h3>
-                <p>{text}</p>
+
+                <div className="more-news-card-body">
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </div>
               </Link>
             </article>
           );

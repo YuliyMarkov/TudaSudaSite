@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { moreNewsInitial, moreNewsExtra } from "../data/homePageData";
 import { useLanguage } from "../context/useLanguage";
@@ -21,6 +21,10 @@ function AllStoriesPage() {
         news: "Новости",
         articles: "Статьи",
       },
+      typeLabels: {
+        news: "Новость",
+        articles: "Статья",
+      },
     },
     uz: {
       title: "Yangiliklar va maqolalar",
@@ -31,15 +35,20 @@ function AllStoriesPage() {
         news: "Yangiliklar",
         articles: "Maqolalar",
       },
+      typeLabels: {
+        news: "Yangilik",
+        articles: "Maqola",
+      },
     },
   };
 
   const t = uiText[language] || uiText.ru;
 
-  const filteredStories =
-    activeFilter === "all"
+  const filteredStories = useMemo(() => {
+    return activeFilter === "all"
       ? allStoriesData
       : allStoriesData.filter((item) => item.type === activeFilter);
+  }, [activeFilter]);
 
   return (
     <>
@@ -49,9 +58,11 @@ function AllStoriesPage() {
         <div className="container">
           <div className="all-news-header">
             <h1>{t.title}</h1>
+            <p className="all-news-description">{t.description}</p>
 
             <div className="all-news-filters">
               <button
+                type="button"
                 className={activeFilter === "all" ? "active" : ""}
                 onClick={() => setActiveFilter("all")}
               >
@@ -59,6 +70,7 @@ function AllStoriesPage() {
               </button>
 
               <button
+                type="button"
                 className={activeFilter === "news" ? "active" : ""}
                 onClick={() => setActiveFilter("news")}
               >
@@ -66,6 +78,7 @@ function AllStoriesPage() {
               </button>
 
               <button
+                type="button"
                 className={activeFilter === "articles" ? "active" : ""}
                 onClick={() => setActiveFilter("articles")}
               >
@@ -75,12 +88,16 @@ function AllStoriesPage() {
           </div>
 
           <div className="all-news-grid">
-            {filteredStories.map((item, index) => {
+            {filteredStories.map((item) => {
               const title = getLocalizedValue(item.title, language);
               const text = getLocalizedValue(item.text, language);
+              const typeLabel =
+                item.type && t.typeLabels[item.type]
+                  ? t.typeLabels[item.type]
+                  : "";
 
               return (
-                <article key={index} className="all-news-card">
+                <article key={item.slug} className="all-news-card">
                   <Link
                     to={`/${language}/stories/${item.slug}`}
                     className="all-news-card-link"
@@ -88,6 +105,10 @@ function AllStoriesPage() {
                     <img src={item.image} alt={title} />
 
                     <div className="all-news-card-body">
+                      {typeLabel ? (
+                        <span className="all-news-card-type">{typeLabel}</span>
+                      ) : null}
+
                       <h3>{title}</h3>
                       <p>{text}</p>
                     </div>

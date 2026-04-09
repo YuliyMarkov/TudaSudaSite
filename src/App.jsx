@@ -19,6 +19,7 @@ import AllRestaurantsPage from "./pages/AllRestaurantsPage";
 import AllPlacesPage from "./pages/AllPlacesPage";
 import AllStoriesPage from "./pages/AllStoriesPage";
 import StoryPage from "./pages/StoryPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 import MoviePage from "./pages/MoviePage";
 
@@ -42,7 +43,7 @@ function App() {
       <Header />
 
       <Routes>
-        <Route path="/" element={<Navigate to="/ru" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
 
         <Route path="/:lang" element={<HomePage onOpenReel={open} />} />
 

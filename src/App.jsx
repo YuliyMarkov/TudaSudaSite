@@ -9,6 +9,7 @@ import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ContactsPage from "./pages/ContactsPage";
 import PrivacyPage from "./pages/PrivacyPage";
+import CategoryPage from "./pages/CategoryPage";
 
 import AllCinemaPage from "./pages/AllCinemaPage";
 import AllConcertsPage from "./pages/AllConcertsPage";
@@ -43,9 +44,11 @@ function App() {
       <Header />
 
       <Routes>
-        <Route path="*" element={<NotFoundPage />} />
+        <Route path="/" element={<Navigate to="/ru" replace />} />
 
         <Route path="/:lang" element={<HomePage onOpenReel={open} />} />
+
+        <Route path="/:lang/category/:slug" element={<CategoryPage />} />
 
         <Route path="/:lang/cinema" element={<AllCinemaPage />} />
         <Route path="/:lang/concerts" element={<AllConcertsPage />} />
@@ -63,7 +66,7 @@ function App() {
         <Route path="/:lang/contacts" element={<ContactsPage />} />
         <Route path="/:lang/privacy" element={<PrivacyPage />} />
 
-        <Route path="*" element={<Navigate to="/ru" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
 
       <Footer />

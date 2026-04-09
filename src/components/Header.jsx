@@ -80,6 +80,10 @@ function Header() {
   const burgerBtnRef = useRef(null);
   const navRef = useRef(null);
 
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+  };
+
   const uiText = {
     ru: {
       homeLabel: "ТудаСюда — на главную",
@@ -271,7 +275,11 @@ function Header() {
           </div>
 
           <div className="header-search-desktop">
-            <form className="header-inline-search" role="search">
+            <form
+              className="header-inline-search"
+              role="search"
+              onSubmit={handleSearchSubmit}
+            >
               <input
                 type="search"
                 className="header-inline-search-input"
@@ -440,7 +448,11 @@ function Header() {
           className={`header-mobile-search ${isSearchOpen ? "active" : ""}`}
           id="mobileSearchBar"
         >
-          <form className="mobile-search-form-visible" role="search">
+          <form
+            className="mobile-search-form-visible"
+            role="search"
+            onSubmit={handleSearchSubmit}
+          >
             <div className="mobile-search-row">
               <input
                 type="search"

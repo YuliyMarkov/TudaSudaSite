@@ -74,7 +74,7 @@ function StoryPage() {
       <main className="story-page">
         <div className="container">
           <div className="story-page-top">
-            <Link to={`/${currentLang}/stories`} className="story-back-link">
+            <Link to={`/${currentLang}/stories`} className="back-link">
               {t.back}
             </Link>
           </div>

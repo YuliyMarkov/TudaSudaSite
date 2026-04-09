@@ -26,9 +26,9 @@ function CategoryPage() {
       science: "Наука",
       economy: "Экономика",
       default: "Категория",
-      allNews: "Все новости",
+      allNews: "Все материалы",
       showMore: "Смотреть ещё",
-      loadMore: "Больше новостей",
+      loadMore: "Больше материалов",
     },
     uz: {
       uzbekistan: "O‘zbekiston",
@@ -38,44 +38,44 @@ function CategoryPage() {
       science: "Fan",
       economy: "Iqtisod",
       default: "Kategoriya",
-      allNews: "Barcha yangiliklar",
+      allNews: "Barcha materiallar",
       showMore: "Yana ko‘rish",
-      loadMore: "Ko‘proq yangilik",
+      loadMore: "Ko‘proq material",
     },
   };
 
   const seoDescriptions = {
     ru: {
       uzbekistan:
-        "Свежие новости Узбекистана: главные события, происшествия, экономика и важные обновления дня.",
+        "Свежие материалы об Узбекистане: главные события, происшествия, экономика и важные обновления дня.",
       world:
-        "Последние новости мира: главные международные события, политика, экономика и происшествия.",
+        "Последние материалы о мире: главные международные события, политика, экономика и происшествия.",
       auto:
-        "Авто новости: новые модели, изменения на рынке, обзоры и главные события автомобильной сферы.",
+        "Материалы об авто: новые модели, изменения на рынке, обзоры и главные события автомобильной сферы.",
       incidents:
         "Происшествия: ДТП, чрезвычайные ситуации, криминальные сводки и важные события.",
       science:
-        "Новости науки: технологии, открытия, исследования и главные научные события.",
+        "Материалы о науке: технологии, открытия, исследования и главные научные события.",
       economy:
-        "Новости экономики: финансы, бизнес, рынок и экономические изменения в Узбекистане и мире.",
+        "Материалы об экономике: финансы, бизнес, рынок и экономические изменения в Узбекистане и мире.",
       default:
-        "Свежие новости, главные события и актуальные материалы на сайте «Дайджест».",
+        "Свежие материалы, главные события и актуальные истории на сайте «Дайджест».",
     },
     uz: {
       uzbekistan:
-        "O‘zbekiston yangiliklari: kunning muhim voqealari, hodisalar, iqtisodiyot va dolzarb yangilanishlar.",
+        "O‘zbekiston haqidagi yangi materiallar: kunning muhim voqealari, hodisalar, iqtisodiyot va dolzarb yangilanishlar.",
       world:
-        "Dunyo yangiliklari: xalqaro voqealar, siyosat, iqtisodiyot va muhim hodisalar.",
+        "Dunyo haqidagi so‘nggi materiallar: xalqaro voqealar, siyosat, iqtisodiyot va muhim hodisalar.",
       auto:
-        "Avto yangiliklar: yangi modelllar, bozor o‘zgarishlari, sharhlar va avtomobil sohasidagi voqealar.",
+        "Avto haqidagi materiallar: yangi modelllar, bozor o‘zgarishlari, sharhlar va avtomobil sohasidagi voqealar.",
       incidents:
         "Hodisalar: YTH, favqulodda holatlar, jinoyat xabarlari va muhim voqealar.",
       science:
-        "Fan yangiliklari: texnologiyalar, kashfiyotlar, tadqiqotlar va ilmiy voqealar.",
+        "Fan haqidagi materiallar: texnologiyalar, kashfiyotlar, tadqiqotlar va ilmiy voqealar.",
       economy:
-        "Iqtisodiyot yangiliklari: moliya, biznes, bozor va iqtisodiy o‘zgarishlar.",
+        "Iqtisodiyot haqidagi materiallar: moliya, biznes, bozor va iqtisodiy o‘zgarishlar.",
       default:
-        "«Dayjest» saytida so‘nggi yangiliklar, muhim voqealar va dolzarb materiallar.",
+        "«Dayjest» saytida so‘nggi materiallar, muhim voqealar va dolzarb hikoyalar.",
     },
   };
 
@@ -150,7 +150,7 @@ function CategoryPage() {
                 key={`${item.slug}-${index}`}
               >
                 <Link
-                  to={`/${language}/news/${item.slug}`}
+                  to={`/${language}/stories/${item.slug}`}
                   className="category-news-card-link"
                 >
                   <img src={item.image} alt={title} />
@@ -194,7 +194,7 @@ function CategoryPage() {
             return (
               <article className="more-news-card" key={index}>
                 <Link
-                  to={`/${language}/news/${item.slug}`}
+                  to={`/${language}/stories/${item.slug}`}
                   className="more-news-card-link"
                 >
                   <img src={item.image} alt={title} />

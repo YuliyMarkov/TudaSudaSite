@@ -58,7 +58,7 @@ function MoviePage() {
             <div className="movie-not-found">
               <h1>{t.notFoundTitle}</h1>
               <p>{t.notFoundText}</p>
-              <Link to={`/${language}/cinema`} className="movie-back-link">
+              <Link to={`/${language}/cinema`} className="back-link">
                 {t.back}
               </Link>
             </div>

@@ -1,9 +1,25 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { cinemaEvents } from "../data/homePageData";
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
+
+function formatCinemaDate(dateString, language) {
+  const date = new Date(`${dateString}T00:00:00`);
+
+  return {
+    weekday: new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
+      weekday: "short",
+    }).format(date),
+    day: new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
+      day: "numeric",
+    }).format(date),
+    month: new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
+      month: "short",
+    }).format(date),
+  };
+}
 
 function formatDateToISO(date) {
   const year = date.getFullYear();
@@ -12,43 +28,30 @@ function formatDateToISO(date) {
   return `${year}-${month}-${day}`;
 }
 
-function formatCinemaDate(dateString, language) {
-  const locale = language === "uz" ? "uz-UZ" : "ru-RU";
-  const date = new Date(`${dateString}T00:00:00`);
+function getExtendedCinemaDates(totalAfter = 24) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  return {
-    weekday: new Intl.DateTimeFormat(locale, {
-      weekday: "short",
-    }).format(date),
-    day: new Intl.DateTimeFormat(locale, {
-      day: "numeric",
-    }).format(date),
-    month: new Intl.DateTimeFormat(locale, {
-      month: "short",
-    }).format(date),
-  };
-}
+  const dates = [];
 
-function formatSelectedDateLabel(dateString, language) {
-  const locale = language === "uz" ? "uz-UZ" : "ru-RU";
-  const date = new Date(`${dateString}T00:00:00`);
+  for (let i = 0; i <= totalAfter; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    dates.push(formatDateToISO(d));
+  }
 
-  return new Intl.DateTimeFormat(locale, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(date);
+  return dates;
 }
 
 function getActiveCinemaWeekRange() {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const currentDay = today.getDay();
 
-  const currentDay = today.getDay(); // 0 = Sunday
-  const daysSinceThursday = (currentDay - 4 + 7) % 7;
+  const daysUntilThursday = (4 - currentDay + 7) % 7;
 
   const startDate = new Date(today);
-  startDate.setDate(today.getDate() - daysSinceThursday);
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(today.getDate() + daysUntilThursday);
 
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + 6);
@@ -57,29 +60,6 @@ function getActiveCinemaWeekRange() {
     start: formatDateToISO(startDate),
     end: formatDateToISO(endDate),
   };
-}
-
-function getExtendedCinemaDates(totalBefore = 10, totalAfter = 24) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const dates = [];
-
-  for (let i = -totalBefore; i <= totalAfter; i += 1) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    dates.push(formatDateToISO(date));
-  }
-
-  return dates;
-}
-
-function getMovieFirstDate(movie) {
-  const dates = Object.keys(movie.schedule || {}).sort((a, b) =>
-    a.localeCompare(b)
-  );
-
-  return dates.length ? dates[0] : null;
 }
 
 function AllCinemaPage() {
@@ -91,13 +71,11 @@ function AllCinemaPage() {
       title: "Кино",
       description:
         "Киноафиша Ташкента: фильмы, премьеры, сеансы и подборка того, что сейчас идет в кино.",
-      open: "Открыть фильм",
       premiereTitle: "Премьеры и скоро в кино",
       todayTitle: "В кино по датам",
       noResults: "На выбранную дату фильмов пока нет.",
       sessions: "Сеансы",
       moreSessions: "Смотреть фильм",
-      selectedDate: "Выбрана дата",
       prevDates: "Предыдущие даты",
       nextDates: "Следующие даты",
     },
@@ -105,13 +83,11 @@ function AllCinemaPage() {
       title: "Kino",
       description:
         "Toshkent kinoafishasi: filmlar, premyeralar, seanslar va hozir kinoda bo‘lgan filmlar tanlovi.",
-      open: "Filmni ochish",
       premiereTitle: "Premyeralar va tez orada kinoda",
       todayTitle: "Sanalar bo‘yicha kinoda",
       noResults: "Tanlangan sana uchun filmlar hozircha yo‘q.",
       sessions: "Seanslar",
       moreSessions: "Filmni ko‘rish",
-      selectedDate: "Tanlangan sana",
       prevDates: "Oldingi sanalar",
       nextDates: "Keyingi sanalar",
     },
@@ -119,17 +95,20 @@ function AllCinemaPage() {
 
   const t = uiText[language] || uiText.ru;
 
+  const allDates = useMemo(() => getExtendedCinemaDates(24), []);
   const activeRange = useMemo(() => getActiveCinemaWeekRange(), []);
-  const allDates = useMemo(() => getExtendedCinemaDates(10, 24), []);
 
-  const [selectedDate, setSelectedDate] = useState(activeRange.start);
+  const todayISO = formatDateToISO(new Date());
+  const [selectedDate, setSelectedDate] = useState(todayISO);
 
   const featuredPremieres = useMemo(() => {
     return cinemaEvents.filter((movie) => {
-      const firstDate = getMovieFirstDate(movie);
-      return firstDate && firstDate > activeRange.end;
+      const movieDates = Object.keys(movie.schedule || {}).sort((a, b) =>
+        a.localeCompare(b),
+      );
+      return movieDates.length > 0 && movieDates[0] > activeRange.start;
     });
-  }, [activeRange.end]);
+  }, [activeRange.start]);
 
   const filteredMovies = useMemo(() => {
     if (!selectedDate) return [];
@@ -139,10 +118,6 @@ function AllCinemaPage() {
       return Array.isArray(sessions) && sessions.length > 0;
     });
   }, [selectedDate]);
-
-  const selectedDateLabel = useMemo(() => {
-    return formatSelectedDateLabel(selectedDate, language);
-  }, [selectedDate, language]);
 
   const isDateActive = (date) => {
     return date >= activeRange.start && date <= activeRange.end;
@@ -156,27 +131,13 @@ function AllCinemaPage() {
   const scrollDates = (direction) => {
     if (!datesRef.current) return;
 
+    const amount = direction === "left" ? -320 : 320;
+
     datesRef.current.scrollBy({
-      left: direction === "left" ? -320 : 320,
+      left: amount,
       behavior: "smooth",
     });
   };
-
-  useEffect(() => {
-    if (!datesRef.current) return;
-
-    const activeButton = datesRef.current.querySelector(
-      `[data-date="${selectedDate}"]`
-    );
-
-    if (!activeButton) return;
-
-    activeButton.scrollIntoView({
-      behavior: "smooth",
-      inline: "center",
-      block: "nearest",
-    });
-  }, [selectedDate]);
 
   return (
     <>
@@ -191,7 +152,7 @@ function AllCinemaPage() {
             </div>
           </div>
 
-          {featuredPremieres.length > 0 ? (
+          {featuredPremieres.length > 0 && (
             <div className="all-cinema-premieres-section">
               <div className="all-cinema-section-head">
                 <h2>{t.premiereTitle}</h2>
@@ -204,18 +165,14 @@ function AllCinemaPage() {
                   const location = getLocalizedValue(movie.location, language);
                   const category = getLocalizedValue(
                     movie.categoryLabel,
-                    language
+                    language,
                   );
 
                   return (
-                    <article
-                      key={movie.id}
-                      className="all-cinema-premiere-card"
-                    >
+                    <article key={movie.id} className="all-cinema-premiere-card">
                       <Link
                         to={`/${language}/movies/${movie.slug}`}
                         className="all-cinema-premiere-link"
-                        aria-label={`${t.open}: ${title}`}
                       >
                         <div className="all-cinema-premiere-poster-wrap">
                           <img
@@ -223,22 +180,19 @@ function AllCinemaPage() {
                             alt={title}
                             className="all-cinema-premiere-poster"
                           />
-
-                          {category ? (
+                          {category && (
                             <span className="all-cinema-badge">{category}</span>
-                          ) : null}
+                          )}
                         </div>
 
                         <div className="all-cinema-premiere-body">
                           <h3>{title}</h3>
-
-                          {subtitle ? (
+                          {subtitle && (
                             <p className="all-cinema-subtitle">{subtitle}</p>
-                          ) : null}
-
-                          {location ? (
+                          )}
+                          {location && (
                             <p className="all-cinema-location">{location}</p>
-                          ) : null}
+                          )}
                         </div>
                       </Link>
                     </article>
@@ -246,51 +200,53 @@ function AllCinemaPage() {
                 })}
               </div>
             </div>
-          ) : null}
+          )}
 
           <div className="all-cinema-today-section">
-            <div className="all-cinema-section-head all-cinema-section-head--with-date">
-              <div>
-                <h2>{t.todayTitle}</h2>
-                <p className="all-cinema-selected-date">
-                  {t.selectedDate}: {selectedDateLabel}
-                </p>
-              </div>
+            <div className="all-cinema-section-head">
+              <h2>{t.todayTitle}</h2>
             </div>
 
-            <div className="cinema-calendar-wrap">
+            <div className="upcoming-calendar-slider-wrap cinema-calendar-shell">
               <button
+                className="upcoming-calendar-nav prev"
                 type="button"
-                className="cinema-calendar-nav prev"
-                onClick={() => scrollDates("left")}
                 aria-label={t.prevDates}
+                onClick={() => scrollDates("left")}
               >
                 &#10094;
               </button>
 
-              <div className="cinema-calendar-dates" ref={datesRef}>
+              <div
+                className="upcoming-calendar-dates cinema-calendar-dates"
+                ref={datesRef}
+                role="tablist"
+                aria-label={t.todayTitle}
+              >
                 {allDates.map((date) => {
                   const formatted = formatCinemaDate(date, language);
                   const active = isDateActive(date);
+                  const isSelected = selectedDate === date;
 
                   return (
                     <button
                       key={date}
                       type="button"
-                      data-date={date}
-                      className={`cinema-calendar-date ${
-                        selectedDate === date ? "active" : ""
+                      className={`upcoming-calendar-date ${
+                        isSelected ? "active" : ""
                       } ${!active ? "inactive" : ""}`}
                       onClick={() => handleDateClick(date)}
                       disabled={!active}
+                      role="tab"
+                      aria-selected={isSelected}
                     >
-                      <span className="cinema-calendar-weekday">
+                      <span className="upcoming-calendar-weekday">
                         {formatted.weekday}
                       </span>
-                      <span className="cinema-calendar-day">
+                      <span className="upcoming-calendar-day">
                         {formatted.day}
                       </span>
-                      <span className="cinema-calendar-month">
+                      <span className="upcoming-calendar-month">
                         {formatted.month}
                       </span>
                     </button>
@@ -299,16 +255,16 @@ function AllCinemaPage() {
               </div>
 
               <button
+                className="upcoming-calendar-nav next"
                 type="button"
-                className="cinema-calendar-nav next"
-                onClick={() => scrollDates("right")}
                 aria-label={t.nextDates}
+                onClick={() => scrollDates("right")}
               >
                 &#10095;
               </button>
             </div>
 
-            {filteredMovies.length > 0 ? (
+            {filteredMovies.length ? (
               <div className="all-cinema-grid all-cinema-grid--expanded">
                 {filteredMovies.map((movie) => {
                   const title = getLocalizedValue(movie.title, language);
@@ -316,20 +272,16 @@ function AllCinemaPage() {
                   const location = getLocalizedValue(movie.location, language);
                   const category = getLocalizedValue(
                     movie.categoryLabel,
-                    language
+                    language,
                   );
-                  const cinemaBlocks = movie.schedule?.[selectedDate] || [];
-
-                  const flattenedSessions = cinemaBlocks
-                    .flatMap((block) => block.sessions || [])
-                    .slice(0, 4);
+                  const sessions =
+                    movie.schedule?.[selectedDate]?.[0]?.sessions || [];
 
                   return (
                     <article key={movie.id} className="all-cinema-card">
                       <Link
                         to={`/${language}/movies/${movie.slug}`}
                         className="all-cinema-card-link"
-                        aria-label={`${t.open}: ${title}`}
                       >
                         <div className="all-cinema-poster-wrap">
                           <img
@@ -337,41 +289,40 @@ function AllCinemaPage() {
                             alt={title}
                             className="all-cinema-poster"
                           />
-
-                          {category ? (
+                          {category && (
                             <span className="all-cinema-badge">{category}</span>
-                          ) : null}
+                          )}
                         </div>
 
                         <div className="all-cinema-card-body">
                           <h3>{title}</h3>
 
-                          {subtitle ? (
+                          {subtitle && (
                             <p className="all-cinema-subtitle">{subtitle}</p>
-                          ) : null}
+                          )}
 
-                          {location ? (
+                          {location && (
                             <p className="all-cinema-location">{location}</p>
-                          ) : null}
+                          )}
 
-                          {flattenedSessions.length > 0 ? (
+                          {sessions.length > 0 && (
                             <div className="all-cinema-sessions">
                               <span className="all-cinema-sessions-label">
-                                {t.sessions}:
+                                {t.sessions}
                               </span>
 
                               <div className="all-cinema-sessions-list">
-                                {flattenedSessions.map((session, index) => (
+                                {sessions.slice(0, 4).map((s, i) => (
                                   <span
-                                    key={`${movie.id}-${selectedDate}-${session.time}-${index}`}
+                                    key={`${movie.id}-${selectedDate}-${i}`}
                                     className="all-cinema-session-chip"
                                   >
-                                    {session.time}
+                                    {s.time}
                                   </span>
                                 ))}
                               </div>
                             </div>
-                          ) : null}
+                          )}
 
                           <span className="all-cinema-more-link">
                             {t.moreSessions}

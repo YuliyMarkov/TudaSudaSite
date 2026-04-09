@@ -1868,6 +1868,8 @@ body.dark-theme .all-cinema-badge {
   align-items: center;
   gap: 12px;
   margin-bottom: 24px;
+  position: relative;
+  overflow: visible;
 }
 
 .cinema-calendar-dates {
@@ -1875,7 +1877,7 @@ body.dark-theme .all-cinema-badge {
   gap: 12px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 6px;
+  padding: 12px 0 6px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
@@ -1914,10 +1916,13 @@ body.dark-theme .all-cinema-badge {
     background 0.2s ease,
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .cinema-calendar-date:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.05);
+  z-index: 3;
   border-color: var(--accent-color);
   box-shadow: 0 10px 22px rgba(0, 0, 96, 0.08);
 }
@@ -6694,7 +6699,9 @@ body.dark-theme .all-theatre-badge {
   border-radius: 999px;
   text-decoration: none;
   font-weight: 700;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .not-found-button:hover {
@@ -6723,7 +6730,9 @@ body.dark-theme .all-theatre-badge {
   border-radius: 999px;
   text-decoration: none;
   font-weight: 600;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .not-found-chip:hover {
@@ -6752,12 +6761,20 @@ body.dark-theme .all-theatre-badge {
 
 /* light theme */
 body:not(.dark-theme) .not-found-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.72));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.88),
+    rgba(255, 255, 255, 0.72)
+  );
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 body:not(.dark-theme) .not-found-badge {
-  background: linear-gradient(135deg, rgba(172, 230, 0, 0.24), rgba(0, 0, 96, 0.08));
+  background: linear-gradient(
+    135deg,
+    rgba(172, 230, 0, 0.24),
+    rgba(0, 0, 96, 0.08)
+  );
   color: var(--text-color);
 }
 
@@ -6783,12 +6800,20 @@ body:not(.dark-theme) .not-found-glow-right {
 
 /* dark theme */
 body.dark-theme .not-found-card {
-  background: linear-gradient(180deg, rgba(13, 16, 33, 0.92), rgba(10, 12, 24, 0.84));
+  background: linear-gradient(
+    180deg,
+    rgba(13, 16, 33, 0.92),
+    rgba(10, 12, 24, 0.84)
+  );
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 body.dark-theme .not-found-badge {
-  background: linear-gradient(135deg, rgba(172, 230, 0, 0.16), rgba(255, 255, 255, 0.04));
+  background: linear-gradient(
+    135deg,
+    rgba(172, 230, 0, 0.16),
+    rgba(255, 255, 255, 0.04)
+  );
   color: #f4f7ff;
 }
 
@@ -7054,7 +7079,9 @@ body.dark-theme .section-page-card-badge {
 }
 
 .section-page-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .section-page-card-link {
@@ -7094,7 +7121,9 @@ body.dark-theme .section-page-card-badge {
 
 /* Кнопка / текст */
 .section-page-card-more {
-  transition: transform 0.25s ease, opacity 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
 }
 
 .section-page-card:hover .section-page-card-more {
@@ -7103,4 +7132,559 @@ body.dark-theme .section-page-card-badge {
 
 .more-news-card-body {
   padding: 16px 18px 18px;
+}
+
+/* =========================================
+   FINAL OVERRIDE: CINEMA CALENDAR SAME AS HOMEPAGE
+========================================= */
+
+.all-cinema-today-section .cinema-calendar-wrap {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-bottom: 22px !important;
+  overflow: visible !important;
+}
+
+.all-cinema-today-section .cinema-calendar-dates {
+  display: flex !important;
+  gap: 12px !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  padding: 0 0 6px !important;
+  margin-bottom: 0 !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: smooth !important;
+  flex: 1 !important;
+}
+
+.all-cinema-today-section .cinema-calendar-dates::-webkit-scrollbar {
+  display: none !important;
+}
+
+.all-cinema-today-section .cinema-calendar-date {
+  position: relative !important;
+  flex: 0 0 auto !important;
+  min-width: 78px !important;
+  min-height: 94px !important;
+  padding: 12px 10px !important;
+  border: 1px solid rgba(0, 0, 96, 0.1) !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.32) !important;
+  color: var(--text-color) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease !important;
+  box-shadow: none !important;
+  z-index: 1 !important;
+}
+
+.all-cinema-today-section .cinema-calendar-date:hover {
+  transform: translateY(-2px) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 96, 0.08) !important;
+  z-index: 3 !important;
+}
+
+.all-cinema-today-section .cinema-calendar-date.active {
+  background: var(--accent-color) !important;
+  color: var(--accent-contrast) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 12px 24px var(--accent-soft-strong) !important;
+  z-index: 4 !important;
+}
+
+body.dark-theme .all-cinema-today-section .cinema-calendar-date {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(172, 230, 0, 0.14) !important;
+}
+
+body.dark-theme .all-cinema-today-section .cinema-calendar-date:hover {
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24) !important;
+}
+
+body.dark-theme .all-cinema-today-section .cinema-calendar-date.active {
+  background: var(--accent-color) !important;
+  color: var(--accent-contrast) !important;
+  border-color: var(--accent-color) !important;
+}
+
+.all-cinema-today-section .cinema-calendar-weekday {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  opacity: 0.78 !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+}
+
+.all-cinema-today-section .cinema-calendar-day {
+  font-size: 30px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+
+.all-cinema-today-section .cinema-calendar-month {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  opacity: 0.78 !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+}
+
+.all-cinema-today-section .cinema-calendar-date.inactive {
+  opacity: 0.35 !important;
+  cursor: default !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  filter: grayscale(0.15) !important;
+}
+
+.all-cinema-today-section .cinema-calendar-date.inactive:hover {
+  transform: none !important;
+  border-color: rgba(0, 0, 96, 0.1) !important;
+  box-shadow: none !important;
+}
+
+body.dark-theme .all-cinema-today-section .cinema-calendar-date.inactive:hover {
+  border-color: rgba(172, 230, 0, 0.14) !important;
+}
+
+.all-cinema-today-section .cinema-calendar-nav {
+  width: 32px !important;
+  height: 80px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #8b8b8b !important;
+  font-size: 34px !important;
+  font-weight: 300 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    color 0.2s ease !important;
+  opacity: 0.5 !important;
+  flex-shrink: 0 !important;
+  box-shadow: none !important;
+}
+
+.all-cinema-today-section .cinema-calendar-nav:hover {
+  opacity: 1 !important;
+  transform: scale(1.08) !important;
+  color: #666 !important;
+}
+
+body.dark-theme .all-cinema-today-section .cinema-calendar-nav {
+  color: #8b8b8b !important;
+  opacity: 0.6 !important;
+}
+
+body.dark-theme .all-cinema-today-section .cinema-calendar-nav:hover {
+  color: #b3b3b3 !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 1100px) {
+  .all-cinema-today-section .cinema-calendar-date {
+    min-width: 78px !important;
+    min-height: 90px !important;
+  }
+
+  .all-cinema-today-section .cinema-calendar-day {
+    font-size: 28px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .all-cinema-today-section .cinema-calendar-wrap {
+    gap: 8px !important;
+  }
+
+  .all-cinema-today-section .cinema-calendar-nav {
+    width: 28px !important;
+    height: 64px !important;
+    font-size: 28px !important;
+  }
+
+  .all-cinema-today-section .cinema-calendar-date {
+    min-width: 74px !important;
+    min-height: 86px !important;
+    border-radius: 18px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .all-cinema-today-section .cinema-calendar-wrap {
+    gap: 10px !important;
+  }
+
+  .all-cinema-today-section .cinema-calendar-nav {
+    display: none !important;
+  }
+
+  .all-cinema-today-section .cinema-calendar-date {
+    min-width: 72px !important;
+    min-height: 84px !important;
+    padding: 10px 8px !important;
+    border-radius: 18px !important;
+  }
+
+  .all-cinema-today-section .cinema-calendar-day {
+    font-size: 26px !important;
+  }
+
+  .all-cinema-today-section .cinema-calendar-weekday,
+  .all-cinema-today-section .cinema-calendar-month {
+    font-size: 11px !important;
+  }
+}
+
+/* календарь кино использует стиль главной */
+.cinema-calendar-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cinema-calendar-shell .upcoming-calendar-dates {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: 6px;
+}
+
+/* неактивные даты на странице кино */
+.cinema-calendar-shell .upcoming-calendar-date.inactive {
+  opacity: 0.35;
+  pointer-events: none;
+  filter: grayscale(0.12);
+}
+
+.cinema-calendar-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cinema-calendar-shell .upcoming-calendar-dates {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: 6px;
+}
+
+.cinema-calendar-shell .upcoming-calendar-date.inactive {
+  opacity: 0.35;
+  pointer-events: none;
+  filter: grayscale(0.12);
+}
+
+/* =================== FINAL OVERRIDES: ALL CINEMA CALENDAR =================== */
+
+.all-cinema-page,
+.all-cinema-today-section,
+.all-cinema-section-head,
+.cinema-calendar-shell {
+  overflow: visible !important;
+}
+
+.cinema-calendar-shell {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.all-cinema-today-section .upcoming-calendar-nav {
+  width: 32px !important;
+  height: 80px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #8b8b8b !important;
+  font-size: 34px !important;
+  font-weight: 300 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    color 0.2s ease !important;
+  opacity: 0.5 !important;
+  flex-shrink: 0 !important;
+  box-shadow: none !important;
+}
+
+.all-cinema-today-section .upcoming-calendar-nav:hover {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1.08) !important;
+  color: #666 !important;
+}
+
+body.dark-theme .all-cinema-today-section .upcoming-calendar-nav {
+  color: #8b8b8b !important;
+  opacity: 0.6 !important;
+}
+
+body.dark-theme .all-cinema-today-section .upcoming-calendar-nav:hover {
+  color: #b3b3b3 !important;
+  opacity: 1 !important;
+}
+
+.cinema-calendar-shell .upcoming-calendar-dates {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  gap: 12px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 6px 0 6px !important;
+  margin-bottom: 0 !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: smooth !important;
+}
+
+.cinema-calendar-shell .upcoming-calendar-dates::-webkit-scrollbar {
+  display: none !important;
+}
+
+.all-cinema-today-section .upcoming-calendar-date {
+  position: relative !important;
+  flex: 0 0 auto !important;
+  min-width: 78px !important;
+  min-height: 94px !important;
+  padding: 12px 10px !important;
+  border: 1px solid rgba(0, 0, 96, 0.1) !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.32) !important;
+  color: var(--text-color) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease !important;
+  z-index: 1 !important;
+  box-shadow: none !important;
+}
+
+.all-cinema-today-section .upcoming-calendar-date:hover {
+  transform: translateY(0) scale(1.04) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 96, 0.08) !important;
+  z-index: 3 !important;
+}
+
+.all-cinema-today-section .upcoming-calendar-date.active {
+  background: var(--accent-color) !important;
+  color: var(--accent-contrast) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 12px 24px var(--accent-soft-strong) !important;
+  z-index: 4 !important;
+}
+
+body.dark-theme .all-cinema-today-section .upcoming-calendar-date {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(172, 230, 0, 0.14) !important;
+}
+
+body.dark-theme .all-cinema-today-section .upcoming-calendar-date:hover {
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24) !important;
+}
+
+body.dark-theme .all-cinema-today-section .upcoming-calendar-date.active {
+  background: var(--accent-color) !important;
+  color: var(--accent-contrast) !important;
+  border-color: var(--accent-color) !important;
+}
+
+.all-cinema-today-section .upcoming-calendar-weekday {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  opacity: 0.78 !important;
+  text-transform: uppercase !important;
+}
+
+.all-cinema-today-section .upcoming-calendar-day {
+  font-size: 30px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+
+.all-cinema-today-section .upcoming-calendar-month {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  opacity: 0.78 !important;
+  text-transform: uppercase !important;
+}
+
+.cinema-calendar-shell .upcoming-calendar-date.inactive {
+  opacity: 0.35 !important;
+  pointer-events: none !important;
+  filter: grayscale(0.12) !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 1100px) {
+  .all-cinema-today-section .upcoming-calendar-date {
+    min-width: 78px !important;
+    min-height: 90px !important;
+  }
+
+  .all-cinema-today-section .upcoming-calendar-day {
+    font-size: 28px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .cinema-calendar-shell {
+    gap: 8px !important;
+  }
+
+  .all-cinema-today-section .upcoming-calendar-nav {
+    width: 28px !important;
+    height: 64px !important;
+    font-size: 28px !important;
+  }
+
+  .all-cinema-today-section .upcoming-calendar-date {
+    min-width: 74px !important;
+    min-height: 86px !important;
+    border-radius: 18px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .cinema-calendar-shell {
+    gap: 10px !important;
+  }
+
+  .all-cinema-today-section .upcoming-calendar-nav {
+    display: none !important;
+  }
+
+  .all-cinema-today-section .upcoming-calendar-date {
+    min-width: 72px !important;
+    min-height: 84px !important;
+    padding: 10px 8px !important;
+    border-radius: 18px !important;
+  }
+
+  .all-cinema-today-section .upcoming-calendar-day {
+    font-size: 26px !important;
+  }
+
+  .all-cinema-today-section .upcoming-calendar-weekday,
+  .all-cinema-today-section .upcoming-calendar-month {
+    font-size: 11px !important;
+  }
+}
+/* ===== FIX: кино-календарь — крайняя дата и стрелки ===== */
+
+.cinema-calendar-shell {
+  gap: 14px;
+}
+
+.cinema-calendar-shell .upcoming-calendar-dates {
+  padding-left: 8px;   /* чтобы первая дата не тёрлась о стрелку */
+  padding-right: 8px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* стрелки не должны участвовать в "прыгающем" выравнивании */
+.cinema-calendar-shell .upcoming-calendar-nav {
+  flex: 0 0 32px;
+  align-self: center;
+  transform: none !important;
+}
+
+.cinema-calendar-shell .upcoming-calendar-nav:hover {
+  transform: none !important;
+  opacity: 1;
+}
+
+/* если хочешь лёгкий эффект без скачка */
+.cinema-calendar-shell .upcoming-calendar-nav {
+  transition:
+    opacity 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+/* чтобы первая и последняя даты не выглядели обрезанными */
+.cinema-calendar-shell .upcoming-calendar-date:first-child {
+  margin-left: 5px;
+}
+
+.cinema-calendar-shell .upcoming-calendar-date:last-child {
+  margin-right: 5px;
+}
+
+/* ===== FIX: выравнивание стрелок по календарю ===== */
+
+.cinema-calendar-shell {
+  align-items: flex-start; /* убираем центрирование по высоте */
+}
+
+/* поднимаем стрелки на уровень карточек */
+.cinema-calendar-shell .upcoming-calendar-nav {
+  margin-top: -45px; /* подгони если нужно: 12–18px */
+}
+
+/* ===== FIX: календарь на главной — hover без обрезания ===== */
+
+.upcoming-calendar-section,
+.upcoming-calendar-header,
+.upcoming-calendar-slider-wrap {
+  overflow: visible;
+}
+
+.upcoming-calendar-dates {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: 6px;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.upcoming-calendar-dates::-webkit-scrollbar {
+  display: none;
+}
+
+.upcoming-calendar-date {
+  position: relative;
+  z-index: 1;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.upcoming-calendar-date:hover {
+  transform: scale(1.04);
+  z-index: 3;
+}
+
+.upcoming-calendar-date.active:hover {
+  transform: scale(1.04);
 }

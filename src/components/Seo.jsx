@@ -9,23 +9,23 @@ function Seo({
   schema = null,
 }) {
   const siteUrl = "https://tudasuda.uz";
-
   const brand = "ТудаСюда";
 
   const fullTitle = title.includes(brand)
     ? title
     : `${title} — ${brand}`;
 
-  const fullUrl = canonical ? `${siteUrl}${canonical}` : siteUrl;
+  const fullUrl = canonical
+    ? `${siteUrl}${canonical}`
+    : siteUrl;
 
   const fullImage = image.startsWith("http")
     ? image
     : `${siteUrl}${image}`;
 
+  // 🔥 нормальная подстановка URL без костылей
   const normalizedSchema = schema
-    ? JSON.parse(
-        JSON.stringify(schema).replaceAll('"__PAGE_URL__"', `"${fullUrl}"`)
-      )
+    ? replaceSchemaUrls(schema, fullUrl)
     : null;
 
   return (
@@ -40,6 +40,7 @@ function Seo({
       <meta property="og:type" content={type} />
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={fullImage} />
+      <meta property="og:site_name" content={brand} />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -58,6 +59,27 @@ function Seo({
       )}
     </Helmet>
   );
+}
+
+// 🔥 рекурсивная замена __PAGE_URL__
+function replaceSchemaUrls(obj, url) {
+  if (typeof obj === "string") {
+    return obj === "__PAGE_URL__" ? url : obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => replaceSchemaUrls(item, url));
+  }
+
+  if (typeof obj === "object" && obj !== null) {
+    const newObj = {};
+    for (const key in obj) {
+      newObj[key] = replaceSchemaUrls(obj[key], url);
+    }
+    return newObj;
+  }
+
+  return obj;
 }
 
 export default Seo;

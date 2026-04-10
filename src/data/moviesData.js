@@ -3,23 +3,37 @@ const t = (ru, uz = "") => ({ ru, uz });
 export const moviesData = [
   {
     slug: "avatar-3-fire-and-ash",
-    title: t("Аватар 3: Пепел и пламя", "Avatar 3: Kul va alanga"),
+    title: t("Аватар 3: Пламя и пепел", "Avatar 3: Olov va kul"),
     poster: "/Previews/Avatar3.webp",
-    trailer: "https://www.youtube.com/embed/ZkqK44XzPNk",
+    trailer: "https://www.youtube.com/embed/DKsLmoGW9xo",
     gallery: [
       "/Previews/Avatar3.webp",
       "/Photos-for-Site/Cirk.webp",
       "/Photos-for-Site/Planetariy.webp",
+      "/Photos-for-Site/Vystavka.webp",
     ],
     description: t(
       "Новая глава масштабной фантастической саги. Зрителей ждут возвращение знакомых героев, новые миры Пандоры, крупные сражения и визуально впечатляющее приключение на большом экране.",
       "Mashhur fantastik dostonning yangi bobida tomoshabinlarni tanish qahramonlar, Pandoraning yangi olamlari, yirik janglar va katta ekrandagi ta’sirli sarguzasht kutadi."
     ),
     info: {
-      genre: t("Фантастика, приключения", "Fantastika, sarguzasht"),
-      duration: t("2 ч 40 мин", "2 soat 40 daqiqa"),
-      age: "12+",
-      premiere: t("Премьера", "Premyera"),
+      genre: t(
+        "Фантастика, фэнтези, приключения",
+        "Fantastika, fentezi, sarguzasht"
+      ),
+      duration: t("3 ч 15 мин", "3 soat 15 daqiqa"),
+      age: "PG-13",
+      premiere: t("19 декабря 2025", "2025-yil 19-dekabr"),
+      country: t("США", "AQSH"),
+      director: t("Джеймс Кэмерон", "Jeyms Kemeron"),
+      cast: [
+        t("Сэм Уортингтон", "Sem Uortington"),
+        t("Зои Салдана", "Zoi Saldana"),
+        t("Сигурни Уивер", "Sigurni Uiver"),
+        t("Стивен Лэнг", "Stiven Leng"),
+      ],
+      imdb: "7.3",
+      kp: "7.6",
     },
     schedule: {
       "2026-04-02": [

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   featuredNews,
@@ -8,7 +8,6 @@ import {
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 import AdBlock from "../components/AdBlock";
-import Loader from "../components/Loader";
 import Seo from "../components/Seo";
 
 const batchSize = 8;
@@ -85,23 +84,22 @@ function CategoryPage() {
     seoDescriptions[language]?.[slug] || seoDescriptions[language]?.default;
   const canonical = `/${language}/category/${slug}`;
 
-  const [loading, setLoading] = useState(true);
-  const [visibleNews, setVisibleNews] = useState([]);
-  const [loadedCount, setLoadedCount] = useState(0);
-
-  useEffect(() => {
-    const categoryTopNews = [...featuredNews, ...moreNewsInitial].slice(0, 8);
-
-    const timer = setTimeout(() => {
-      setVisibleNews(categoryTopNews);
-      setLoadedCount(0);
-      setLoading(false);
-    }, 300);
-
-    return () => clearTimeout(timer);
+  const initialNews = useMemo(() => {
+    return [...featuredNews, ...moreNewsInitial].slice(0, 8);
   }, [slug]);
 
-  const categoryLoadMorePool = [...moreNewsExtra, ...moreNewsInitial];
+  const categoryLoadMorePool = useMemo(() => {
+    return [...moreNewsExtra, ...moreNewsInitial];
+  }, []);
+
+  const [loadedCount, setLoadedCount] = useState(0);
+
+  const visibleNews = useMemo(() => {
+    const extraItems = categoryLoadMorePool.slice(0, loadedCount);
+    return [...initialNews, ...extraItems];
+  }, [initialNews, categoryLoadMorePool, loadedCount]);
+
+  const hasMore = loadedCount < categoryLoadMorePool.length;
 
   const handleLoadMore = () => {
     const nextItems = categoryLoadMorePool.slice(
@@ -109,19 +107,8 @@ function CategoryPage() {
       loadedCount + batchSize
     );
 
-    setVisibleNews((prev) => [...prev, ...nextItems]);
     setLoadedCount((prev) => prev + nextItems.length);
   };
-
-  const hasMore = loadedCount < categoryLoadMorePool.length;
-
-  if (loading) {
-    return (
-      <main className="main container">
-        <Loader />
-      </main>
-    );
-  }
 
   return (
     <main className="main container">

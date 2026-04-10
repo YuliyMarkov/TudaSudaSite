@@ -43,20 +43,21 @@ function getExtendedCinemaDates(totalAfter = 24) {
   return dates;
 }
 
-function getActiveCinemaWeekRange() {
+function getCurrentCinemaWeekRange() {
   const today = new Date();
-  const currentDay = today.getDay();
+  today.setHours(0, 0, 0, 0);
 
-  const daysUntilThursday = (4 - currentDay + 7) % 7;
+  const currentDay = today.getDay(); // 0 = Sunday, 4 = Thursday
+  const daysSinceThursday = (currentDay - 4 + 7) % 7;
 
   const startDate = new Date(today);
-  startDate.setHours(0, 0, 0, 0);
-  startDate.setDate(today.getDate() + daysUntilThursday);
+  startDate.setDate(today.getDate() - daysSinceThursday);
 
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + 6);
 
   return {
+    today: formatDateToISO(today),
     start: formatDateToISO(startDate),
     end: formatDateToISO(endDate),
   };
@@ -72,7 +73,7 @@ function AllCinemaPage() {
       description:
         "Киноафиша Ташкента: фильмы, премьеры, сеансы и подборка того, что сейчас идет в кино.",
       premiereTitle: "Премьеры и скоро в кино",
-      todayTitle: "В кино по датам",
+      todayTitle: "Выберите дату",
       noResults: "На выбранную дату фильмов пока нет.",
       sessions: "Сеансы",
       moreSessions: "Смотреть фильм",
@@ -84,7 +85,7 @@ function AllCinemaPage() {
       description:
         "Toshkent kinoafishasi: filmlar, premyeralar, seanslar va hozir kinoda bo‘lgan filmlar tanlovi.",
       premiereTitle: "Premyeralar va tez orada kinoda",
-      todayTitle: "Sanalar bo‘yicha kinoda",
+      todayTitle: "Sanani tanlang",
       noResults: "Tanlangan sana uchun filmlar hozircha yo‘q.",
       sessions: "Seanslar",
       moreSessions: "Filmni ko‘rish",
@@ -96,32 +97,35 @@ function AllCinemaPage() {
   const t = uiText[language] || uiText.ru;
 
   const allDates = useMemo(() => getExtendedCinemaDates(24), []);
-  const activeRange = useMemo(() => getActiveCinemaWeekRange(), []);
+  const activeRange = useMemo(() => getCurrentCinemaWeekRange(), []);
 
-  const todayISO = formatDateToISO(new Date());
-  const [selectedDate, setSelectedDate] = useState(todayISO);
+  const [selectedDate, setSelectedDate] = useState(activeRange.today);
+
+  const isDateActive = (date) => {
+    return date >= activeRange.today && date <= activeRange.end;
+  };
+
+  const currentSelectedDate = isDateActive(selectedDate)
+    ? selectedDate
+    : activeRange.today;
 
   const featuredPremieres = useMemo(() => {
     return cinemaEvents.filter((movie) => {
       const movieDates = Object.keys(movie.schedule || {}).sort((a, b) =>
-        a.localeCompare(b),
+        a.localeCompare(b)
       );
-      return movieDates.length > 0 && movieDates[0] > activeRange.start;
+      return movieDates.length > 0 && movieDates[0] > activeRange.end;
     });
-  }, [activeRange.start]);
+  }, [activeRange.end]);
 
   const filteredMovies = useMemo(() => {
-    if (!selectedDate) return [];
+    if (!currentSelectedDate) return [];
 
     return cinemaEvents.filter((movie) => {
-      const sessions = movie.schedule?.[selectedDate];
+      const sessions = movie.schedule?.[currentSelectedDate];
       return Array.isArray(sessions) && sessions.length > 0;
     });
-  }, [selectedDate]);
-
-  const isDateActive = (date) => {
-    return date >= activeRange.start && date <= activeRange.end;
-  };
+  }, [currentSelectedDate]);
 
   const handleDateClick = (date) => {
     if (!isDateActive(date)) return;
@@ -165,11 +169,14 @@ function AllCinemaPage() {
                   const location = getLocalizedValue(movie.location, language);
                   const category = getLocalizedValue(
                     movie.categoryLabel,
-                    language,
+                    language
                   );
 
                   return (
-                    <article key={movie.id} className="all-cinema-premiere-card">
+                    <article
+                      key={movie.id}
+                      className="all-cinema-premiere-card"
+                    >
                       <Link
                         to={`/${language}/movies/${movie.slug}`}
                         className="all-cinema-premiere-link"
@@ -226,7 +233,7 @@ function AllCinemaPage() {
                 {allDates.map((date) => {
                   const formatted = formatCinemaDate(date, language);
                   const active = isDateActive(date);
-                  const isSelected = selectedDate === date;
+                  const isSelected = currentSelectedDate === date;
 
                   return (
                     <button
@@ -272,10 +279,10 @@ function AllCinemaPage() {
                   const location = getLocalizedValue(movie.location, language);
                   const category = getLocalizedValue(
                     movie.categoryLabel,
-                    language,
+                    language
                   );
                   const sessions =
-                    movie.schedule?.[selectedDate]?.[0]?.sessions || [];
+                    movie.schedule?.[currentSelectedDate]?.[0]?.sessions || [];
 
                   return (
                     <article key={movie.id} className="all-cinema-card">
@@ -314,7 +321,7 @@ function AllCinemaPage() {
                               <div className="all-cinema-sessions-list">
                                 {sessions.slice(0, 4).map((s, i) => (
                                   <span
-                                    key={`${movie.id}-${selectedDate}-${i}`}
+                                    key={`${movie.id}-${currentSelectedDate}-${i}`}
                                     className="all-cinema-session-chip"
                                   >
                                     {s.time}

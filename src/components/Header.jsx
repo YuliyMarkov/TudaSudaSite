@@ -47,10 +47,80 @@ const WEATHER_CODES = {
   },
 };
 
+const UI_TEXT = {
+  ru: {
+    homeLabel: "ТудаСюда — на главную",
+    categories: {
+      cinema: "Кино",
+      concerts: "Концерты",
+      theater: "Театр",
+      exhibitions: "Выставки",
+      kids: "Детям",
+      restaurants: "Рестораны",
+      places: "Места",
+    },
+    socialsTitle: "Мы в соцсетях",
+    socialsLabel: "Социальные сети",
+    searchPlaceholder: "Поиск по сайту...",
+    searchButton: "Поиск",
+    searchToggle: "Открыть поиск",
+    navLabel: "Основная навигация",
+    langGroup: "Переключение языка",
+    themeLabel: "Переключить тему",
+    burgerLabel: "Открыть меню",
+    weatherFallback: "Погода...",
+    cityLabel: "Ташкент",
+  },
+  uz: {
+    homeLabel: "TudaSuda — bosh sahifaga",
+    categories: {
+      cinema: "Kino",
+      concerts: "Konsertlar",
+      theater: "Teatr",
+      exhibitions: "Ko‘rgazmalar",
+      kids: "Bolalar",
+      restaurants: "Restoranlar",
+      places: "Joylar",
+    },
+    socialsTitle: "Biz ijtimoiy tarmoqlarda",
+    socialsLabel: "Ijtimoiy tarmoqlar",
+    searchPlaceholder: "Sayt bo‘ylab qidirish...",
+    searchButton: "Qidirish",
+    searchToggle: "Qidiruvni ochish",
+    navLabel: "Asosiy navigatsiya",
+    langGroup: "Tilni almashtirish",
+    themeLabel: "Mavzuni almashtirish",
+    burgerLabel: "Menyuni ochish",
+    weatherFallback: "Ob-havo...",
+    cityLabel: "Toshkent",
+  },
+};
+
 const TASHKENT = {
   latitude: 41.3111,
   longitude: 69.2797,
 };
+
+const SOCIALS = [
+  {
+    name: "Telegram",
+    href: "https://t.me/+zBdfoNGygiw3MzYy",
+    lightIcon: "/Icons/TG_Logo_Light.svg",
+    darkIcon: "/Icons/TG_Logo_Dark.svg",
+  },
+  {
+    name: "Instagram",
+    href: "https://www.instagram.com/tudasudauz/",
+    lightIcon: "/Icons/IG_Logo_Light.svg",
+    darkIcon: "/Icons/IG_Logo_Dark.svg",
+  },
+  {
+    name: "YouTube",
+    href: "https://www.youtube.com/@tudasudauz",
+    lightIcon: "/Icons/YT_Logo_Light.webp",
+    darkIcon: "/Icons/YT_Logo_Dark.webp",
+  },
+];
 
 function getWeatherEmoji(code) {
   if (code === 0 || code === 1) return "☀️";
@@ -72,95 +142,54 @@ function Header() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isDarkTheme, setIsDarkTheme] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
-  });
+  const [isDarkTheme, setIsDarkTheme] = useState(
+    () => localStorage.getItem("theme") === "dark"
+  );
   const [weather, setWeather] = useState(null);
 
   const burgerBtnRef = useRef(null);
   const navRef = useRef(null);
 
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
-  };
+  const t = UI_TEXT[language] || UI_TEXT.ru;
 
-  const uiText = {
-    ru: {
-      homeLabel: "ТудаСюда — на главную",
-      categories: {
-        cinema: "Кино",
-        concerts: "Концерты",
-        theater: "Театр",
-        exhibitions: "Выставки",
-        kids: "Детям",
-        restaurants: "Рестораны",
-        places: "Места",
+  const categoryItems = useMemo(
+    () => [
+      { to: `/${language}/cinema`, emoji: "🎬", label: t.categories.cinema },
+      {
+        to: `/${language}/concerts`,
+        emoji: "🎤",
+        label: t.categories.concerts,
       },
-      socialsTitle: "Мы в соцсетях",
-      socialsLabel: "Социальные сети",
-      searchPlaceholder: "Поиск по сайту...",
-      searchButton: "Поиск",
-      searchToggle: "Открыть поиск",
-      navLabel: "Основная навигация",
-      langGroup: "Переключение языка",
-      themeLabel: "Переключить тему",
-      burgerLabel: "Открыть меню",
-      weatherFallback: "Погода...",
-      cityLabel: "Ташкент",
-    },
-    uz: {
-      homeLabel: "TudaSuda — bosh sahifaga",
-      categories: {
-        cinema: "Kino",
-        concerts: "Konsertlar",
-        theater: "Teatr",
-        exhibitions: "Ko‘rgazmalar",
-        kids: "Bolalar",
-        restaurants: "Restoranlar",
-        places: "Joylar",
+      { to: `/${language}/theatre`, emoji: "🎭", label: t.categories.theater },
+      {
+        to: `/${language}/exhibitions`,
+        emoji: "🖼️",
+        label: t.categories.exhibitions,
       },
-      socialsTitle: "Biz ijtimoiy tarmoqlarda",
-      socialsLabel: "Ijtimoiy tarmoqlar",
-      searchPlaceholder: "Sayt bo‘ylab qidirish...",
-      searchButton: "Qidirish",
-      searchToggle: "Qidiruvni ochish",
-      navLabel: "Asosiy navigatsiya",
-      langGroup: "Tilni almashtirish",
-      themeLabel: "Mavzuni almashtirish",
-      burgerLabel: "Menyuni ochish",
-      weatherFallback: "Ob-havo...",
-      cityLabel: "Toshkent",
-    },
-  };
+      { to: `/${language}/kids`, emoji: "🧸", label: t.categories.kids },
+      {
+        to: `/${language}/restaurants`,
+        emoji: "🍽️",
+        label: t.categories.restaurants,
+      },
+      { to: `/${language}/places`, emoji: "📍", label: t.categories.places },
+    ],
+    [language, t]
+  );
 
-  const t = uiText[language] || uiText.ru;
+  const weatherText = useMemo(() => {
+    if (!weather || weather.code == null) return "";
+    return (WEATHER_CODES[language] || WEATHER_CODES.ru)[weather.code] || "";
+  }, [weather, language]);
 
-  const categoryItems = [
-    { to: `/${language}/cinema`, emoji: "🎬", label: t.categories.cinema },
-    { to: `/${language}/concerts`, emoji: "🎤", label: t.categories.concerts },
-    { to: `/${language}/theatre`, emoji: "🎭", label: t.categories.theater },
-    {
-      to: `/${language}/exhibitions`,
-      emoji: "🖼️",
-      label: t.categories.exhibitions,
-    },
-    { to: `/${language}/kids`, emoji: "🧸", label: t.categories.kids },
-    {
-      to: `/${language}/restaurants`,
-      emoji: "🍽️",
-      label: t.categories.restaurants,
-    },
-    { to: `/${language}/places`, emoji: "📍", label: t.categories.places },
-  ];
+  const weatherEmoji = useMemo(() => {
+    if (!weather || weather.code == null) return "🌤️";
+    return getWeatherEmoji(weather.code);
+  }, [weather]);
 
   useEffect(() => {
-    if (isDarkTheme) {
-      document.body.classList.add("dark-theme");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.body.classList.remove("dark-theme");
-      localStorage.setItem("theme", "light");
-    }
+    document.body.classList.toggle("dark-theme", isDarkTheme);
+    localStorage.setItem("theme", isDarkTheme ? "dark" : "light");
   }, [isDarkTheme]);
 
   useEffect(() => {
@@ -177,16 +206,6 @@ function Header() {
       .catch(() => setWeather(null));
   }, []);
 
-  const weatherText = useMemo(() => {
-    if (!weather || weather.code == null) return "";
-    return (WEATHER_CODES[language] || WEATHER_CODES.ru)[weather.code] || "";
-  }, [weather, language]);
-
-  const weatherEmoji = useMemo(() => {
-    if (!weather || weather.code == null) return "🌤️";
-    return getWeatherEmoji(weather.code);
-  }, [weather]);
-
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 900) {
@@ -200,8 +219,7 @@ function Header() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!isMenuOpen) return;
-      if (window.innerWidth > 900) return;
+      if (!isMenuOpen || window.innerWidth > 900) return;
 
       const clickedInsideNav = navRef.current?.contains(event.target);
       const clickedBurger = burgerBtnRef.current?.contains(event.target);
@@ -219,6 +237,10 @@ function Header() {
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [isMenuOpen]);
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+  };
 
   const toggleMenu = () => {
     setIsMenuOpen((prev) => !prev);
@@ -255,6 +277,10 @@ function Header() {
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  const getSocialIcon = (item) => {
+    return isDarkTheme ? item.darkIcon : item.lightIcon;
   };
 
   return (
@@ -330,56 +356,18 @@ function Header() {
             </button>
 
             <div className="socials" aria-label={t.socialsLabel}>
-              <a
-                href="https://t.me/+zBdfoNGygiw3MzYy"
-                className="social"
-                aria-label="Telegram"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src={
-                    isDarkTheme
-                      ? "/Icons/TG_Logo_Dark.svg"
-                      : "/Icons/TG_Logo_Light.svg"
-                  }
-                  alt="Telegram"
-                />
-              </a>
-
-              <a
-                href="https://www.instagram.com/tudasudauz/"
-                className="social"
-                aria-label="Instagram"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src={
-                    isDarkTheme
-                      ? "/Icons/IG_Logo_Dark.svg"
-                      : "/Icons/IG_Logo_Light.svg"
-                  }
-                  alt="Instagram"
-                />
-              </a>
-
-              <a
-                href="https://www.youtube.com/@tudasudauz"
-                className="social"
-                aria-label="YouTube"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src={
-                    isDarkTheme
-                      ? "/Icons/YT_Logo_Dark.webp"
-                      : "/Icons/YT_Logo_Light.webp"
-                  }
-                  alt="YouTube"
-                />
-              </a>
+              {SOCIALS.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="social"
+                  aria-label={item.name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={getSocialIcon(item)} alt={item.name} />
+                </a>
+              ))}
             </div>
 
             <div className="lang-switch" aria-label={t.langGroup} role="group">
@@ -493,65 +481,21 @@ function Header() {
             <div className="mobile-socials-title">{t.socialsTitle}</div>
 
             <div className="mobile-socials-grid">
-              <a
-                href="https://t.me/+zBdfoNGygiw3MzYy"
-                className="mobile-social-card"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Telegram"
-              >
-                <span className="mobile-social-card-icon">
-                  <img
-                    src={
-                      isDarkTheme
-                        ? "/Icons/TG_Logo_Dark.svg"
-                        : "/Icons/TG_Logo_Light.svg"
-                    }
-                    alt="Telegram"
-                  />
-                </span>
-                <span className="mobile-social-card-text">Telegram</span>
-              </a>
-
-              <a
-                href="https://www.instagram.com/tudasudauz/"
-                className="mobile-social-card"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-              >
-                <span className="mobile-social-card-icon">
-                  <img
-                    src={
-                      isDarkTheme
-                        ? "/Icons/IG_Logo_Dark.svg"
-                        : "/Icons/IG_Logo_Light.svg"
-                    }
-                    alt="Instagram"
-                  />
-                </span>
-                <span className="mobile-social-card-text">Instagram</span>
-              </a>
-
-              <a
-                href="https://www.youtube.com/@tudasudauz"
-                className="mobile-social-card"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="YouTube"
-              >
-                <span className="mobile-social-card-icon">
-                  <img
-                    src={
-                      isDarkTheme
-                        ? "/Icons/YT_Logo_Dark.webp"
-                        : "/Icons/YT_Logo_Light.webp"
-                    }
-                    alt="YouTube"
-                  />
-                </span>
-                <span className="mobile-social-card-text">YouTube</span>
-              </a>
+              {SOCIALS.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="mobile-social-card"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={item.name}
+                >
+                  <span className="mobile-social-card-icon">
+                    <img src={getSocialIcon(item)} alt={item.name} />
+                  </span>
+                  <span className="mobile-social-card-text">{item.name}</span>
+                </a>
+              ))}
             </div>
           </div>
         </nav>

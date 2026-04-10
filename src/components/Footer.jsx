@@ -2,6 +2,44 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 
+const UI_TEXT = {
+  ru: {
+    copyright: "© 2026 ТудаСюда. Все права защищены.",
+    navLabel: "Навигация в подвале",
+    about: "О нас",
+    privacy: "Политика конфиденциальности",
+    contacts: "Контакты",
+  },
+  uz: {
+    copyright: "© 2026 TudaSuda. Barcha huquqlar himoyalangan.",
+    navLabel: "Footer navigatsiyasi",
+    about: "Biz haqimizda",
+    privacy: "Maxfiylik siyosati",
+    contacts: "Kontaktlar",
+  },
+};
+
+const SOCIALS = [
+  {
+    name: "Telegram",
+    href: "https://t.me/+zBdfoNGygiw3MzYy",
+    lightIcon: "/Icons/TG_Logo_Light.svg",
+    darkIcon: "/Icons/TG_Logo_Dark.svg",
+  },
+  {
+    name: "Instagram",
+    href: "https://www.instagram.com/tudasudauz/",
+    lightIcon: "/Icons/IG_Logo_Light.svg",
+    darkIcon: "/Icons/IG_Logo_Dark.svg",
+  },
+  {
+    name: "YouTube",
+    href: "https://www.youtube.com/@tudasudauz",
+    lightIcon: "/Icons/YT_Logo_Light.webp",
+    darkIcon: "/Icons/YT_Logo_Dark.webp",
+  },
+];
+
 function Footer() {
   const { language } = useLanguage();
 
@@ -25,24 +63,11 @@ function Footer() {
     return () => observer.disconnect();
   }, []);
 
-  const uiText = {
-    ru: {
-      copyright: "© 2026 ТудаСюда. Все права защищены.",
-      navLabel: "Навигация в подвале",
-      about: "О нас",
-      privacy: "Политика конфиденциальности",
-      contacts: "Контакты",
-    },
-    uz: {
-      copyright: "© 2026 TudaSuda. Barcha huquqlar himoyalangan.",
-      navLabel: "Footer navigatsiyasi",
-      about: "Biz haqimizda",
-      privacy: "Maxfiylik siyosati",
-      contacts: "Kontaktlar",
-    },
-  };
+  const t = UI_TEXT[language] || UI_TEXT.ru;
 
-  const t = uiText[language] || uiText.ru;
+  const getSocialIcon = (item) => {
+    return isDarkTheme ? item.darkIcon : item.lightIcon;
+  };
 
   return (
     <footer className="footer">
@@ -56,56 +81,18 @@ function Footer() {
         </nav>
 
         <div className="footer-socials">
-          <a
-            href="https://t.me/+zBdfoNGygiw3MzYy"
-            className="footer-social"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Telegram"
-          >
-            <img
-              src={
-                isDarkTheme
-                  ? "/Icons/TG_Logo_Dark.svg"
-                  : "/Icons/TG_Logo_Light.svg"
-              }
-              alt="Telegram"
-            />
-          </a>
-
-          <a
-            href="https://www.instagram.com/tudasudauz/"
-            className="footer-social"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Instagram"
-          >
-            <img
-              src={
-                isDarkTheme
-                  ? "/Icons/IG_Logo_Dark.svg"
-                  : "/Icons/IG_Logo_Light.svg"
-              }
-              alt="Instagram"
-            />
-          </a>
-
-          <a
-            href="https://www.youtube.com/@tudasudauz"
-            className="footer-social"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="YouTube"
-          >
-            <img
-              src={
-                isDarkTheme
-                  ? "/Icons/YT_Logo_Dark.webp"
-                  : "/Icons/YT_Logo_Light.webp"
-              }
-              alt="YouTube"
-            />
-          </a>
+          {SOCIALS.map((item) => (
+            <a
+              key={item.name}
+              href={item.href}
+              className="footer-social"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={item.name}
+            >
+              <img src={getSocialIcon(item)} alt={item.name} />
+            </a>
+          ))}
         </div>
       </div>
     </footer>

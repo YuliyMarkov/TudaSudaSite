@@ -7,6 +7,7 @@ import Seo from "../components/Seo";
 
 function formatDateLabel(dateString, language) {
   const date = new Date(`${dateString}T00:00:00`);
+
   return new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
     day: "numeric",
     month: "long",
@@ -14,15 +15,28 @@ function formatDateLabel(dateString, language) {
   }).format(date);
 }
 
-function getSavedMovieRating(slug) {
+/*
+  ВАЖНО:
+  Сейчас рейтинг сохраняется локально, как временная основа.
+  Потом эти функции можно просто заменить на API-запросы к бэкенду.
+*/
+
+function getLocalMovieRating(slug) {
   if (!slug) return 0;
+
   const saved = localStorage.getItem(`movie-rating-${slug}`);
   return saved ? Number(saved) : 0;
+}
+
+function saveLocalMovieRating(slug, value) {
+  if (!slug) return;
+  localStorage.setItem(`movie-rating-${slug}`, String(value));
 }
 
 function MoviePage() {
   const { language } = useLanguage();
   const { slug } = useParams();
+  const sessionsRef = useRef(null);
 
   const movie = moviesData.find((item) => item.slug === slug);
 
@@ -73,8 +87,7 @@ function MoviePage() {
 
   const [selectedDate, setSelectedDate] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
-  const [userRating, setUserRating] = useState(() => getSavedMovieRating(slug));
-  const sessionsRef = useRef(null);
+  const [userRating, setUserRating] = useState(() => getLocalMovieRating(slug));
 
   const availableDates = useMemo(() => {
     if (!movie?.schedule) return [];
@@ -84,10 +97,6 @@ function MoviePage() {
   const currentSelectedDate = availableDates.includes(selectedDate)
     ? selectedDate
     : availableDates[0] || "";
-
-  const currentUserRating = useMemo(() => {
-    return userRating || getSavedMovieRating(slug);
-  }, [userRating, slug]);
 
   const mediaSlides = useMemo(() => {
     if (!movie) return [];
@@ -126,7 +135,16 @@ function MoviePage() {
 
   const handleUserRating = (value) => {
     setUserRating(value);
-    localStorage.setItem(`movie-rating-${slug}`, String(value));
+    saveLocalMovieRating(slug, value);
+
+    /*
+      В БУДУЩЕМ ЗДЕСЬ БУДЕТ:
+      await fetch(`/api/movies/${slug}/rate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value }),
+      });
+    */
   };
 
   if (!movie) {
@@ -261,11 +279,11 @@ function MoviePage() {
                           key={value}
                           type="button"
                           className={`movie-star-btn ${
-                            currentUserRating >= value ? "active" : ""
+                            userRating >= value ? "active" : ""
                           }`}
                           onClick={() => handleUserRating(value)}
                           aria-label={`${t.starsAria} ${value}`}
-                          aria-pressed={currentUserRating === value}
+                          aria-pressed={userRating === value}
                         >
                           ★
                         </button>

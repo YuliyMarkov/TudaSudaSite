@@ -21,6 +21,7 @@ import AllPlacesPage from "./pages/AllPlacesPage";
 import AllStoriesPage from "./pages/AllStoriesPage";
 import StoryPage from "./pages/StoryPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import RestaurantPage from "./pages/RestaurantPage";
 
 import MoviePage from "./pages/MoviePage";
 
@@ -51,6 +52,7 @@ function App() {
         <Route path="/:lang/category/:slug" element={<CategoryPage />} />
 
         <Route path="/:lang/cinema" element={<AllCinemaPage />} />
+        <Route path="/:language/restaurants/:slug" element={<RestaurantPage />} />
         <Route path="/:lang/concerts" element={<AllConcertsPage />} />
         <Route path="/:lang/theatre" element={<AllTheatrePage />} />
         <Route path="/:lang/exhibitions" element={<AllExhibitionsPage />} />

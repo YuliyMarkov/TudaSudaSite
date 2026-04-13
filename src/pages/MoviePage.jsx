@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { moviesData } from "../data/moviesData";
 import { useLanguage } from "../context/useLanguage";
@@ -15,11 +15,33 @@ function formatDateLabel(dateString, language) {
   }).format(date);
 }
 
-/*
-  ВАЖНО:
-  Сейчас рейтинг сохраняется локально, как временная основа.
-  Потом эти функции можно просто заменить на API-запросы к бэкенду.
-*/
+function toLocalIsoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildActualScheduleEntries(schedule) {
+  if (!schedule) return [];
+
+  const sourceKeys = Object.keys(schedule).sort((a, b) => a.localeCompare(b));
+  if (!sourceKeys.length) return [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return sourceKeys.map((sourceKey, index) => {
+    const actualDate = new Date(today);
+    actualDate.setDate(today.getDate() + index);
+
+    return {
+      sourceKey,
+      displayDate: toLocalIsoDate(actualDate),
+      sessions: schedule[sourceKey] || [],
+    };
+  });
+}
 
 function getLocalMovieRating(slug) {
   if (!slug) return 0;
@@ -60,13 +82,14 @@ function MoviePage() {
       buyTickets: "Купить билеты",
       yourRating: "Оцените фильм:",
       starsAria: "Поставить оценку",
+      noSessions: "Нет сеансов",
     },
     uz: {
       back: "Filmlarga qaytish",
       sessions: "Seanslar",
       notFoundTitle: "Film topilmadi",
       notFoundText: "Aftidan, bunday film hali afishada yo‘q.",
-      media: "Treylеr va kadrlar",
+      media: "Treyler va kadrlar",
       country: "Davlat",
       director: "Rejissyor",
       cast: "Aktyorlar",
@@ -75,28 +98,36 @@ function MoviePage() {
       home: "Bosh sahifa",
       previous: "Orqaga",
       next: "Oldinga",
-      trailer: "Treylеr",
+      trailer: "Treyler",
       kinopoisk: "Kinopoisk",
       buyTickets: "Chipta sotib olish",
       yourRating: "Filmni baholang:",
       starsAria: "Baho qo‘yish",
+      noSessions: "Seanslar yo‘q",
     },
   };
 
   const t = uiText[language] || uiText.ru;
 
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDateIndex, setSelectedDateIndex] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [userRating, setUserRating] = useState(() => getLocalMovieRating(slug));
 
-  const availableDates = useMemo(() => {
-    if (!movie?.schedule) return [];
-    return Object.keys(movie.schedule).sort((a, b) => a.localeCompare(b));
+  useEffect(() => {
+    setUserRating(getLocalMovieRating(slug));
+  }, [slug]);
+
+  const scheduleEntries = useMemo(() => {
+    return buildActualScheduleEntries(movie?.schedule);
   }, [movie]);
 
-  const currentSelectedDate = availableDates.includes(selectedDate)
-    ? selectedDate
-    : availableDates[0] || "";
+  const safeSelectedDateIndex =
+    selectedDateIndex >= 0 && selectedDateIndex < scheduleEntries.length
+      ? selectedDateIndex
+      : 0;
+
+  const currentSelectedEntry = scheduleEntries[safeSelectedDateIndex] || null;
+  const selectedSessions = currentSelectedEntry?.sessions || [];
 
   const mediaSlides = useMemo(() => {
     if (!movie) return [];
@@ -136,15 +167,6 @@ function MoviePage() {
   const handleUserRating = (value) => {
     setUserRating(value);
     saveLocalMovieRating(slug, value);
-
-    /*
-      В БУДУЩЕМ ЗДЕСЬ БУДЕТ:
-      await fetch(`/api/movies/${slug}/rate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value }),
-      });
-    */
   };
 
   if (!movie) {
@@ -187,18 +209,12 @@ function MoviePage() {
         }`
       : "";
 
-  const selectedSessions = movie.schedule?.[currentSelectedDate] || [];
-
   const goPrev = () => {
-    setActiveIndex((prev) =>
-      prev === 0 ? mediaSlides.length - 1 : prev - 1
-    );
+    setActiveIndex((prev) => (prev === 0 ? mediaSlides.length - 1 : prev - 1));
   };
 
   const goNext = () => {
-    setActiveIndex((prev) =>
-      prev === mediaSlides.length - 1 ? 0 : prev + 1
-    );
+    setActiveIndex((prev) => (prev === mediaSlides.length - 1 ? 0 : prev + 1));
   };
 
   return (
@@ -388,16 +404,16 @@ function MoviePage() {
               <h2>{t.sessions}</h2>
 
               <div className="movie-date-tabs">
-                {availableDates.map((date) => (
+                {scheduleEntries.map((item, index) => (
                   <button
-                    key={date}
+                    key={`${item.displayDate}-${index}`}
                     type="button"
                     className={`movie-date-tab ${
-                      currentSelectedDate === date ? "active" : ""
+                      safeSelectedDateIndex === index ? "active" : ""
                     }`}
-                    onClick={() => setSelectedDate(date)}
+                    onClick={() => setSelectedDateIndex(index)}
                   >
-                    {formatDateLabel(date, language)}
+                    {formatDateLabel(item.displayDate, language)}
                   </button>
                 ))}
               </div>
@@ -425,6 +441,17 @@ function MoviePage() {
                     </div>
                   </div>
                 ))}
+
+                {!selectedSessions.length && (
+                  <div className="movie-cinema-card">
+                    <h3>—</h3>
+                    <div className="movie-session-buttons">
+                      <span className="movie-session-button">
+                        {t.noSessions}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

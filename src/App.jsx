@@ -22,6 +22,8 @@ import AllStoriesPage from "./pages/AllStoriesPage";
 import StoryPage from "./pages/StoryPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import RestaurantPage from "./pages/RestaurantPage";
+import EventPage from "./pages/EventPage";
+import AllEventsPage from "./pages/AllEventsPage";
 
 import MoviePage from "./pages/MoviePage";
 
@@ -67,6 +69,8 @@ function App() {
         <Route path="/:lang/about" element={<AboutPage />} />
         <Route path="/:lang/contacts" element={<ContactsPage />} />
         <Route path="/:lang/privacy" element={<PrivacyPage />} />
+        <Route path="/:lang/events/:slug" element={<EventPage />} />
+        <Route path="/:lang/events" element={<AllEventsPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

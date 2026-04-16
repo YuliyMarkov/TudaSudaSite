@@ -25,7 +25,7 @@ export const restaurantsData = [
     },
 
     mapEmbed:
-      "https://yandex.uz/map-widget/v1/?um=constructor:CPrh4O4P",
+      "https://yandex.uz/map-widget/v1/?ll=69.205859,41.208253&z=17&pt=69.205859,41.208253,pm2rdm",
 
     workingHours: {
       ru: "Ежедневно, 11:00–23:00",
@@ -94,8 +94,8 @@ export const restaurantsData = [
     },
 
     atmosphere: {
-      ru: "Спокойная, уютная и дружелюбная атмосфера без лишнего пафоса. Здесь комфортно посидеть вдвоём, встретиться с друзьями или просто поесть в расслабленной обстановке.",
-      uz: "Muhit sokin, shinam va ortiqcha dabdabasiz. Bu yerda ikki kishi bo‘lib o‘tirish, do‘stlar bilan uchrashish yoki bemalol ovqatlanish qulay.",
+      ru: "Спокойная, уютная и дружелюбная атмосфера без лишнего пафоса.",
+      uz: "Muhit sokin, shinam va ortiqcha dabdabasiz.",
     },
 
     extras: {
@@ -112,8 +112,8 @@ export const restaurantsData = [
     },
 
     mustVisit: {
-      ru: "Сюда стоит идти тем, кто любит понятную корейскую кухню без перегруза и хочет спокойно поесть в комфортной обстановке.",
-      uz: "Bu yerga tushunarli koreys oshxonasini yaxshi ko‘radigan va qulay muhitda bemalol ovqatlanmoqchi bo‘lganlar kelishi kerak.",
+      ru: "Сюда стоит идти тем, кто любит понятную корейскую кухню.",
+      uz: "Bu yerga tushunarli koreys oshxonasini yaxshi ko‘radiganlar kelishi kerak.",
     },
   },
 
@@ -142,8 +142,9 @@ export const restaurantsData = [
       uz: "Toshkent, shahar markazi",
     },
 
+    // ✅ ИСПРАВЛЕНО
     mapEmbed:
-      "https://yandex.uz/map-widget/v1/?ll=69.2800%2C41.3100&z=16",
+      "https://yandex.uz/map-widget/v1/?ll=69.256774,41.290273&z=17&pt=69.256774,41.290273,pm2rdm",
 
     workingHours: {
       ru: "Ежедневно, 10:00–00:00",
@@ -178,8 +179,8 @@ export const restaurantsData = [
     ],
 
     description: {
-      ru: "Sandal — ресторан турецкой кухни с акцентом на плотные завтраки, мясные блюда и атмосферу восточного гостеприимства. Сюда идут за красивой подачей, понятным меню и комфортным пространством для долгих посиделок.",
-      uz: "Sandal — to‘yimli nonushtalar, go‘shtli taomlar va sharqona mehmondo‘stlik muhiti bilan ajralib turadigan turk oshxonasi restorani. Bu yerga chiroyli taqdimot, tushunarli menyu va uzoq o‘tirish uchun qulay joy sabab kelishadi.",
+      ru: "Sandal — ресторан турецкой кухни с акцентом на завтраки и мясные блюда.",
+      uz: "Sandal — nonushta va go‘shtli taomlarga urg‘u berilgan turk restorani.",
     },
 
     topDishes: [
@@ -208,12 +209,12 @@ export const restaurantsData = [
 
     format: {
       ru: ["Семья", "Компания", "Свидание"],
-      uz: ["Oila bilan", "Kompaniya bilan", "Uchrashuv"],
+      uz: ["Oila", "Kompaniya", "Uchrashuv"],
     },
 
     atmosphere: {
-      ru: "Тёплая, живая и немного праздничная атмосфера. Подойдёт для неспешного ужина, семейного выхода и встреч с друзьями.",
-      uz: "Muhit iliq, jonli va biroz bayramona. Bu joy sekin kechki ovqat, oilaviy chiqish va do‘stlar bilan uchrashuv uchun mos.",
+      ru: "Тёплая и живая атмосфера.",
+      uz: "Iliq va jonli muhit.",
     },
 
     extras: {
@@ -230,8 +231,8 @@ export const restaurantsData = [
     },
 
     mustVisit: {
-      ru: "Идеально для тех, кто хочет атмосферный ресторан с понятной турецкой кухней и красивой подачей.",
-      uz: "Tushunarli turk oshxonasi va chiroyli taqdimotga ega muhitli restoran izlayotganlar uchun ayni muddao.",
+      ru: "Идеально для любителей турецкой кухни.",
+      uz: "Turk oshxonasini yaxshi ko‘radiganlar uchun.",
     },
   },
 ];

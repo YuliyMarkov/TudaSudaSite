@@ -8,23 +8,55 @@ import { getLocalizedValue } from "../utils/getLocalizedValue";
 function getEventLink(language, event) {
   switch (event.linkType) {
     case "movies":
-      return `/${language}/movies/${event.slug}`;
+      return event.slug
+        ? `/${language}/movies/${event.slug}`
+        : `/${language}/cinema`;
+
     case "stories":
-      return `/${language}/stories/${event.slug}`;
+      return event.slug
+        ? `/${language}/stories/${event.slug}`
+        : `/${language}`;
+
     case "cinema":
-      return `/${language}/cinema`;
+      return event.slug
+        ? `/${language}/movies/${event.slug}`
+        : `/${language}/cinema`;
+
+    case "event":
+      return event.slug
+        ? `/${language}/events/${event.slug}`
+        : `/${language}/events`;
+
     case "concerts":
-      return `/${language}/concerts`;
+      return event.slug
+        ? `/${language}/events/${event.slug}`
+        : `/${language}/events?filter=concert`;
+
     case "theatre":
-      return `/${language}/theatre`;
+      return event.slug
+        ? `/${language}/events/${event.slug}`
+        : `/${language}/events?filter=theatre`;
+
     case "exhibitions":
-      return `/${language}/exhibitions`;
+      return event.slug
+        ? `/${language}/events/${event.slug}`
+        : `/${language}/events?filter=exhibition`;
+
     case "kids":
-      return `/${language}/kids`;
+      return event.slug
+        ? `/${language}/events/${event.slug}`
+        : `/${language}/events?filter=kids`;
+
     case "restaurants":
-      return `/${language}/restaurants`;
+      return event.slug
+        ? `/${language}/restaurants/${event.slug}`
+        : `/${language}/restaurants`;
+
     case "places":
-      return `/${language}/places`;
+      return event.slug
+        ? `/${language}/places/${event.slug}`
+        : `/${language}/places`;
+
     default:
       return `/${language}`;
   }

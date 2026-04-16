@@ -57,8 +57,8 @@ const makeSingleEvent = ({
 
 export const featuredEvents = [
   {
-    slug: "event-polina-gagarina",
-    linkType: "stories",
+    slug: "polina-gagarina",
+    linkType: "concerts",
     poster: "/Previews/Gagarina.webp",
     videoEmbed:
       "https://videodelivery.net/a98fca651bad8b255ebdb31bacf47c27/manifest/video.m3u8",
@@ -68,8 +68,8 @@ export const featuredEvents = [
       "Polina Gagarinaning Toshkentdagi konserti"
     ),
     subtitle: t(
-      "16 апреля, билеты — от 100 000 сумов",
-      "16-aprel, chiptalar — 100 000 so‘mdan"
+      "12 мая, билеты — от 300 000 сумов",
+      "12-may, chiptalar — 300 000 so‘mdan"
     ),
   },
   {
@@ -86,19 +86,16 @@ export const featuredEvents = [
     subtitle: t("Вход — от 100 000 сумов", "Kirish — 100 000 so‘mdan"),
   },
   {
-    slug: "event-ruki-vverh",
-    linkType: "stories",
+    slug: "jony-live",
+    linkType: "concerts",
     poster: "/Previews/RukiVverkh.webp",
     videoEmbed:
       "https://videodelivery.net/45e872288da7c19ecfb8650aec841bfd/manifest/video.m3u8",
     alt: t("Главное событие", "Asosiy tadbir"),
-    title: t(
-      "Концерт Руки Вверх! на Humo Arena",
-      "Ruki Vverx! konserti Humo Arena’da"
-    ),
+    title: t("Концерт JONY в Ташкенте", "JONY ning Toshkentdagi konserti"),
     subtitle: t(
-      "18 мая, билеты — от 100 000 сумов",
-      "18-may, chiptalar — 100 000 so‘mdan"
+      "25 мая, билеты — от 250 000 сумов",
+      "25-may, chiptalar — 250 000 so‘mdan"
     ),
   },
   {
@@ -115,17 +112,14 @@ export const featuredEvents = [
     subtitle: t("Билеты — от 60 000 сумов", "Chiptalar — 60 000 so‘mdan"),
   },
   {
-    slug: "event-jony-april",
-    linkType: "stories",
+    slug: "van-gogh-alive",
+    linkType: "exhibitions",
     poster: "/Previews/JONY.webp",
     videoEmbed:
       "https://videodelivery.net/488b09cede1261f1c480b50f9c30b5a2/manifest/video.m3u8",
     alt: t("Главное событие", "Asosiy tadbir"),
-    title: t("Концерт JONY в Ташкенте", "JONY ning Toshkentdagi konserti"),
-    subtitle: t(
-      "17 апреля, билеты — от 100 000 сумов",
-      "17-aprel, chiptalar — 100 000 so‘mdan"
-    ),
+    title: t("Van Gogh Alive в Ташкенте", "Van Gogh Alive Toshkentda"),
+    subtitle: t("Выставка открыта до июля", "Ko‘rgazma iyulgacha ochiq"),
   },
 ];
 
@@ -997,87 +991,62 @@ export const moreNewsExtra = [
 
 export const theatreEvents = [
   {
-    id: "theatre-ilkhom",
-    slug: "ilkhom-performance",
-    image: "/Photos-for-Site/Teatr.webp",
-    title: t("Спектакль в театре «Ильхом»", "Ilhom teatridagi spektakl"),
-    subtitle: t("Современная постановка", "Zamonaviy sahnalashtirish"),
-    location: t("Театр «Ильхом»", "Ilhom teatri"),
+    id: "theatre-gamlet",
+    slug: "gamlet",
+    image: "/images/events/gamlet/cover.jpg",
+    title: t("Гамлет", "Gamlet"),
+    subtitle: t("Классическая постановка", "Klassik sahnalashtirish"),
+    location: t("Русский драматический театр", "Rus drama teatri"),
     categoryLabel: t("Театр", "Teatr"),
     schedule: {
-      today: ["19:00"],
-      tomorrow: ["18:30"],
-      weekend: ["17:00", "20:00"],
+      today: ["18:30"],
+      tomorrow: [],
+      weekend: ["18:30"],
     },
   },
   {
-    id: "theatre-turkiston",
-    slug: "turkiston-performance",
-    image: "/Photos-for-Site/Teatr.webp",
-    title: t("Премьера в «Туркистон»", "“Turkiston”dagi premyera"),
-    subtitle: t("Новая сцена сезона", "Mavsumning yangi sahnasi"),
-    location: t("Дворец «Туркистон»", "“Turkiston” saroyi"),
+    id: "theatre-revizor",
+    slug: "revizor",
+    image: "/images/events/revizor/cover.jpg",
+    title: t("Ревизор", "Revizor"),
+    subtitle: t("Сатирическая классика", "Satirik klassika"),
+    location: t("Молодёжный театр Узбекистана", "O‘zbekiston yoshlar teatri"),
     categoryLabel: t("Театр", "Teatr"),
     schedule: {
       today: [],
-      tomorrow: ["19:30"],
-      weekend: ["18:00"],
+      tomorrow: ["19:00"],
+      weekend: ["19:00"],
     },
   },
   {
-    id: "theatre-opera",
-    slug: "opera-night",
-    image: "/Photos-for-Site/Teatr.webp",
-    title: t("Вечер оперы", "Opera kechasi"),
-    subtitle: t("Классическая программа", "Klassik dastur"),
-    location: t("Большой театр", "Katta teatr"),
+    id: "theatre-alisa",
+    slug: "alisa-v-strane-chudes",
+    image: "/images/events/alisa-v-strane-chudes/cover.jpg",
+    title: t("Алиса в Стране чудес", "Alisa mo‘jizalar mamlakatida"),
+    subtitle: t("Семейный спектакль", "Oilaviy spektakl"),
+    location: t("Государственный театр кукол", "Davlat qo‘g‘irchoq teatri"),
     categoryLabel: t("Театр", "Teatr"),
     schedule: {
-      today: ["19:00"],
+      today: ["12:00"],
       tomorrow: [],
-      weekend: ["18:00", "20:30"],
+      weekend: ["12:00"],
     },
   },
   {
-    id: "theatre-drama",
-    slug: "drama-performance",
-    image: "/Photos-for-Site/Teatr.webp",
-    title: t("Драматический спектакль", "Dramatik spektakl"),
-    subtitle: t("Спецпоказ", "Maxsus namoyish"),
-    location: t("Гос театр", "Davlat teatri"),
+    id: "theatre-romeo",
+    slug: "romeo-i-dzhuletta-balet",
+    image: "/images/events/romeo-i-dzhuletta-balet/cover.jpg",
+    title: t("Ромео и Джульетта", "Romeo va Julyetta"),
+    subtitle: t("Балетная классика", "Balet klassikasi"),
+    location: t(
+      "Большой театр имени Алишера Навои",
+      "Alisher Navoiy nomidagi katta teatr"
+    ),
     categoryLabel: t("Театр", "Teatr"),
     schedule: {
       today: [],
       tomorrow: ["18:00"],
-      weekend: ["17:30"],
-    },
-  },
-  {
-    id: "theatre-comedy",
-    slug: "comedy-performance",
-    image: "/Photos-for-Site/Teatr.webp",
-    title: t("Комедийный вечер", "Komediya kechasi"),
-    subtitle: t("Лёгкий вечер", "Yengil kecha"),
-    location: t("Театр комедии", "Komediya teatri"),
-    categoryLabel: t("Театр", "Teatr"),
-    schedule: {
-      today: ["20:00"],
-      tomorrow: ["19:00"],
-      weekend: ["16:00", "19:00"],
-    },
-  },
-  {
-    id: "theatre-modern",
-    slug: "modern-theatre",
-    image: "/Photos-for-Site/Teatr.webp",
-    title: t("Современный театр", "Zamonaviy teatr"),
-    subtitle: t("Экспериментальная сцена", "Eksperimental sahna"),
-    location: t("Cultura", "Cultura"),
-    categoryLabel: t("Театр", "Teatr"),
-    schedule: {
-      today: [],
-      tomorrow: ["20:00"],
-      weekend: ["18:30"],
+      weekend: ["18:00"],
     },
   },
 ];

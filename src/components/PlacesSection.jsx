@@ -45,7 +45,7 @@ function PlacesSection() {
             return (
               <article key={place.id} className="places-card">
                 <Link
-                  to={`/${language}/news/${place.slug}`}
+                  to={`/${language}/places/${place.slug}`}
                   className="places-card-link"
                   aria-label={`${t.open}: ${title}`}
                 >

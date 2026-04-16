@@ -1,263 +1,220 @@
-import { useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { eventsData } from "../data/eventsData";
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
+import AdBlock from "../components/AdBlock";
 
-const VALID_FILTERS = ["all", "concert", "theatre", "exhibition", "kids"];
-const INITIAL_VISIBLE_COUNT = 12;
-const LOAD_MORE_STEP = 6;
-
-function AllEventsPage() {
+function EventPage() {
+  const { slug } = useParams();
   const { language } = useLanguage();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [visibleCounts, setVisibleCounts] = useState({
-    all: INITIAL_VISIBLE_COUNT,
-    concert: INITIAL_VISIBLE_COUNT,
-    theatre: INITIAL_VISIBLE_COUNT,
-    exhibition: INITIAL_VISIBLE_COUNT,
-    kids: INITIAL_VISIBLE_COUNT,
-  });
+
+  const event = eventsData.find((item) => item.slug === slug);
 
   const uiText = {
     ru: {
-      title: "Афиша",
-      subtitle:
-        "Концерты, спектакли, выставки и события для детей в Ташкенте — всё в одном разделе. Выбирайте событие, смотрите детали и переходите к покупке билетов.",
-      filters: {
-        all: "Все события",
-        concert: "Концерты",
-        theatre: "Спектакли",
-        exhibition: "Выставки",
-        kids: "Для детей",
-      },
-      date: "Дата",
-      price: "Билеты",
-      more: "Подробнее",
-      showMore: "Показать ещё",
-      empty: "Событий по выбранному фильтру пока нет.",
       home: "Главная",
+      back: "Афиша",
+      notFoundTitle: "Событие не найдено",
+      notFoundText: "Похоже, такого события пока нет в каталоге.",
+      about: "О событии",
+      gallery: "Фотогалерея",
+      date: "Дата",
+      time: "Время",
+      venue: "Площадка",
+      address: "Адрес",
+      duration: "Длительность",
+      ageLimit: "Возраст",
+      tickets: "Билеты",
+      buyTickets: "Купить билеты",
+      program: "Что ждет гостей",
+      importantInfo: "Важно знать",
+      map: "Локация на карте",
     },
     uz: {
-      title: "Afisha",
-      subtitle:
-        "Toshkentdagi konsertlar, spektakllar, ko‘rgazmalar va bolalar uchun tadbirlar — hammasi bitta bo‘limda. Tadbirni tanlang, tafsilotlarni ko‘ring va chipta xaridiga o‘ting.",
-      filters: {
-        all: "Barcha tadbirlar",
-        concert: "Konsertlar",
-        theatre: "Spektakllar",
-        exhibition: "Ko‘rgazmalar",
-        kids: "Bolalar uchun",
-      },
-      date: "Sana",
-      price: "Chiptalar",
-      more: "Batafsil",
-      showMore: "Yana ko‘rsatish",
-      empty: "Tanlangan filtr bo‘yicha hozircha tadbirlar yo‘q.",
       home: "Bosh sahifa",
+      back: "Afisha",
+      notFoundTitle: "Tadbir topilmadi",
+      notFoundText: "Aftidan, bunday tadbir hozircha katalogda yo‘q.",
+      about: "Tadbir haqida",
+      gallery: "Fotogalereya",
+      date: "Sana",
+      time: "Vaqt",
+      venue: "Maydon",
+      address: "Manzil",
+      duration: "Davomiyligi",
+      ageLimit: "Yosh",
+      tickets: "Chiptalar",
+      buyTickets: "Chipta sotib olish",
+      program: "Dastur",
+      importantInfo: "Muhim ma’lumot",
+      map: "Xaritadagi joylashuv",
     },
   };
 
   const t = uiText[language] || uiText.ru;
 
-  const filterFromUrl = searchParams.get("filter");
-  const activeFilter =
-    filterFromUrl && VALID_FILTERS.includes(filterFromUrl)
-      ? filterFromUrl
-      : "all";
+  if (!event) {
+    return (
+      <main className="main">
+        <section className="event-page">
+          <div className="container">
+            <div className="event-not-found">
+              <h1>{t.notFoundTitle}</h1>
+              <p>{t.notFoundText}</p>
+              <Link to={`/${language}/events`} className="back-link">
+                {t.back}
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
-  const handleFilterChange = (filter) => {
-    if (filter === "all") {
-      setSearchParams({});
-      return;
-    }
-
-    setSearchParams({ filter });
-  };
-
-  const filteredEvents = useMemo(() => {
-    if (activeFilter === "all") {
-      return eventsData;
-    }
-
-    if (activeFilter === "kids") {
-      return eventsData.filter((event) => event.isForKids);
-    }
-
-    return eventsData.filter((event) => event.type === activeFilter);
-  }, [activeFilter]);
-
-  const visibleCount = visibleCounts[activeFilter] ?? INITIAL_VISIBLE_COUNT;
-  const visibleEvents = filteredEvents.slice(0, visibleCount);
-  const hasMore = filteredEvents.length > visibleCount;
-
-  const handleShowMore = () => {
-    setVisibleCounts((prev) => ({
-      ...prev,
-      [activeFilter]: (prev[activeFilter] ?? INITIAL_VISIBLE_COUNT) + LOAD_MORE_STEP,
-    }));
-  };
+  const title = getLocalizedValue(event.title, language);
+  const description = getLocalizedValue(event.description, language);
+  const categoryLabel = getLocalizedValue(event.categoryLabel, language);
+  const venue = getLocalizedValue(event.venue, language);
+  const address = getLocalizedValue(event.address, language);
+  const date = getLocalizedValue(event.date, language);
+  const time = getLocalizedValue(event.time, language);
+  const duration = getLocalizedValue(event.duration, language);
+  const ageLimit = getLocalizedValue(event.ageLimit, language);
+  const ticketPrice = getLocalizedValue(event.ticketPrice, language);
 
   return (
     <>
-      <Seo title={t.title} description={t.subtitle} />
+      <Seo title={title} description={description} image={event.cover} />
 
       <main className="main">
-        <section className="all-events-page">
+        <section className="event-page">
           <div className="container">
-            <div className="all-events-breadcrumbs">
+            <div className="event-breadcrumbs">
               <Link to={`/${language}`}>{t.home}</Link>
               <span> / </span>
-              <span>{t.title}</span>
+              <Link to={`/${language}/events`}>{t.back}</Link>
+              <span> / </span>
+              <span>{title}</span>
             </div>
 
-            <div className="all-events-header">
-              <h1>{t.title}</h1>
-              <p>{t.subtitle}</p>
-            </div>
+            <div className="event-hero">
+              <div className="event-cover-wrap">
+                <img src={event.cover} alt={title} className="event-cover" />
+              </div>
 
-            <div className="all-events-filters">
-              <button
-                type="button"
-                className={`all-events-filter-btn ${
-                  activeFilter === "all" ? "active" : ""
-                }`}
-                onClick={() => handleFilterChange("all")}
-              >
-                {t.filters.all}
-              </button>
+              <div className="event-info">
+                <div className="event-type-chip">{categoryLabel}</div>
 
-              <button
-                type="button"
-                className={`all-events-filter-btn ${
-                  activeFilter === "concert" ? "active" : ""
-                }`}
-                onClick={() => handleFilterChange("concert")}
-              >
-                {t.filters.concert}
-              </button>
+                <h1>{title}</h1>
 
-              <button
-                type="button"
-                className={`all-events-filter-btn ${
-                  activeFilter === "theatre" ? "active" : ""
-                }`}
-                onClick={() => handleFilterChange("theatre")}
-              >
-                {t.filters.theatre}
-              </button>
+                <p className="event-description">{description}</p>
 
-              <button
-                type="button"
-                className={`all-events-filter-btn ${
-                  activeFilter === "exhibition" ? "active" : ""
-                }`}
-                onClick={() => handleFilterChange("exhibition")}
-              >
-                {t.filters.exhibition}
-              </button>
+                <div className="event-meta-grid">
+                  <div className="event-meta-card">
+                    <span className="event-meta-label">{t.date}</span>
+                    <span className="event-meta-value">{date}</span>
+                  </div>
 
-              <button
-                type="button"
-                className={`all-events-filter-btn ${
-                  activeFilter === "kids" ? "active" : ""
-                }`}
-                onClick={() => handleFilterChange("kids")}
-              >
-                {t.filters.kids}
-              </button>
-            </div>
+                  <div className="event-meta-card">
+                    <span className="event-meta-label">{t.time}</span>
+                    <span className="event-meta-value">{time}</span>
+                  </div>
 
-            {visibleEvents.length > 0 ? (
-              <>
-                <div className="all-events-grid">
-                  {visibleEvents.map((event) => {
-                    const title = getLocalizedValue(event.title, language);
-                    const shortDescription = getLocalizedValue(
-                      event.shortDescription,
-                      language
-                    );
-                    const categoryLabel = getLocalizedValue(
-                      event.categoryLabel,
-                      language
-                    );
-                    const date = getLocalizedValue(event.date, language);
-                    const ticketPrice = getLocalizedValue(
-                      event.ticketPrice,
-                      language
-                    );
+                  <div className="event-meta-card">
+                    <span className="event-meta-label">{t.venue}</span>
+                    <span className="event-meta-value">{venue}</span>
+                  </div>
 
-                    return (
-                      <article className="all-events-card" key={event.slug}>
-                        <Link
-                          to={`/${language}/events/${event.slug}`}
-                          className="all-events-card-link"
-                        >
-                          <div className="all-events-card-image-wrap">
-                            <img
-                              src={event.cover}
-                              alt={title}
-                              className="all-events-card-image"
-                            />
+                  <div className="event-meta-card">
+                    <span className="event-meta-label">{t.address}</span>
+                    <span className="event-meta-value">{address}</span>
+                  </div>
 
-                            <span className="all-events-card-badge">
-                              {categoryLabel}
-                            </span>
-                          </div>
+                  <div className="event-meta-card">
+                    <span className="event-meta-label">{t.duration}</span>
+                    <span className="event-meta-value">{duration}</span>
+                  </div>
 
-                          <div className="all-events-card-body">
-                            <h2>{title}</h2>
-
-                            <p className="all-events-card-description">
-                              {shortDescription}
-                            </p>
-
-                            <div className="all-events-card-meta">
-                              <div className="all-events-card-meta-row">
-                                <span className="all-events-card-meta-label">
-                                  {t.date}
-                                </span>
-                                <span className="all-events-card-meta-value">
-                                  {date}
-                                </span>
-                              </div>
-
-                              <div className="all-events-card-meta-row">
-                                <span className="all-events-card-meta-label">
-                                  {t.price}
-                                </span>
-                                <span className="all-events-card-meta-value">
-                                  {ticketPrice}
-                                </span>
-                              </div>
-                            </div>
-
-                            <span className="all-events-card-more">
-                              {t.more}
-                            </span>
-                          </div>
-                        </Link>
-                      </article>
-                    );
-                  })}
+                  <div className="event-meta-card">
+                    <span className="event-meta-label">{t.ageLimit}</span>
+                    <span className="event-meta-value">{ageLimit}</span>
+                  </div>
                 </div>
 
-                {hasMore && (
-                  <div className="all-events-more-wrap">
-                    <button
-                      type="button"
-                      className="all-events-more-btn"
-                      onClick={handleShowMore}
-                    >
-                      {t.showMore}
-                    </button>
+                <div className="event-ticket-box">
+                  <div className="event-ticket-info">
+                    <span className="event-ticket-label">{t.tickets}</span>
+                    <span className="event-ticket-price">{ticketPrice}</span>
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="all-events-empty">{t.empty}</div>
+
+                  <a
+                    href={event.ticketUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="event-buy-btn"
+                  >
+                    {t.buyTickets}
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {event.gallery?.length > 0 && (
+              <div className="event-content-card">
+                <h2>{t.gallery}</h2>
+                <div className="event-gallery-grid">
+                  {event.gallery.map((image, index) => (
+                    <div className="event-gallery-item" key={index}>
+                      <img src={image} alt={`${title} ${index + 1}`} />
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
+
+            <div className="event-sections">
+              <div className="event-content-card">
+                <h2>{t.about}</h2>
+                <p className="event-text">{description}</p>
+              </div>
+
+              {!!event.program?.length && (
+                <div className="event-content-card">
+                  <h2>{t.program}</h2>
+                  <ul className="event-list">
+                    {event.program.map((item, index) => (
+                      <li key={index}>{getLocalizedValue(item, language)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {!!event.importantInfo?.length && (
+                <div className="event-content-card">
+                  <h2>{t.importantInfo}</h2>
+                  <ul className="event-list">
+                    {event.importantInfo.map((item, index) => (
+                      <li key={index}>{getLocalizedValue(item, language)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <AdBlock />
+
+              <div className="event-content-card event-map-card">
+                <h2>{t.map}</h2>
+                <div className="event-map-wrap">
+                  <iframe
+                    src={event.mapEmbed}
+                    title={`${title} map`}
+                    loading="lazy"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
@@ -265,4 +222,4 @@ function AllEventsPage() {
   );
 }
 
-export default AllEventsPage;
+export default EventPage;

@@ -46,7 +46,7 @@ function TheatreSection() {
         <div className="theatre-header">
           <h2>{t.title}</h2>
 
-          <Link to={`/${language}/theatre`} className="theatre-more">
+          <Link to={`/${language}/events?filter=theatre`} className="theatre-more">
             {t.more}
             <span className="arrow">→</span>
           </Link>
@@ -56,6 +56,8 @@ function TheatreSection() {
           <button
             className="theatre-nav prev"
             onClick={() => scrollSlider("prev")}
+            type="button"
+            aria-label={t.prev}
           >
             &#10094;
           </button>
@@ -74,8 +76,9 @@ function TheatreSection() {
                 return (
                   <article key={item.id} className="theatre-card">
                     <Link
-                      to={`/${language}/news/${item.slug}`}
+                      to={`/${language}/events/${item.slug}`}
                       className="theatre-card-link"
+                      aria-label={`${t.open}: ${title}`}
                     >
                       <div className="theatre-image-wrap">
                         <img
@@ -106,6 +109,8 @@ function TheatreSection() {
           <button
             className="theatre-nav next"
             onClick={() => scrollSlider("next")}
+            type="button"
+            aria-label={t.next}
           >
             &#10095;
           </button>

@@ -73,7 +73,7 @@ function CinemaSection() {
                 return (
                   <article key={movie.id} className="cinema-card">
                     <Link
-                      to={`/${language}/news/${movie.slug}`}
+                      to={`/${language}/movies/${movie.slug}`}
                       className="cinema-card-link"
                       aria-label={`${t.open}: ${title}`}
                     >

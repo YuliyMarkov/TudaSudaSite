@@ -42,6 +42,30 @@ function formatDateLabel(dateString, language) {
   };
 }
 
+function getUpcomingEventLink(language, event, categoryLabel) {
+  const normalizedCategory = String(categoryLabel || "").trim().toLowerCase();
+
+  const eventCategories = [
+    "концерт",
+    "театр",
+    "выставка",
+    "детям",
+    "шоу",
+    "konsert",
+    "teatr",
+    "ko‘rgazma",
+    "korgazma",
+    "bolalar",
+    "shou",
+  ];
+
+  if (eventCategories.includes(normalizedCategory) && event.slug) {
+    return `/${language}/events/${event.slug}`;
+  }
+
+  return `/${language}/events`;
+}
+
 function UpcomingCalendar() {
   const { language } = useLanguage();
   const activeDateRef = useRef(null);
@@ -168,11 +192,12 @@ function UpcomingCalendar() {
                   const title = getLocalizedValue(event.title, language);
                   const location = getLocalizedValue(event.location, language);
                   const category = getLocalizedValue(event.categoryLabel, language);
+                  const href = getUpcomingEventLink(language, event, category);
 
                   return (
                     <article key={event.id} className="upcoming-event-card">
                       <Link
-                        to={`/${language}/news/${event.slug}`}
+                        to={href}
                         className="upcoming-event-link"
                         aria-label={`${t.open}: ${title}`}
                       >

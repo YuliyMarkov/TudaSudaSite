@@ -27,7 +27,7 @@ function EventPage() {
       ageLimit: "Возраст",
       tickets: "Билеты",
       buyTickets: "Купить билеты",
-      program: "Что будет",
+      program: "Что ждет гостей",
       importantInfo: "Важно знать",
       map: "Локация",
     },

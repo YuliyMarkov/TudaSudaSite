@@ -43,7 +43,7 @@ function RestaurantPage() {
       address: "Адрес",
       workingHours: "Режим работы",
       phone: "Телефон",
-      socials: "Соцсети",
+      contacts: "Контакты",
       prices: "Примеры цен",
       topDishes: "Топ-блюда",
       format: "Для кого",
@@ -55,6 +55,8 @@ function RestaurantPage() {
       map: "Локация на карте",
       instagram: "Instagram",
       telegram: "Telegram",
+      website: "Сайт",
+      phoneContact: "Телефон",
       parking: "Парковка",
       wifi: "Wi-Fi",
       booking: "Бронь",
@@ -74,7 +76,7 @@ function RestaurantPage() {
       address: "Manzil",
       workingHours: "Ish vaqti",
       phone: "Telefon",
-      socials: "Ijtimoiy tarmoqlar",
+      contacts: "Kontaktlar",
       prices: "Narxlar misollari",
       topDishes: "Top taomlar",
       format: "Kimlar uchun",
@@ -86,6 +88,8 @@ function RestaurantPage() {
       map: "Xaritadagi joylashuv",
       instagram: "Instagram",
       telegram: "Telegram",
+      website: "Sayt",
+      phoneContact: "Telefon",
       parking: "Avtoturargoh",
       wifi: "Wi-Fi",
       booking: "Bron",
@@ -291,7 +295,7 @@ function RestaurantPage() {
               </div>
 
               <div className="restaurant-content-card">
-                <h2>{t.socials}</h2>
+                <h2>{t.contacts}</h2>
                 <div className="restaurant-social-links">
                   {restaurant.socials?.instagram && (
                     <a
@@ -312,6 +316,26 @@ function RestaurantPage() {
                       className="restaurant-social-link"
                     >
                       {t.telegram}
+                    </a>
+                  )}
+
+                  {restaurant.phone && (
+                    <a
+                      href={`tel:${restaurant.phone.replace(/\s+/g, "")}`}
+                      className="restaurant-social-link"
+                    >
+                      {t.phoneContact}
+                    </a>
+                  )}
+
+                  {restaurant.socials?.website && (
+                    <a
+                      href={restaurant.socials.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="restaurant-social-link"
+                    >
+                      {t.website}
                     </a>
                   )}
                 </div>

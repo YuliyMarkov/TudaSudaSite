@@ -9,22 +9,17 @@ import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ContactsPage from "./pages/ContactsPage";
 import PrivacyPage from "./pages/PrivacyPage";
-import CategoryPage from "./pages/CategoryPage";
 
 import AllCinemaPage from "./pages/AllCinemaPage";
-import AllConcertsPage from "./pages/AllConcertsPage";
-import AllTheatrePage from "./pages/AllTheatrePage";
-import AllExhibitionsPage from "./pages/AllExhibitionsPage";
-import AllKidsPage from "./pages/AllKidsPage";
 import AllRestaurantsPage from "./pages/AllRestaurantsPage";
 import AllPlacesPage from "./pages/AllPlacesPage";
 import AllStoriesPage from "./pages/AllStoriesPage";
 import StoryPage from "./pages/StoryPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import RestaurantPage from "./pages/RestaurantPage";
+import PlacePage from "./pages/PlacePage";
 import EventPage from "./pages/EventPage";
 import AllEventsPage from "./pages/AllEventsPage";
-
 import MoviePage from "./pages/MoviePage";
 
 function App() {
@@ -51,26 +46,24 @@ function App() {
 
         <Route path="/:lang" element={<HomePage onOpenReel={open} />} />
 
-        <Route path="/:lang/category/:slug" element={<CategoryPage />} />
-
         <Route path="/:lang/cinema" element={<AllCinemaPage />} />
-        <Route path="/:language/restaurants/:slug" element={<RestaurantPage />} />
-        <Route path="/:lang/concerts" element={<AllConcertsPage />} />
-        <Route path="/:lang/theatre" element={<AllTheatrePage />} />
-        <Route path="/:lang/exhibitions" element={<AllExhibitionsPage />} />
-        <Route path="/:lang/kids" element={<AllKidsPage />} />
         <Route path="/:lang/restaurants" element={<AllRestaurantsPage />} />
+        <Route path="/:lang/restaurants/:slug" element={<RestaurantPage />} />
+
         <Route path="/:lang/places" element={<AllPlacesPage />} />
+        <Route path="/:lang/places/:slug" element={<PlacePage />} />
+
         <Route path="/:lang/stories" element={<AllStoriesPage />} />
         <Route path="/:lang/stories/:slug" element={<StoryPage />} />
-
         <Route path="/:lang/movies/:slug" element={<MoviePage />} />
+
+        <Route path="/:lang/events" element={<AllEventsPage />} />
+        <Route path="/:lang/events/:slug" element={<EventPage />} />
 
         <Route path="/:lang/about" element={<AboutPage />} />
         <Route path="/:lang/contacts" element={<ContactsPage />} />
         <Route path="/:lang/privacy" element={<PrivacyPage />} />
-        <Route path="/:lang/events/:slug" element={<EventPage />} />
-        <Route path="/:lang/events" element={<AllEventsPage />} />
+        <Route path="/:lang/places/:slug" element={<PlacePage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

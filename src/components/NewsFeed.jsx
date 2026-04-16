@@ -3,6 +3,20 @@ import { featuredNews } from "../data/homePageData";
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 
+function getNewsLink(language, item) {
+  switch (item.linkType) {
+    case "events":
+      return `/${language}/events/${item.slug}`;
+    case "movies":
+      return `/${language}/movies/${item.slug}`;
+    case "places":
+      return `/${language}/places/${item.slug}`;
+    case "news":
+    default:
+      return `/${language}/news/${item.slug}`;
+  }
+}
+
 function NewsFeed() {
   const { language } = useLanguage();
 
@@ -33,13 +47,11 @@ function NewsFeed() {
           {featuredNews.slice(0, 6).map((item, index) => {
             const title = getLocalizedValue(item.title, language);
             const text = getLocalizedValue(item.text, language);
+            const href = getNewsLink(language, item);
 
             return (
               <article className="news-card" key={index}>
-                <Link
-                  to={`/${language}/news/${item.slug}`}
-                  className="news-card-link"
-                >
+                <Link to={href} className="news-card-link">
                   <img src={item.image} alt={title} />
                   <h3>{title}</h3>
                   <p>{text}</p>

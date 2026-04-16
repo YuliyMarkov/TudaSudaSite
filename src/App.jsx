@@ -63,8 +63,6 @@ function App() {
         <Route path="/:lang/about" element={<AboutPage />} />
         <Route path="/:lang/contacts" element={<ContactsPage />} />
         <Route path="/:lang/privacy" element={<PrivacyPage />} />
-        <Route path="/:lang/places/:slug" element={<PlacePage />} />
-
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
 

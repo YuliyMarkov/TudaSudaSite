@@ -52,7 +52,7 @@ const UI_TEXT = {
     homeLabel: "ТудаСюда — на главную",
     categories: {
       cinema: "Кино",
-      events: "Афиша",
+      afisha: "Афиша",
       concerts: "Концерты",
       theater: "Театр",
       exhibitions: "Выставки",
@@ -76,7 +76,7 @@ const UI_TEXT = {
     homeLabel: "TudaSuda — bosh sahifaga",
     categories: {
       cinema: "Kino",
-      events: "Afisha",
+      afisha: "Afisha",
       concerts: "Konsertlar",
       theater: "Teatr",
       exhibitions: "Ko‘rgazmalar",
@@ -157,7 +157,7 @@ function Header() {
   const categoryItems = useMemo(
     () => [
       { to: `/${language}/cinema`, emoji: "🎬", label: t.categories.cinema },
-      { to: `/${language}/events`, emoji: "🎟️", label: t.categories.events },
+      { to: `/${language}/events`, emoji: "🎟️", label: t.categories.afisha },
       {
         to: `/${language}/events?filter=concert`,
         emoji: "🎤",
@@ -292,11 +292,6 @@ function Header() {
 
   const getSocialIcon = (item) => {
     return isDarkTheme ? item.darkIcon : item.lightIcon;
-  };
-
-  const isCategoryActive = (item) => {
-    const currentPath = `${location.pathname}${location.search}`;
-    return currentPath === item.to;
   };
 
   return (
@@ -482,9 +477,7 @@ function Header() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`category-chip ${
-                  isCategoryActive(item) ? "active" : ""
-                }`}
+                className="category-chip"
                 onClick={closeMenu}
               >
                 <span className="category-chip-emoji" aria-hidden="true">

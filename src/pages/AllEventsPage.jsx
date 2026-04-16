@@ -1,220 +1,254 @@
-import { Link, useParams } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { eventsData } from "../data/eventsData";
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
-import AdBlock from "../components/AdBlock";
 
-function EventPage() {
-  const { slug } = useParams();
+const INITIAL_VISIBLE_COUNT = 12;
+const LOAD_MORE_COUNT = 12;
+const ALLOWED_FILTERS = ["all", "concert", "theatre", "exhibition", "kids"];
+
+function AllEventsPage() {
   const { language } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
 
-  const event = eventsData.find((item) => item.slug === slug);
+  const filterFromUrl = searchParams.get("filter");
+  const activeFilter =
+    filterFromUrl && ALLOWED_FILTERS.includes(filterFromUrl)
+      ? filterFromUrl
+      : "all";
 
   const uiText = {
     ru: {
-      home: "Главная",
-      back: "Афиша",
-      notFoundTitle: "Событие не найдено",
-      notFoundText: "Похоже, такого события пока нет в каталоге.",
-      about: "О событии",
-      gallery: "Фотогалерея",
+      title: "Афиша",
+      subtitle:
+        "Концерты, спектакли, выставки и события для детей в Ташкенте — всё в одном разделе. Выбирайте событие, смотрите детали и переходите к покупке билетов.",
+      filters: {
+        all: "Все события",
+        concert: "Концерты",
+        theatre: "Спектакли",
+        exhibition: "Выставки",
+        kids: "Для детей",
+      },
       date: "Дата",
-      time: "Время",
-      venue: "Площадка",
-      address: "Адрес",
-      duration: "Длительность",
-      ageLimit: "Возраст",
-      tickets: "Билеты",
-      buyTickets: "Купить билеты",
-      program: "Что ждет гостей",
-      importantInfo: "Важно знать",
-      map: "Локация на карте",
+      price: "Билеты",
+      more: "Подробнее",
+      loadMore: "Показать ещё",
+      empty: "Событий по выбранному фильтру пока нет.",
+      home: "Главная",
     },
     uz: {
-      home: "Bosh sahifa",
-      back: "Afisha",
-      notFoundTitle: "Tadbir topilmadi",
-      notFoundText: "Aftidan, bunday tadbir hozircha katalogda yo‘q.",
-      about: "Tadbir haqida",
-      gallery: "Fotogalereya",
+      title: "Afisha",
+      subtitle:
+        "Toshkentdagi konsertlar, spektakllar, ko‘rgazmalar va bolalar uchun tadbirlar — hammasi bitta bo‘limda. Tadbirni tanlang, tafsilotlarni ko‘ring va chipta xaridiga o‘ting.",
+      filters: {
+        all: "Barcha tadbirlar",
+        concert: "Konsertlar",
+        theatre: "Spektakllar",
+        exhibition: "Ko‘rgazmalar",
+        kids: "Bolalar uchun",
+      },
       date: "Sana",
-      time: "Vaqt",
-      venue: "Maydon",
-      address: "Manzil",
-      duration: "Davomiyligi",
-      ageLimit: "Yosh",
-      tickets: "Chiptalar",
-      buyTickets: "Chipta sotib olish",
-      program: "Dastur",
-      importantInfo: "Muhim ma’lumot",
-      map: "Xaritadagi joylashuv",
+      price: "Chiptalar",
+      more: "Batafsil",
+      loadMore: "Yana ko‘rsatish",
+      empty: "Tanlangan filtr bo‘yicha hozircha tadbirlar yo‘q.",
+      home: "Bosh sahifa",
     },
   };
 
   const t = uiText[language] || uiText.ru;
 
-  if (!event) {
-    return (
-      <main className="main">
-        <section className="event-page">
-          <div className="container">
-            <div className="event-not-found">
-              <h1>{t.notFoundTitle}</h1>
-              <p>{t.notFoundText}</p>
-              <Link to={`/${language}/events`} className="back-link">
-                {t.back}
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-    );
-  }
+  const setFilter = (filter) => {
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
 
-  const title = getLocalizedValue(event.title, language);
-  const description = getLocalizedValue(event.description, language);
-  const categoryLabel = getLocalizedValue(event.categoryLabel, language);
-  const venue = getLocalizedValue(event.venue, language);
-  const address = getLocalizedValue(event.address, language);
-  const date = getLocalizedValue(event.date, language);
-  const time = getLocalizedValue(event.time, language);
-  const duration = getLocalizedValue(event.duration, language);
-  const ageLimit = getLocalizedValue(event.ageLimit, language);
-  const ticketPrice = getLocalizedValue(event.ticketPrice, language);
+    if (filter === "all") {
+      setSearchParams({});
+    } else {
+      setSearchParams({ filter });
+    }
+  };
+
+  const filteredEvents = useMemo(() => {
+    if (activeFilter === "all") {
+      return eventsData;
+    }
+
+    if (activeFilter === "kids") {
+      return eventsData.filter((event) => event.isForKids);
+    }
+
+    return eventsData.filter((event) => event.type === activeFilter);
+  }, [activeFilter]);
+
+  const visibleEvents = filteredEvents.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredEvents.length;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + LOAD_MORE_COUNT);
+  };
 
   return (
     <>
-      <Seo title={title} description={description} image={event.cover} />
+      <Seo title={t.title} description={t.subtitle} />
 
       <main className="main">
-        <section className="event-page">
+        <section className="all-events-page">
           <div className="container">
-            <div className="event-breadcrumbs">
+            <div className="all-events-breadcrumbs">
               <Link to={`/${language}`}>{t.home}</Link>
               <span> / </span>
-              <Link to={`/${language}/events`}>{t.back}</Link>
-              <span> / </span>
-              <span>{title}</span>
+              <span>{t.title}</span>
             </div>
 
-            <div className="event-hero">
-              <div className="event-cover-wrap">
-                <img src={event.cover} alt={title} className="event-cover" />
-              </div>
-
-              <div className="event-info">
-                <div className="event-type-chip">{categoryLabel}</div>
-
-                <h1>{title}</h1>
-
-                <p className="event-description">{description}</p>
-
-                <div className="event-meta-grid">
-                  <div className="event-meta-card">
-                    <span className="event-meta-label">{t.date}</span>
-                    <span className="event-meta-value">{date}</span>
-                  </div>
-
-                  <div className="event-meta-card">
-                    <span className="event-meta-label">{t.time}</span>
-                    <span className="event-meta-value">{time}</span>
-                  </div>
-
-                  <div className="event-meta-card">
-                    <span className="event-meta-label">{t.venue}</span>
-                    <span className="event-meta-value">{venue}</span>
-                  </div>
-
-                  <div className="event-meta-card">
-                    <span className="event-meta-label">{t.address}</span>
-                    <span className="event-meta-value">{address}</span>
-                  </div>
-
-                  <div className="event-meta-card">
-                    <span className="event-meta-label">{t.duration}</span>
-                    <span className="event-meta-value">{duration}</span>
-                  </div>
-
-                  <div className="event-meta-card">
-                    <span className="event-meta-label">{t.ageLimit}</span>
-                    <span className="event-meta-value">{ageLimit}</span>
-                  </div>
-                </div>
-
-                <div className="event-ticket-box">
-                  <div className="event-ticket-info">
-                    <span className="event-ticket-label">{t.tickets}</span>
-                    <span className="event-ticket-price">{ticketPrice}</span>
-                  </div>
-
-                  <a
-                    href={event.ticketUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="event-buy-btn"
-                  >
-                    {t.buyTickets}
-                  </a>
-                </div>
-              </div>
+            <div className="all-events-header">
+              <h1>{t.title}</h1>
+              <p>{t.subtitle}</p>
             </div>
 
-            {event.gallery?.length > 0 && (
-              <div className="event-content-card">
-                <h2>{t.gallery}</h2>
-                <div className="event-gallery-grid">
-                  {event.gallery.map((image, index) => (
-                    <div className="event-gallery-item" key={index}>
-                      <img src={image} alt={`${title} ${index + 1}`} />
-                    </div>
-                  ))}
+            <div className="all-events-filters">
+              <button
+                type="button"
+                className={`all-events-filter-btn ${
+                  activeFilter === "all" ? "active" : ""
+                }`}
+                onClick={() => setFilter("all")}
+              >
+                {t.filters.all}
+              </button>
+
+              <button
+                type="button"
+                className={`all-events-filter-btn ${
+                  activeFilter === "concert" ? "active" : ""
+                }`}
+                onClick={() => setFilter("concert")}
+              >
+                {t.filters.concert}
+              </button>
+
+              <button
+                type="button"
+                className={`all-events-filter-btn ${
+                  activeFilter === "theatre" ? "active" : ""
+                }`}
+                onClick={() => setFilter("theatre")}
+              >
+                {t.filters.theatre}
+              </button>
+
+              <button
+                type="button"
+                className={`all-events-filter-btn ${
+                  activeFilter === "exhibition" ? "active" : ""
+                }`}
+                onClick={() => setFilter("exhibition")}
+              >
+                {t.filters.exhibition}
+              </button>
+
+              <button
+                type="button"
+                className={`all-events-filter-btn ${
+                  activeFilter === "kids" ? "active" : ""
+                }`}
+                onClick={() => setFilter("kids")}
+              >
+                {t.filters.kids}
+              </button>
+            </div>
+
+            {visibleEvents.length > 0 ? (
+              <>
+                <div className="all-events-grid">
+                  {visibleEvents.map((event) => {
+                    const title = getLocalizedValue(event.title, language);
+                    const shortDescription = getLocalizedValue(
+                      event.shortDescription,
+                      language
+                    );
+                    const categoryLabel = getLocalizedValue(
+                      event.categoryLabel,
+                      language
+                    );
+                    const date = getLocalizedValue(event.date, language);
+                    const ticketPrice = getLocalizedValue(
+                      event.ticketPrice,
+                      language
+                    );
+
+                    return (
+                      <article className="all-events-card" key={event.slug}>
+                        <Link
+                          to={`/${language}/events/${event.slug}`}
+                          className="all-events-card-link"
+                        >
+                          <div className="all-events-card-image-wrap">
+                            <img
+                              src={event.cover}
+                              alt={title}
+                              className="all-events-card-image"
+                            />
+
+                            <span className="all-events-card-badge">
+                              {categoryLabel}
+                            </span>
+                          </div>
+
+                          <div className="all-events-card-body">
+                            <h2>{title}</h2>
+
+                            <p className="all-events-card-description">
+                              {shortDescription}
+                            </p>
+
+                            <div className="all-events-card-meta">
+                              <div className="all-events-card-meta-row">
+                                <span className="all-events-card-meta-label">
+                                  {t.date}
+                                </span>
+                                <span className="all-events-card-meta-value">
+                                  {date}
+                                </span>
+                              </div>
+
+                              <div className="all-events-card-meta-row">
+                                <span className="all-events-card-meta-label">
+                                  {t.price}
+                                </span>
+                                <span className="all-events-card-meta-value">
+                                  {ticketPrice}
+                                </span>
+                              </div>
+                            </div>
+
+                            <span className="all-events-card-more">
+                              {t.more}
+                            </span>
+                          </div>
+                        </Link>
+                      </article>
+                    );
+                  })}
                 </div>
-              </div>
+
+                {hasMore && (
+                  <div className="more-news-action">
+                    <button
+                      className="more-news-button"
+                      type="button"
+                      onClick={handleLoadMore}
+                    >
+                      {t.loadMore}
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="all-events-empty">{t.empty}</div>
             )}
-
-            <div className="event-sections">
-              <div className="event-content-card">
-                <h2>{t.about}</h2>
-                <p className="event-text">{description}</p>
-              </div>
-
-              {!!event.program?.length && (
-                <div className="event-content-card">
-                  <h2>{t.program}</h2>
-                  <ul className="event-list">
-                    {event.program.map((item, index) => (
-                      <li key={index}>{getLocalizedValue(item, language)}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {!!event.importantInfo?.length && (
-                <div className="event-content-card">
-                  <h2>{t.importantInfo}</h2>
-                  <ul className="event-list">
-                    {event.importantInfo.map((item, index) => (
-                      <li key={index}>{getLocalizedValue(item, language)}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <AdBlock />
-
-              <div className="event-content-card event-map-card">
-                <h2>{t.map}</h2>
-                <div className="event-map-wrap">
-                  <iframe
-                    src={event.mapEmbed}
-                    title={`${title} map`}
-                    loading="lazy"
-                    allowFullScreen
-                  />
-                </div>
-              </div>
-            </div>
           </div>
         </section>
       </main>
@@ -222,4 +256,4 @@ function EventPage() {
   );
 }
 
-export default EventPage;
+export default AllEventsPage;

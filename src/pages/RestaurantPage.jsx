@@ -4,10 +4,7 @@ import { restaurantsData } from "../data/restaurantsData";
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
-
-/*
-  LOCAL STORAGE РЕЙТИНГ
-*/
+import AdBlock from "../components/AdBlock";
 
 function getLocalRestaurantRating(slug) {
   if (!slug) return 0;
@@ -340,6 +337,8 @@ function RestaurantPage() {
                   )}
                 </div>
               </div>
+
+              <AdBlock/>
 
               <div className="restaurant-content-card restaurant-map-card">
                 <h2>{t.map}</h2>

@@ -3,6 +3,7 @@ import { restaurantsData } from "../data/restaurantsData";
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
+import AdBlock from "../components/AdBlock";
 
 function AllRestaurantsPage() {
   const { language } = useLanguage();
@@ -46,6 +47,8 @@ function AllRestaurantsPage() {
               <h1>{t.title}</h1>
               <p>{t.description}</p>
             </div>
+
+            <AdBlock/>
 
             {!restaurantsData.length ? (
               <div className="restaurants-empty-state">

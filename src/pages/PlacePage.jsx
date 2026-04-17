@@ -4,6 +4,7 @@ import { placesData } from "../data/placesData";
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
+import AdBlock from "../components/AdBlock";
 
 function getLocalPlaceRating(slug) {
   if (!slug) return 0;
@@ -310,6 +311,8 @@ function PlacePage() {
                   )}
                 </div>
               </div>
+
+              <AdBlock />
 
               <div className="place-content-card place-map-card">
                 <h2>{t.map}</h2>

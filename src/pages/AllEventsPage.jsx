@@ -4,6 +4,7 @@ import { eventsData } from "../data/eventsData";
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
+import AdBlock from "../components/AdBlock";
 
 const INITIAL_VISIBLE_COUNT = 12;
 const LOAD_MORE_COUNT = 12;
@@ -107,6 +108,8 @@ function AllEventsPage() {
               <h1>{t.title}</h1>
               <p>{t.subtitle}</p>
             </div>
+
+            <AdBlock/>
 
             <div className="all-events-filters">
               <button
@@ -213,6 +216,8 @@ function AllEventsPage() {
                                   {date}
                                 </span>
                               </div>
+
+                              
 
                               <div className="all-events-card-meta-row">
                                 <span className="all-events-card-meta-label">

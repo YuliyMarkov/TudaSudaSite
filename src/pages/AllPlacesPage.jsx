@@ -3,6 +3,7 @@ import { placesData } from "../data/placesData";
 import { useLanguage } from "../context/useLanguage";
 import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
+import AdBlock from "../components/AdBlock";
 
 function AllPlacesPage() {
   const { language } = useLanguage();
@@ -43,6 +44,8 @@ function AllPlacesPage() {
               <h1>{t.title}</h1>
               <p>{t.description}</p>
             </div>
+
+            <AdBlock/>
 
             <div className="all-places-grid">
               {placesData.map((place) => {

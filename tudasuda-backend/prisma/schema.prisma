@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  status      String   @default("draft")
+  type        String
+  isForKids   Boolean  @default(false)
+  coverImage  String?
+  ticketUrl   String?
+  mapEmbed    String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  translations EventTranslation[]
+  sessions     EventSession[]
+}
+
+model EventTranslation {
+  id               Int    @id @default(autoincrement())
+  eventId          Int
+  locale           String
+
+  title            String
+  shortDescription String?
+  description      String?
+  address          String?
+  ticketPrice      String?
+
+  seoTitle         String?
+  seoDescription   String?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, locale])
+}
+
+model EventSession {
+  id        Int      @id @default(autoincrement())
+  eventId   Int
+
+  startAt   DateTime
+  endAt     DateTime?
+
+  price     String?
+  ticketUrl String?
+
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Restaurant {
+  id         Int      @id @default(autoincrement())
+  slug       String   @unique
+  status     String   @default("draft")
+  coverImage String?
+  mapEmbed   String?
+  phone      String?
+
+  instagram  String?
+  telegram   String?
+  website    String?
+
+  parking    Boolean  @default(false)
+  wifi       Boolean  @default(false)
+  booking    Boolean  @default(false)
+  delivery   Boolean  @default(false)
+  smoking    Boolean  @default(false)
+  terrace    Boolean  @default(false)
+  music      Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  translations RestaurantTranslation[]
+  prices       RestaurantPriceItem[]
+  dishes       RestaurantDish[]
+  formats      RestaurantFormatTag[]
+}
+
+model RestaurantTranslation {
+  id               Int    @id @default(autoincrement())
+  restaurantId     Int
+  locale           String
+
+  title            String
+  type             String?
+  cuisine          String?
+  address          String?
+  workingHours     String?
+  averageCheck     String?
+  description      String?
+  atmosphere       String?
+  mustVisit        String?
+
+  seoTitle         String?
+  seoDescription   String?
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, locale])
+}
+
+model RestaurantPriceItem {
+  id           Int    @id @default(autoincrement())
+  restaurantId Int
+  locale       String
+  value        String
+  sortOrder    Int    @default(0)
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model RestaurantDish {
+  id           Int    @id @default(autoincrement())
+  restaurantId Int
+  image        String?
+  locale       String
+  title        String
+  sortOrder    Int    @default(0)
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model RestaurantFormatTag {
+  id           Int    @id @default(autoincrement())
+  restaurantId Int
+  locale       String
+  value        String
+  sortOrder    Int    @default(0)
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}

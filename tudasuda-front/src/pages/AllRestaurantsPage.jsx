@@ -1,12 +1,17 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { restaurantsData } from "../data/restaurantsData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
 import AdBlock from "../components/AdBlock";
 
+const API_BASE_URL = "http://localhost:4000";
+
 function AllRestaurantsPage() {
   const { language } = useLanguage();
+
+  const [restaurants, setRestaurants] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const uiText = {
     ru: {
@@ -18,7 +23,10 @@ function AllRestaurantsPage() {
       format: "Формат",
       openCard: "Открыть место",
       emptyTitle: "Пока заведений нет",
-      emptyText: "Этот раздел скоро будет заполнен подборкой ресторанов и гастрономических мест.",
+      emptyText:
+        "Этот раздел скоро будет заполнен подборкой ресторанов и гастрономических мест.",
+      loading: "Загрузка заведений...",
+      error: "Не удалось загрузить заведения.",
     },
     uz: {
       title: "Restoranlar",
@@ -31,10 +39,62 @@ function AllRestaurantsPage() {
       emptyTitle: "Hozircha joylar yo‘q",
       emptyText:
         "Bu bo‘lim tez orada restoranlar va gastronomik joylar tanlovi bilan to‘ldiriladi.",
+      loading: "Joylar yuklanmoqda...",
+      error: "Joylarni yuklab bo‘lmadi.",
     },
   };
 
   const t = uiText[language] || uiText.ru;
+
+  useEffect(() => {
+    async function loadRestaurants() {
+      try {
+        setIsLoading(true);
+        setLoadError("");
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/restaurants?status=published&lang=${language}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load restaurants");
+        }
+
+        const data = await response.json();
+        setRestaurants(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("LOAD RESTAURANTS ERROR:", error);
+        setLoadError(t.error);
+        setRestaurants([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadRestaurants();
+  }, [language, t.error]);
+
+  const normalizedRestaurants = useMemo(() => {
+    return restaurants.map((restaurant) => {
+      const translation = restaurant.translations?.[0] || null;
+
+      const formatList =
+        restaurant.formats?.map((item) => item.value).filter(Boolean) || [];
+
+      return {
+        id: restaurant.id,
+        slug: restaurant.slug,
+        cover: restaurant.coverImage,
+        title: translation?.title || "",
+        type: translation?.type || "",
+        cuisine: translation?.cuisine || "",
+        averageCheck: translation?.averageCheck || "",
+        description: translation?.description || "",
+        mustVisit: translation?.mustVisit || "",
+        formatList,
+      };
+    });
+  }, [restaurants]);
 
   return (
     <>
@@ -48,41 +108,26 @@ function AllRestaurantsPage() {
               <p>{t.description}</p>
             </div>
 
-            <AdBlock/>
+            <AdBlock />
 
-            {!restaurantsData.length ? (
+            {isLoading ? (
+              <div className="restaurants-empty-state">
+                <h2>{t.loading}</h2>
+              </div>
+            ) : loadError ? (
+              <div className="restaurants-empty-state">
+                <h2>{t.error}</h2>
+              </div>
+            ) : !normalizedRestaurants.length ? (
               <div className="restaurants-empty-state">
                 <h2>{t.emptyTitle}</h2>
                 <p>{t.emptyText}</p>
               </div>
             ) : (
               <div className="restaurants-grid">
-                {restaurantsData.map((restaurant) => {
-                  const title = getLocalizedValue(restaurant.title, language);
-                  const type = getLocalizedValue(restaurant.type, language);
-                  const cuisine = getLocalizedValue(restaurant.cuisine, language);
-                  const averageCheck = getLocalizedValue(
-                    restaurant.averageCheck,
-                    language
-                  );
-                  const description = getLocalizedValue(
-                    restaurant.description,
-                    language
-                  );
-                  const mustVisit = getLocalizedValue(
-                    restaurant.mustVisit,
-                    language
-                  );
-                  const formatList =
-                    restaurant.format?.[language] ||
-                    restaurant.format?.ru ||
-                    [];
-
+                {normalizedRestaurants.map((restaurant) => {
                   return (
-                    <article
-                      className="restaurant-card"
-                      key={restaurant.slug}
-                    >
+                    <article className="restaurant-card" key={restaurant.slug}>
                       <Link
                         to={`/${language}/restaurants/${restaurant.slug}`}
                         className="restaurant-card-link"
@@ -90,22 +135,32 @@ function AllRestaurantsPage() {
                         <div className="restaurant-card-image-wrap">
                           <img
                             src={restaurant.cover}
-                            alt={title}
+                            alt={restaurant.title}
                             className="restaurant-card-image"
                           />
                         </div>
 
                         <div className="restaurant-card-body">
-                          <h2>{title}</h2>
+                          <h2>{restaurant.title}</h2>
 
                           <div className="restaurant-card-meta">
-                            <span className="restaurant-card-chip">{type}</span>
-                            <span className="restaurant-card-chip">
-                              {cuisine}
-                            </span>
-                            <span className="restaurant-card-chip">
-                              {averageCheck}
-                            </span>
+                            {restaurant.type && (
+                              <span className="restaurant-card-chip">
+                                {restaurant.type}
+                              </span>
+                            )}
+
+                            {restaurant.cuisine && (
+                              <span className="restaurant-card-chip">
+                                {restaurant.cuisine}
+                              </span>
+                            )}
+
+                            {restaurant.averageCheck && (
+                              <span className="restaurant-card-chip">
+                                {restaurant.averageCheck}
+                              </span>
+                            )}
                           </div>
 
                           <div className="restaurant-card-info">
@@ -114,7 +169,7 @@ function AllRestaurantsPage() {
                                 {t.cuisine}:
                               </span>
                               <span className="restaurant-card-value">
-                                {cuisine}
+                                {restaurant.cuisine}
                               </span>
                             </div>
 
@@ -123,29 +178,32 @@ function AllRestaurantsPage() {
                                 {t.averageCheck}:
                               </span>
                               <span className="restaurant-card-value">
-                                {averageCheck}
+                                {restaurant.averageCheck}
                               </span>
                             </div>
 
-                            {!!formatList.length && (
+                            {!!restaurant.formatList.length && (
                               <div className="restaurant-card-row">
                                 <span className="restaurant-card-label">
                                   {t.format}:
                                 </span>
                                 <span className="restaurant-card-value">
-                                  {formatList.join(", ")}
+                                  {restaurant.formatList.join(", ")}
                                 </span>
                               </div>
                             )}
                           </div>
 
                           <p className="restaurant-card-description">
-                            {description}
+                            {restaurant.description}
                           </p>
 
-                          <div className="restaurant-card-highlight">
-                            <strong>👉</strong> <span>{mustVisit}</span>
-                          </div>
+                          {!!restaurant.mustVisit && (
+                            <div className="restaurant-card-highlight">
+                              <strong>👉</strong>{" "}
+                              <span>{restaurant.mustVisit}</span>
+                            </div>
+                          )}
 
                           <span className="restaurant-card-button">
                             {t.openCard}

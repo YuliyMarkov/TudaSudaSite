@@ -1,32 +1,37 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useState } from "react";
-import { restaurantsData } from "../data/restaurantsData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
 import AdBlock from "../components/AdBlock";
 
-function getLocalRestaurantRating(slug) {
-  if (!slug) return 0;
+const API_BASE_URL = "http://localhost:4000";
 
-  const saved = localStorage.getItem(`restaurant-rating-${slug}`);
-  return saved ? Number(saved) : 0;
-}
+function getBrowserToken() {
+  const storageKey = "restaurant-browser-token";
+  const existing = localStorage.getItem(storageKey);
 
-function saveLocalRestaurantRating(slug, value) {
-  if (!slug) return;
-  localStorage.setItem(`restaurant-rating-${slug}`, String(value));
+  if (existing) return existing;
+
+  const generated =
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `browser_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+  localStorage.setItem(storageKey, generated);
+  return generated;
 }
 
 function RestaurantPage() {
   const { slug } = useParams();
   const { language } = useLanguage();
 
-  const [userRating, setUserRating] = useState(() =>
-    getLocalRestaurantRating(slug)
-  );
+  const [browserToken, setBrowserToken] = useState("");
+  const [userRating, setUserRating] = useState(0);
 
-  const restaurant = restaurantsData.find((item) => item.slug === slug);
+  const [restaurant, setRestaurant] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [isRatingLoading, setIsRatingLoading] = useState(false);
 
   const uiText = {
     ru: {
@@ -41,7 +46,7 @@ function RestaurantPage() {
       workingHours: "Режим работы",
       phone: "Телефон",
       contacts: "Контакты",
-      prices: "Цен",
+      prices: "Цены",
       topDishes: "Топ-блюда",
       format: "Для кого",
       atmosphere: "Атмосфера",
@@ -61,6 +66,12 @@ function RestaurantPage() {
       smoking: "Курение",
       terrace: "Терраса",
       music: "Музыка",
+      loading: "Загрузка заведения...",
+      error: "Не удалось загрузить заведение.",
+      averageRating: "Средняя оценка",
+      votes: "голосов",
+      ratingError: "Не удалось сохранить оценку.",
+      noData: "Уточняется",
     },
     uz: {
       home: "Bosh sahifa",
@@ -94,17 +105,195 @@ function RestaurantPage() {
       smoking: "Chekish",
       terrace: "Terrasa",
       music: "Musiqa",
+      loading: "Joy yuklanmoqda...",
+      error: "Joyni yuklab bo‘lmadi.",
+      averageRating: "O‘rtacha baho",
+      votes: "ta ovoz",
+      ratingError: "Bahoni saqlab bo‘lmadi.",
+      noData: "Aniqlanmoqda",
     },
   };
 
   const t = uiText[language] || uiText.ru;
 
-  const handleUserRating = (value) => {
-    setUserRating(value);
-    saveLocalRestaurantRating(slug, value);
+  useEffect(() => {
+    const token = getBrowserToken();
+    setBrowserToken(token);
+  }, []);
+
+  useEffect(() => {
+    if (!browserToken) return;
+
+    async function loadRestaurant() {
+      try {
+        setIsLoading(true);
+        setLoadError("");
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/restaurants/${slug}?lang=${language}&browserToken=${encodeURIComponent(browserToken)}`
+        );
+
+        if (response.status === 404) {
+          setRestaurant(null);
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Failed to load restaurant");
+        }
+
+        const data = await response.json();
+        setRestaurant(data);
+        setUserRating(data.userRating || 0);
+      } catch (error) {
+        console.error("LOAD RESTAURANT ERROR:", error);
+        setLoadError(t.error);
+        setRestaurant(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadRestaurant();
+  }, [slug, language, browserToken, t.error]);
+
+  const handleUserRating = async (value) => {
+    if (!restaurant?.id || !browserToken || isRatingLoading) return;
+
+    try {
+      setIsRatingLoading(true);
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/restaurants/${restaurant.id}/rate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            browserToken,
+            value,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to save rating");
+      }
+
+      const data = await response.json();
+
+      setUserRating(data.userRating || value);
+      setRestaurant((prev) =>
+        prev
+          ? {
+              ...prev,
+              ratingAverage:
+                typeof data.ratingAverage === "number"
+                  ? data.ratingAverage
+                  : prev.ratingAverage,
+              ratingCount:
+                typeof data.ratingCount === "number"
+                  ? data.ratingCount
+                  : prev.ratingCount,
+              userRating: data.userRating || value,
+            }
+          : prev
+      );
+    } catch (error) {
+      console.error("RATE RESTAURANT ERROR:", error);
+      alert(t.ratingError);
+    } finally {
+      setIsRatingLoading(false);
+    }
   };
 
-  if (!restaurant) {
+  const normalizedRestaurant = useMemo(() => {
+    if (!restaurant) return null;
+
+    const translation = restaurant.translations?.[0] || null;
+
+    const formatList =
+      restaurant.formats?.map((item) => item.value).filter(Boolean) || [];
+
+    const priceItems =
+      restaurant.prices?.map((item) => item.value).filter(Boolean) || [];
+
+    const topDishes =
+      restaurant.dishes?.map((dish) => ({
+        image: dish.image,
+        title: dish.title,
+      })) || [];
+
+    const amenityItems = [
+      restaurant.parking ? t.parking : null,
+      restaurant.wifi ? t.wifi : null,
+      restaurant.booking ? t.booking : null,
+      restaurant.delivery ? t.delivery : null,
+      restaurant.smoking ? t.smoking : null,
+      restaurant.terrace ? t.terrace : null,
+      restaurant.music ? t.music : null,
+    ].filter(Boolean);
+
+    return {
+      id: restaurant.id,
+      slug: restaurant.slug,
+      cover: restaurant.coverImage,
+      mapEmbed: restaurant.mapEmbed,
+      phone: restaurant.phone,
+      instagram: restaurant.instagram,
+      telegram: restaurant.telegram,
+      website: restaurant.website,
+      ratingAverage: restaurant.ratingAverage || 0,
+      ratingCount: restaurant.ratingCount || 0,
+      title: translation?.title || "",
+      type: translation?.type || "",
+      cuisine: translation?.cuisine || "",
+      address: translation?.address || "",
+      workingHours: translation?.workingHours || "",
+      averageCheck: translation?.averageCheck || "",
+      description: translation?.description || "",
+      atmosphere: translation?.atmosphere || "",
+      mustVisit: translation?.mustVisit || "",
+      formatList,
+      priceItems,
+      topDishes,
+      amenityItems,
+    };
+  }, [restaurant, t]);
+
+  if (isLoading) {
+    return (
+      <main className="main">
+        <section className="restaurant-page">
+          <div className="container">
+            <div className="restaurant-not-found">
+              <p>{t.loading}</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="main">
+        <section className="restaurant-page">
+          <div className="container">
+            <div className="restaurant-not-found">
+              <h1>{t.error}</h1>
+              <Link to={`/${language}/restaurants`} className="back-link">
+                {t.back}
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (!normalizedRestaurant) {
     return (
       <main className="main">
         <section className="restaurant-page">
@@ -122,28 +311,29 @@ function RestaurantPage() {
     );
   }
 
-  const title = getLocalizedValue(restaurant.title, language);
-  const type = getLocalizedValue(restaurant.type, language);
-  const cuisine = getLocalizedValue(restaurant.cuisine, language);
-  const address = getLocalizedValue(restaurant.address, language);
-  const workingHours = getLocalizedValue(restaurant.workingHours, language);
-  const averageCheck = getLocalizedValue(restaurant.averageCheck, language);
-  const description = getLocalizedValue(restaurant.description, language);
-  const atmosphere = getLocalizedValue(restaurant.atmosphere, language);
-  const mustVisit = getLocalizedValue(restaurant.mustVisit, language);
-
-  const formatList =
-    restaurant.format?.[language] || restaurant.format?.ru || [];
-
-  const amenityItems = [
-    restaurant.amenities?.parking ? t.parking : null,
-    restaurant.amenities?.wifi ? t.wifi : null,
-    restaurant.amenities?.booking ? t.booking : null,
-    restaurant.amenities?.delivery ? t.delivery : null,
-    restaurant.amenities?.smoking ? t.smoking : null,
-    restaurant.extras?.terrace ? t.terrace : null,
-    restaurant.extras?.music ? t.music : null,
-  ].filter(Boolean);
+  const {
+    title,
+    type,
+    cuisine,
+    address,
+    workingHours,
+    averageCheck,
+    description,
+    atmosphere,
+    mustVisit,
+    formatList,
+    amenityItems,
+    priceItems,
+    topDishes,
+    cover,
+    phone,
+    instagram,
+    telegram,
+    website,
+    mapEmbed,
+    ratingAverage,
+    ratingCount,
+  } = normalizedRestaurant;
 
   return (
     <>
@@ -162,20 +352,22 @@ function RestaurantPage() {
 
             <div className="restaurant-hero">
               <div className="restaurant-cover-wrap">
-                <img
-                  src={restaurant.cover}
-                  alt={title}
-                  className="restaurant-cover"
-                />
+                <img src={cover} alt={title} className="restaurant-cover" />
               </div>
 
               <div className="restaurant-info">
                 <h1>{title}</h1>
 
                 <div className="restaurant-meta">
-                  <span className="restaurant-meta-chip">{type}</span>
-                  <span className="restaurant-meta-chip">{cuisine}</span>
-                  <span className="restaurant-meta-chip">{averageCheck}</span>
+                  {type && <span className="restaurant-meta-chip">{type}</span>}
+                  {cuisine && (
+                    <span className="restaurant-meta-chip">{cuisine}</span>
+                  )}
+                  {averageCheck && (
+                    <span className="restaurant-meta-chip">
+                      {averageCheck}
+                    </span>
+                  )}
                 </div>
 
                 <div className="restaurant-details">
@@ -183,7 +375,9 @@ function RestaurantPage() {
                     <span className="restaurant-detail-label">
                       {t.address}:
                     </span>
-                    <span className="restaurant-detail-value">{address}</span>
+                    <span className="restaurant-detail-value">
+                      {address || t.noData}
+                    </span>
                   </div>
 
                   <div className="restaurant-detail-row">
@@ -191,7 +385,7 @@ function RestaurantPage() {
                       {t.workingHours}:
                     </span>
                     <span className="restaurant-detail-value">
-                      {workingHours}
+                      {workingHours || t.noData}
                     </span>
                   </div>
 
@@ -200,7 +394,18 @@ function RestaurantPage() {
                       {t.phone}:
                     </span>
                     <span className="restaurant-detail-value">
-                      {restaurant.phone}
+                      {phone || t.noData}
+                    </span>
+                  </div>
+
+                  <div className="restaurant-detail-row">
+                    <span className="restaurant-detail-label">
+                      {t.averageRating}:
+                    </span>
+                    <span className="restaurant-detail-value">
+                      {ratingAverage > 0
+                        ? `${ratingAverage.toFixed(1)} / 5 (${ratingCount} ${t.votes})`
+                        : `0 / 5 (${ratingCount} ${t.votes})`}
                     </span>
                   </div>
                 </div>
@@ -227,6 +432,7 @@ function RestaurantPage() {
                         onClick={() => handleUserRating(value)}
                         aria-label={`${t.starsAria} ${value}`}
                         aria-pressed={userRating === value}
+                        disabled={isRatingLoading}
                       >
                         ★
                       </button>
@@ -240,8 +446,8 @@ function RestaurantPage() {
               <div className="restaurant-content-card">
                 <h2>{t.prices}</h2>
                 <ul className="restaurant-price-list">
-                  {restaurant.prices?.map((item, index) => (
-                    <li key={index}>{getLocalizedValue(item, language)}</li>
+                  {priceItems.map((item, index) => (
+                    <li key={index}>{item}</li>
                   ))}
                 </ul>
               </div>
@@ -249,13 +455,10 @@ function RestaurantPage() {
               <div className="restaurant-content-card">
                 <h2>{t.topDishes}</h2>
                 <div className="restaurant-dishes-grid">
-                  {restaurant.topDishes?.map((dish, index) => (
+                  {topDishes.map((dish, index) => (
                     <div className="restaurant-dish-card" key={index}>
-                      <img
-                        src={dish.image}
-                        alt={getLocalizedValue(dish.title, language)}
-                      />
-                      <span>{getLocalizedValue(dish.title, language)}</span>
+                      <img src={dish.image} alt={dish.title} />
+                      <span>{dish.title}</span>
                     </div>
                   ))}
                 </div>
@@ -272,7 +475,7 @@ function RestaurantPage() {
                 </div>
 
                 <h2 className="restaurant-subtitle">{t.atmosphere}</h2>
-                <p className="restaurant-text">{atmosphere}</p>
+                <p className="restaurant-text">{atmosphere || t.noData}</p>
               </div>
 
               <div className="restaurant-content-card">
@@ -288,15 +491,15 @@ function RestaurantPage() {
 
               <div className="restaurant-highlight-card">
                 <h2>{t.mustVisit}</h2>
-                <p>{mustVisit}</p>
+                <p>{mustVisit || t.noData}</p>
               </div>
 
               <div className="restaurant-content-card">
                 <h2>{t.contacts}</h2>
                 <div className="restaurant-social-links">
-                  {restaurant.socials?.instagram && (
+                  {instagram && (
                     <a
-                      href={restaurant.socials.instagram}
+                      href={instagram}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="restaurant-social-link"
@@ -305,9 +508,9 @@ function RestaurantPage() {
                     </a>
                   )}
 
-                  {restaurant.socials?.telegram && (
+                  {telegram && (
                     <a
-                      href={restaurant.socials.telegram}
+                      href={telegram}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="restaurant-social-link"
@@ -316,18 +519,18 @@ function RestaurantPage() {
                     </a>
                   )}
 
-                  {restaurant.phone && (
+                  {phone && (
                     <a
-                      href={`tel:${restaurant.phone.replace(/\s+/g, "")}`}
+                      href={`tel:${phone.replace(/\s+/g, "")}`}
                       className="restaurant-social-link"
                     >
                       {t.phoneContact}
                     </a>
                   )}
 
-                  {restaurant.socials?.website && (
+                  {website && (
                     <a
-                      href={restaurant.socials.website}
+                      href={website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="restaurant-social-link"
@@ -338,19 +541,21 @@ function RestaurantPage() {
                 </div>
               </div>
 
-              <AdBlock/>
+              <AdBlock />
 
-              <div className="restaurant-content-card restaurant-map-card">
-                <h2>{t.map}</h2>
-                <div className="restaurant-map-wrap">
-                  <iframe
-                    src={restaurant.mapEmbed}
-                    title={`${title} map`}
-                    loading="lazy"
-                    allowFullScreen
-                  />
+              {mapEmbed && (
+                <div className="restaurant-content-card restaurant-map-card">
+                  <h2>{t.map}</h2>
+                  <div className="restaurant-map-wrap">
+                    <iframe
+                      src={mapEmbed}
+                      title={`${title} map`}
+                      loading="lazy"
+                      allowFullScreen
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>

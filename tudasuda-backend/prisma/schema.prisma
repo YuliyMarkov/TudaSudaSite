@@ -17,20 +17,23 @@ model User {
 }
 
 model Event {
-  id          Int      @id @default(autoincrement())
-  slug        String   @unique
-  status      String   @default("draft")
-  type        String
-  isForKids   Boolean  @default(false)
-  coverImage  String?
-  ticketUrl   String?
-  mapEmbed    String?
+  id                 Int      @id @default(autoincrement())
+  slug               String   @unique
+  status             String   @default("draft")
+  type               String
+  isForKids          Boolean  @default(false)
+  coverImage         String?
+  ticketUrl          String?
+  mapEmbed           String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  translations EventTranslation[]
-  sessions     EventSession[]
+  translations       EventTranslation[]
+  sessions           EventSession[]
+  galleryItems       EventGalleryItem[]
+  programItems       EventProgramItem[]
+  importantInfoItems EventImportantInfoItem[]
 }
 
 model EventTranslation {
@@ -43,6 +46,9 @@ model EventTranslation {
   description      String?
   address          String?
   ticketPrice      String?
+  venue            String?
+  duration         String?
+  ageLimit         String?
 
   seoTitle         String?
   seoDescription   String?
@@ -67,52 +73,85 @@ model EventSession {
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
+model EventGalleryItem {
+  id        Int    @id @default(autoincrement())
+  eventId   Int
+  image     String
+  sortOrder Int    @default(0)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model EventProgramItem {
+  id        Int    @id @default(autoincrement())
+  eventId   Int
+  locale    String
+  value     String
+  sortOrder Int    @default(0)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model EventImportantInfoItem {
+  id        Int    @id @default(autoincrement())
+  eventId   Int
+  locale    String
+  value     String
+  sortOrder Int    @default(0)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
 model Restaurant {
-  id         Int      @id @default(autoincrement())
-  slug       String   @unique
-  status     String   @default("draft")
-  coverImage String?
-  mapEmbed   String?
-  phone      String?
+  id            Int      @id @default(autoincrement())
+  slug          String   @unique
+  status        String   @default("draft")
+  coverImage    String?
+  mapEmbed      String?
+  phone         String?
 
-  instagram  String?
-  telegram   String?
-  website    String?
+  instagram     String?
+  telegram      String?
+  website       String?
 
-  parking    Boolean  @default(false)
-  wifi       Boolean  @default(false)
-  booking    Boolean  @default(false)
-  delivery   Boolean  @default(false)
-  smoking    Boolean  @default(false)
-  terrace    Boolean  @default(false)
-  music      Boolean  @default(false)
+  parking       Boolean  @default(false)
+  wifi          Boolean  @default(false)
+  booking       Boolean  @default(false)
+  delivery      Boolean  @default(false)
+  smoking       Boolean  @default(false)
+  terrace       Boolean  @default(false)
+  music         Boolean  @default(false)
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  ratingAverage Float    @default(0)
+  ratingCount   Int      @default(0)
 
-  translations RestaurantTranslation[]
-  prices       RestaurantPriceItem[]
-  dishes       RestaurantDish[]
-  formats      RestaurantFormatTag[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  translations  RestaurantTranslation[]
+  prices        RestaurantPriceItem[]
+  dishes        RestaurantDish[]
+  formats       RestaurantFormatTag[]
+  ratings       RestaurantRating[]
 }
 
 model RestaurantTranslation {
-  id               Int    @id @default(autoincrement())
-  restaurantId     Int
-  locale           String
+  id             Int    @id @default(autoincrement())
+  restaurantId   Int
+  locale         String
 
-  title            String
-  type             String?
-  cuisine          String?
-  address          String?
-  workingHours     String?
-  averageCheck     String?
-  description      String?
-  atmosphere       String?
-  mustVisit        String?
+  title          String
+  type           String?
+  cuisine        String?
+  address        String?
+  workingHours   String?
+  averageCheck   String?
+  description    String?
+  atmosphere     String?
+  mustVisit      String?
 
-  seoTitle         String?
-  seoDescription   String?
+  seoTitle       String?
+  seoDescription String?
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
@@ -150,32 +189,49 @@ model RestaurantFormatTag {
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
 
+model RestaurantRating {
+  id           Int      @id @default(autoincrement())
+  restaurantId Int
+  browserToken String
+  value        Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, browserToken])
+}
+
 model Place {
-  id         Int      @id @default(autoincrement())
-  slug       String   @unique
-  status     String   @default("draft")
-  coverImage String?
-  mapEmbed   String?
-  phone      String?
+  id            Int      @id @default(autoincrement())
+  slug          String   @unique
+  status        String   @default("draft")
+  coverImage    String?
+  mapEmbed      String?
+  phone         String?
 
-  instagram  String?
-  telegram   String?
-  website    String?
+  instagram     String?
+  telegram      String?
+  website       String?
 
-  parking    Boolean  @default(false)
-  wifi       Boolean  @default(false)
-  booking    Boolean  @default(false)
-  family     Boolean  @default(false)
-  terrace    Boolean  @default(false)
-  photoZone  Boolean  @default(false)
+  parking       Boolean  @default(false)
+  wifi          Boolean  @default(false)
+  booking       Boolean  @default(false)
+  family        Boolean  @default(false)
+  terrace       Boolean  @default(false)
+  photoZone     Boolean  @default(false)
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  ratingAverage Float    @default(0)
+  ratingCount   Int      @default(0)
 
-  translations PlaceTranslation[]
-  prices       PlacePriceItem[]
-  highlights   PlaceHighlight[]
-  suitableFor  PlaceSuitableForTag[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  translations  PlaceTranslation[]
+  prices        PlacePriceItem[]
+  highlights    PlaceHighlight[]
+  suitableFor   PlaceSuitableForTag[]
+  ratings       PlaceRating[]
 }
 
 model PlaceTranslation {
@@ -232,6 +288,19 @@ model PlaceSuitableForTag {
   place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
 }
 
+model PlaceRating {
+  id           Int      @id @default(autoincrement())
+  placeId      Int
+  browserToken String
+  value        Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([placeId, browserToken])
+}
+
 model Movie {
   id              Int      @id @default(autoincrement())
   slug            String   @unique
@@ -246,12 +315,19 @@ model Movie {
   durationMinutes Int?
   ageRating       String?
   imdbRating      String?
+  kpRating        String?
+
+  ratingAverage   Float    @default(0)
+  ratingCount     Int      @default(0)
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   translations    MovieTranslation[]
   sessions        MovieSession[]
+  galleryItems    MovieGalleryItem[]
+  castItems       MovieCastItem[]
+  ratings         MovieRating[]
 }
 
 model MovieTranslation {
@@ -264,6 +340,7 @@ model MovieTranslation {
   description    String?
   genre          String?
   country        String?
+  director       String?
 
   seoTitle       String?
   seoDescription String?
@@ -274,30 +351,64 @@ model MovieTranslation {
 }
 
 model MovieSession {
-  id        Int      @id @default(autoincrement())
-  movieId   Int
+  id          Int      @id @default(autoincrement())
+  movieId      Int
 
-  startAt   DateTime
-  endAt     DateTime?
-  hallName  String?
-  price     String?
-  ticketUrl String?
+  sessionDate DateTime
+  sessionTime String
+  cinemaName  String
+  hallName    String?
+  price       String?
+  ticketUrl   String?
 
-  createdAt DateTime @default(now())
+  createdAt   DateTime @default(now())
 
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 }
 
-model Story {
-  id          Int      @id @default(autoincrement())
-  slug        String   @unique
-  status      String   @default("draft")
-  isFeatured  Boolean  @default(false)
-  coverImage  String?
-  publishedAt DateTime?
+model MovieGalleryItem {
+  id        Int    @id @default(autoincrement())
+  movieId   Int
+  image     String
+  sortOrder Int    @default(0)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+}
+
+model MovieCastItem {
+  id        Int    @id @default(autoincrement())
+  movieId   Int
+  locale    String
+  name      String
+  sortOrder Int    @default(0)
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+}
+
+model MovieRating {
+  id           Int      @id @default(autoincrement())
+  movieId      Int
+  browserToken String
+  value        Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([movieId, browserToken])
+}
+
+model Story {
+  id           Int      @id @default(autoincrement())
+  slug         String   @unique
+  status       String   @default("draft")
+  type         String   @default("news")
+  isFeatured   Boolean  @default(false)
+  coverImage   String?
+  publishedAt  DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   translations StoryTranslation[]
 }
@@ -338,12 +449,12 @@ model HeroSlide {
 }
 
 model HeroSlideTranslation {
-  id             Int    @id @default(autoincrement())
-  heroSlideId    Int
-  locale         String
+  id          Int    @id @default(autoincrement())
+  heroSlideId Int
+  locale      String
 
-  title          String
-  subtitle       String?
+  title       String
+  subtitle    String?
 
   heroSlide HeroSlide @relation(fields: [heroSlideId], references: [id], onDelete: Cascade)
 
@@ -351,16 +462,16 @@ model HeroSlideTranslation {
 }
 
 model Reel {
-  id         Int      @id @default(autoincrement())
-  sortOrder  Int      @default(0)
-  isActive   Boolean  @default(true)
+  id           Int      @id @default(autoincrement())
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
 
-  coverImage String
-  videoUrl   String
-  sourceType String   @default("instagram")
+  coverImage   String
+  videoUrl     String
+  sourceType   String   @default("instagram")
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   translations ReelTranslation[]
 }

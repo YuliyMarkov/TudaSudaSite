@@ -5,6 +5,7 @@ import {
   getRestaurantBySlug,
   updateRestaurant,
   deleteRestaurant,
+  rateRestaurant,
 } from "../controllers/restaurants.controller.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 
@@ -15,5 +16,6 @@ router.get("/:slug", getRestaurantBySlug);
 router.post("/", requireAuth, createRestaurant);
 router.put("/:id", requireAuth, updateRestaurant);
 router.delete("/:id", requireAuth, deleteRestaurant);
+router.post("/:id/rate", rateRestaurant);
 
 export default router;

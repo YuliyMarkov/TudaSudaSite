@@ -1,15 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { moreNewsInitial, moreNewsExtra } from "../data/homePageData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
 
-const allStoriesData = [...moreNewsInitial, ...moreNewsExtra];
+const API_BASE_URL = "http://localhost:4000";
 
 function AllStoriesPage() {
   const { language } = useLanguage();
   const [activeFilter, setActiveFilter] = useState("all");
+  const [stories, setStories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const uiText = {
     ru: {
@@ -25,6 +26,9 @@ function AllStoriesPage() {
         news: "Новость",
         articles: "Статья",
       },
+      loading: "Загрузка материалов...",
+      error: "Не удалось загрузить материалы.",
+      empty: "Материалов пока нет.",
     },
     uz: {
       title: "Yangiliklar va maqolalar",
@@ -39,16 +43,62 @@ function AllStoriesPage() {
         news: "Yangilik",
         articles: "Maqola",
       },
+      loading: "Materiallar yuklanmoqda...",
+      error: "Materiallarni yuklab bo‘lmadi.",
+      empty: "Hozircha materiallar yo‘q.",
     },
   };
 
   const t = uiText[language] || uiText.ru;
 
+  useEffect(() => {
+    async function loadStories() {
+      try {
+        setIsLoading(true);
+        setLoadError("");
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/stories?status=published&lang=${language}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load stories");
+        }
+
+        const data = await response.json();
+        setStories(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("LOAD STORIES ERROR:", error);
+        setLoadError(t.error);
+        setStories([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadStories();
+  }, [language, t.error]);
+
+  const normalizedStories = useMemo(() => {
+    return stories.map((item) => {
+      const translation = item.translations?.[0] || null;
+
+      return {
+        id: item.id,
+        slug: item.slug,
+        type: item.type || "news",
+        image: item.coverImage,
+        title: translation?.title || "",
+        text: translation?.excerpt || "",
+      };
+    });
+  }, [stories]);
+
   const filteredStories = useMemo(() => {
     return activeFilter === "all"
-      ? allStoriesData
-      : allStoriesData.filter((item) => item.type === activeFilter);
-  }, [activeFilter]);
+      ? normalizedStories
+      : normalizedStories.filter((item) => item.type === activeFilter);
+  }, [activeFilter, normalizedStories]);
 
   return (
     <>
@@ -87,36 +137,42 @@ function AllStoriesPage() {
             </div>
           </div>
 
-          <div className="all-news-grid">
-            {filteredStories.map((item) => {
-              const title = getLocalizedValue(item.title, language);
-              const text = getLocalizedValue(item.text, language);
-              const typeLabel =
-                item.type && t.typeLabels[item.type]
-                  ? t.typeLabels[item.type]
-                  : "";
+          {isLoading ? (
+            <div className="all-news-empty">{t.loading}</div>
+          ) : loadError ? (
+            <div className="all-news-empty">{loadError}</div>
+          ) : filteredStories.length ? (
+            <div className="all-news-grid">
+              {filteredStories.map((item) => {
+                const typeLabel =
+                  item.type && t.typeLabels[item.type]
+                    ? t.typeLabels[item.type]
+                    : "";
 
-              return (
-                <article key={item.slug} className="all-news-card">
-                  <Link
-                    to={`/${language}/stories/${item.slug}`}
-                    className="all-news-card-link"
-                  >
-                    <img src={item.image} alt={title} />
+                return (
+                  <article key={item.slug} className="all-news-card">
+                    <Link
+                      to={`/${language}/stories/${item.slug}`}
+                      className="all-news-card-link"
+                    >
+                      {item.image ? <img src={item.image} alt={item.title} /> : null}
 
-                    <div className="all-news-card-body">
-                      {typeLabel ? (
-                        <span className="all-news-card-type">{typeLabel}</span>
-                      ) : null}
+                      <div className="all-news-card-body">
+                        {typeLabel ? (
+                          <span className="all-news-card-type">{typeLabel}</span>
+                        ) : null}
 
-                      <h3>{title}</h3>
-                      <p>{text}</p>
-                    </div>
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
+                        <h3>{item.title}</h3>
+                        <p>{item.text}</p>
+                      </div>
+                    </Link>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="all-news-empty">{t.empty}</div>
+          )}
         </div>
       </section>
     </>

@@ -1,32 +1,37 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useState } from "react";
-import { placesData } from "../data/placesData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
 import AdBlock from "../components/AdBlock";
 
-function getLocalPlaceRating(slug) {
-  if (!slug) return 0;
+const API_BASE_URL = "http://localhost:4000";
 
-  const saved = localStorage.getItem(`place-rating-${slug}`);
-  return saved ? Number(saved) : 0;
-}
+function getBrowserToken() {
+  const storageKey = "place-browser-token";
+  const existing = localStorage.getItem(storageKey);
 
-function saveLocalPlaceRating(slug, value) {
-  if (!slug) return;
-  localStorage.setItem(`place-rating-${slug}`, String(value));
+  if (existing) return existing;
+
+  const generated =
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `browser_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+  localStorage.setItem(storageKey, generated);
+  return generated;
 }
 
 function PlacePage() {
   const { slug } = useParams();
   const { language } = useLanguage();
 
-  const [userRating, setUserRating] = useState(() =>
-    getLocalPlaceRating(slug)
-  );
+  const [browserToken, setBrowserToken] = useState("");
+  const [userRating, setUserRating] = useState(0);
 
-  const place = placesData.find((item) => item.slug === slug);
+  const [place, setPlace] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [isRatingLoading, setIsRatingLoading] = useState(false);
 
   const uiText = {
     ru: {
@@ -59,6 +64,12 @@ function PlacePage() {
       family: "С детьми",
       terrace: "Открытая зона",
       photoZone: "Фото-зоны",
+      loading: "Загрузка места...",
+      error: "Не удалось загрузить место.",
+      averageRating: "Средняя оценка",
+      votes: "голосов",
+      ratingError: "Не удалось сохранить оценку.",
+      noData: "Уточняется",
     },
     uz: {
       home: "Bosh sahifa",
@@ -90,17 +101,191 @@ function PlacePage() {
       family: "Bolalar bilan",
       terrace: "Ochiq hudud",
       photoZone: "Fotozonalar",
+      loading: "Joy yuklanmoqda...",
+      error: "Joyni yuklab bo‘lmadi.",
+      averageRating: "O‘rtacha baho",
+      votes: "ta ovoz",
+      ratingError: "Bahoni saqlab bo‘lmadi.",
+      noData: "Aniqlanmoqda",
     },
   };
 
   const t = uiText[language] || uiText.ru;
 
-  const handleUserRating = (value) => {
-    setUserRating(value);
-    saveLocalPlaceRating(slug, value);
+  useEffect(() => {
+    const token = getBrowserToken();
+    setBrowserToken(token);
+  }, []);
+
+  useEffect(() => {
+    if (!browserToken) return;
+
+    async function loadPlace() {
+      try {
+        setIsLoading(true);
+        setLoadError("");
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/places/${slug}?lang=${language}&browserToken=${encodeURIComponent(browserToken)}`
+        );
+
+        if (response.status === 404) {
+          setPlace(null);
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Failed to load place");
+        }
+
+        const data = await response.json();
+        setPlace(data);
+        setUserRating(data.userRating || 0);
+      } catch (error) {
+        console.error("LOAD PLACE ERROR:", error);
+        setLoadError(t.error);
+        setPlace(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadPlace();
+  }, [slug, language, browserToken, t.error]);
+
+  const handleUserRating = async (value) => {
+    if (!place?.id || !browserToken || isRatingLoading) return;
+
+    try {
+      setIsRatingLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/api/places/${place.id}/rate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          browserToken,
+          value,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save rating");
+      }
+
+      const data = await response.json();
+
+      setUserRating(data.userRating || value);
+      setPlace((prev) =>
+        prev
+          ? {
+              ...prev,
+              ratingAverage:
+                typeof data.ratingAverage === "number"
+                  ? data.ratingAverage
+                  : prev.ratingAverage,
+              ratingCount:
+                typeof data.ratingCount === "number"
+                  ? data.ratingCount
+                  : prev.ratingCount,
+              userRating: data.userRating || value,
+            }
+          : prev
+      );
+    } catch (error) {
+      console.error("RATE PLACE ERROR:", error);
+      alert(t.ratingError);
+    } finally {
+      setIsRatingLoading(false);
+    }
   };
 
-  if (!place) {
+  const normalizedPlace = useMemo(() => {
+    if (!place) return null;
+
+    const translation = place.translations?.[0] || null;
+
+    const suitableForList =
+      place.suitableFor?.map((item) => item.value).filter(Boolean) || [];
+
+    const priceItems =
+      place.prices?.map((item) => item.value).filter(Boolean) || [];
+
+    const highlights =
+      place.highlights?.map((item) => ({
+        image: item.image,
+        title: item.title,
+      })) || [];
+
+    const amenityItems = [
+      place.parking ? t.parking : null,
+      place.wifi ? t.wifi : null,
+      place.booking ? t.booking : null,
+      place.family ? t.family : null,
+      place.terrace ? t.terrace : null,
+      place.photoZone ? t.photoZone : null,
+    ].filter(Boolean);
+
+    return {
+      id: place.id,
+      slug: place.slug,
+      cover: place.coverImage,
+      mapEmbed: place.mapEmbed,
+      phone: place.phone,
+      instagram: place.instagram,
+      telegram: place.telegram,
+      website: place.website,
+      ratingAverage: place.ratingAverage || 0,
+      ratingCount: place.ratingCount || 0,
+      title: translation?.title || "",
+      type: translation?.type || "",
+      category: translation?.category || "",
+      address: translation?.address || "",
+      workingHours: translation?.workingHours || "",
+      priceLabel: translation?.priceLabel || "",
+      description: translation?.description || "",
+      features: translation?.features || "",
+      mustVisit: translation?.mustVisit || "",
+      suitableForList,
+      priceItems,
+      highlights,
+      amenityItems,
+    };
+  }, [place, t]);
+
+  if (isLoading) {
+    return (
+      <main className="main">
+        <section className="place-page">
+          <div className="container">
+            <div className="place-not-found">
+              <p>{t.loading}</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="main">
+        <section className="place-page">
+          <div className="container">
+            <div className="place-not-found">
+              <h1>{t.error}</h1>
+              <Link to={`/${language}/places`} className="back-link">
+                {t.back}
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (!normalizedPlace) {
     return (
       <main className="main">
         <section className="place-page">
@@ -118,27 +303,29 @@ function PlacePage() {
     );
   }
 
-  const title = getLocalizedValue(place.title, language);
-  const type = getLocalizedValue(place.type, language);
-  const category = getLocalizedValue(place.category, language);
-  const address = getLocalizedValue(place.address, language);
-  const workingHours = getLocalizedValue(place.workingHours, language);
-  const priceLabel = getLocalizedValue(place.priceLabel, language);
-  const description = getLocalizedValue(place.description, language);
-  const features = getLocalizedValue(place.features, language);
-  const mustVisit = getLocalizedValue(place.mustVisit, language);
-
-  const suitableForList =
-    place.suitableFor?.[language] || place.suitableFor?.ru || [];
-
-  const amenityItems = [
-    place.amenities?.parking ? t.parking : null,
-    place.amenities?.wifi ? t.wifi : null,
-    place.amenities?.booking ? t.booking : null,
-    place.amenities?.family ? t.family : null,
-    place.extras?.terrace ? t.terrace : null,
-    place.extras?.photoZone ? t.photoZone : null,
-  ].filter(Boolean);
+  const {
+    title,
+    type,
+    category,
+    address,
+    workingHours,
+    priceLabel,
+    description,
+    features,
+    mustVisit,
+    suitableForList,
+    amenityItems,
+    priceItems,
+    highlights,
+    cover,
+    phone,
+    instagram,
+    telegram,
+    website,
+    mapEmbed,
+    ratingAverage,
+    ratingCount,
+  } = normalizedPlace;
 
   return (
     <>
@@ -157,37 +344,54 @@ function PlacePage() {
 
             <div className="place-hero">
               <div className="place-cover-wrap">
-                <img src={place.cover} alt={title} className="place-cover" />
+                <img src={cover} alt={title} className="place-cover" />
               </div>
 
               <div className="place-info">
                 <h1>{title}</h1>
 
                 <div className="place-meta">
-                  <span className="place-meta-chip">{type}</span>
-                  <span className="place-meta-chip">{category}</span>
-                  <span className="place-meta-chip">{priceLabel}</span>
+                  {type && <span className="place-meta-chip">{type}</span>}
+                  {category && <span className="place-meta-chip">{category}</span>}
+                  {priceLabel && (
+                    <span className="place-meta-chip">{priceLabel}</span>
+                  )}
                 </div>
 
                 <div className="place-details">
                   <div className="place-detail-row">
                     <span className="place-detail-label">{t.address}:</span>
-                    <span className="place-detail-value">{address}</span>
+                    <span className="place-detail-value">
+                      {address || t.noData}
+                    </span>
                   </div>
 
                   <div className="place-detail-row">
                     <span className="place-detail-label">
                       {t.workingHours}:
                     </span>
-                    <span className="place-detail-value">{workingHours}</span>
+                    <span className="place-detail-value">
+                      {workingHours || t.noData}
+                    </span>
                   </div>
 
-                  {place.phone && (
+                  {phone && (
                     <div className="place-detail-row">
                       <span className="place-detail-label">{t.phone}:</span>
-                      <span className="place-detail-value">{place.phone}</span>
+                      <span className="place-detail-value">{phone}</span>
                     </div>
                   )}
+
+                  <div className="place-detail-row">
+                    <span className="place-detail-label">
+                      {t.averageRating}:
+                    </span>
+                    <span className="place-detail-value">
+                      {ratingAverage > 0
+                        ? `${ratingAverage.toFixed(1)} / 5 (${ratingCount} ${t.votes})`
+                        : `0 / 5 (${ratingCount} ${t.votes})`}
+                    </span>
+                  </div>
                 </div>
 
                 <p className="place-description">{description}</p>
@@ -210,6 +414,7 @@ function PlacePage() {
                         onClick={() => handleUserRating(value)}
                         aria-label={`${t.starsAria} ${value}`}
                         aria-pressed={userRating === value}
+                        disabled={isRatingLoading}
                       >
                         ★
                       </button>
@@ -223,8 +428,8 @@ function PlacePage() {
               <div className="place-content-card">
                 <h2>{t.prices}</h2>
                 <ul className="place-price-list">
-                  {place.prices?.map((item, index) => (
-                    <li key={index}>{getLocalizedValue(item, language)}</li>
+                  {priceItems.map((item, index) => (
+                    <li key={index}>{item}</li>
                   ))}
                 </ul>
               </div>
@@ -232,13 +437,10 @@ function PlacePage() {
               <div className="place-content-card">
                 <h2>{t.highlights}</h2>
                 <div className="place-highlights-grid">
-                  {place.highlights?.map((item, index) => (
+                  {highlights.map((item, index) => (
                     <div className="place-highlight-item" key={index}>
-                      <img
-                        src={item.image}
-                        alt={getLocalizedValue(item.title, language)}
-                      />
-                      <span>{getLocalizedValue(item.title, language)}</span>
+                      <img src={item.image} alt={item.title} />
+                      <span>{item.title}</span>
                     </div>
                   ))}
                 </div>
@@ -255,7 +457,7 @@ function PlacePage() {
                 </div>
 
                 <h2 className="place-subtitle">{t.features}</h2>
-                <p className="place-text">{features}</p>
+                <p className="place-text">{features || t.noData}</p>
               </div>
 
               <div className="place-content-card">
@@ -271,15 +473,15 @@ function PlacePage() {
 
               <div className="place-highlight-card">
                 <h2>{t.mustVisit}</h2>
-                <p>{mustVisit}</p>
+                <p>{mustVisit || t.noData}</p>
               </div>
 
               <div className="place-content-card">
                 <h2>{t.contacts}</h2>
                 <div className="place-social-links">
-                  {place.contacts?.instagram && (
+                  {instagram && (
                     <a
-                      href={place.contacts.instagram}
+                      href={instagram}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="place-social-link"
@@ -288,9 +490,9 @@ function PlacePage() {
                     </a>
                   )}
 
-                  {place.contacts?.telegram && (
+                  {telegram && (
                     <a
-                      href={place.contacts.telegram}
+                      href={telegram}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="place-social-link"
@@ -299,9 +501,9 @@ function PlacePage() {
                     </a>
                   )}
 
-                  {place.contacts?.website && (
+                  {website && (
                     <a
-                      href={place.contacts.website}
+                      href={website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="place-social-link"
@@ -314,17 +516,19 @@ function PlacePage() {
 
               <AdBlock />
 
-              <div className="place-content-card place-map-card">
-                <h2>{t.map}</h2>
-                <div className="place-map-wrap">
-                  <iframe
-                    src={place.mapEmbed}
-                    title={`${title} map`}
-                    loading="lazy"
-                    allowFullScreen
-                  />
+              {mapEmbed && (
+                <div className="place-content-card place-map-card">
+                  <h2>{t.map}</h2>
+                  <div className="place-map-wrap">
+                    <iframe
+                      src={mapEmbed}
+                      title={`${title} map`}
+                      loading="lazy"
+                      allowFullScreen
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>

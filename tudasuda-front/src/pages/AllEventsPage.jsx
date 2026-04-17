@@ -1,19 +1,36 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { eventsData } from "../data/eventsData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
-import AdBlock from "../components/AdBlock";
 
 const INITIAL_VISIBLE_COUNT = 12;
 const LOAD_MORE_COUNT = 12;
 const ALLOWED_FILTERS = ["all", "concert", "theatre", "exhibition", "kids"];
+const API_BASE_URL = "http://localhost:4000";
+
+function formatEventDate(dateString, language) {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
 
 function AllEventsPage() {
   const { language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
+
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const filterFromUrl = searchParams.get("filter");
   const activeFilter =
@@ -39,6 +56,8 @@ function AllEventsPage() {
       loadMore: "Показать ещё",
       empty: "Событий по выбранному фильтру пока нет.",
       home: "Главная",
+      loading: "Загрузка событий...",
+      error: "Не удалось загрузить события.",
     },
     uz: {
       title: "Afisha",
@@ -57,10 +76,44 @@ function AllEventsPage() {
       loadMore: "Yana ko‘rsatish",
       empty: "Tanlangan filtr bo‘yicha hozircha tadbirlar yo‘q.",
       home: "Bosh sahifa",
+      loading: "Tadbirlar yuklanmoqda...",
+      error: "Tadbirlarni yuklab bo‘lmadi.",
     },
   };
 
   const t = uiText[language] || uiText.ru;
+
+  useEffect(() => {
+    async function loadEvents() {
+      try {
+        setIsLoading(true);
+        setLoadError("");
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/events?status=published&lang=${language}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load events");
+        }
+
+        const data = await response.json();
+        setEvents(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("LOAD EVENTS ERROR:", error);
+        setLoadError(t.error);
+        setEvents([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadEvents();
+  }, [language, t.error]);
+
+  useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
+  }, [activeFilter, language]);
 
   const setFilter = (filter) => {
     setVisibleCount(INITIAL_VISIBLE_COUNT);
@@ -72,17 +125,39 @@ function AllEventsPage() {
     }
   };
 
+  const normalizedEvents = useMemo(() => {
+    return events.map((event) => {
+      const translation = event.translations?.[0] || null;
+      const firstSession = event.sessions?.[0] || null;
+
+      return {
+        id: event.id,
+        slug: event.slug,
+        type: event.type,
+        isForKids: event.isForKids,
+        coverImage: event.coverImage,
+        title: translation?.title || "",
+        shortDescription: translation?.shortDescription || "",
+        description: translation?.description || "",
+        address: translation?.address || "",
+        ticketPrice:
+          translation?.ticketPrice || firstSession?.price || "",
+        date: firstSession?.startAt || null,
+      };
+    });
+  }, [events]);
+
   const filteredEvents = useMemo(() => {
     if (activeFilter === "all") {
-      return eventsData;
+      return normalizedEvents;
     }
 
     if (activeFilter === "kids") {
-      return eventsData.filter((event) => event.isForKids);
+      return normalizedEvents.filter((event) => event.isForKids);
     }
 
-    return eventsData.filter((event) => event.type === activeFilter);
-  }, [activeFilter]);
+    return normalizedEvents.filter((event) => event.type === activeFilter);
+  }, [normalizedEvents, activeFilter]);
 
   const visibleEvents = filteredEvents.slice(0, visibleCount);
   const hasMore = visibleCount < filteredEvents.length;
@@ -108,8 +183,6 @@ function AllEventsPage() {
               <h1>{t.title}</h1>
               <p>{t.subtitle}</p>
             </div>
-
-            <AdBlock/>
 
             <div className="all-events-filters">
               <button
@@ -163,25 +236,14 @@ function AllEventsPage() {
               </button>
             </div>
 
-            {visibleEvents.length > 0 ? (
+            {isLoading ? (
+              <div className="all-events-empty">{t.loading}</div>
+            ) : loadError ? (
+              <div className="all-events-empty">{loadError}</div>
+            ) : visibleEvents.length > 0 ? (
               <>
                 <div className="all-events-grid">
                   {visibleEvents.map((event) => {
-                    const title = getLocalizedValue(event.title, language);
-                    const shortDescription = getLocalizedValue(
-                      event.shortDescription,
-                      language
-                    );
-                    const categoryLabel = getLocalizedValue(
-                      event.categoryLabel,
-                      language
-                    );
-                    const date = getLocalizedValue(event.date, language);
-                    const ticketPrice = getLocalizedValue(
-                      event.ticketPrice,
-                      language
-                    );
-
                     return (
                       <article className="all-events-card" key={event.slug}>
                         <Link
@@ -190,21 +252,29 @@ function AllEventsPage() {
                         >
                           <div className="all-events-card-image-wrap">
                             <img
-                              src={event.cover}
-                              alt={title}
+                              src={event.coverImage}
+                              alt={event.title}
                               className="all-events-card-image"
                             />
 
                             <span className="all-events-card-badge">
-                              {categoryLabel}
+                              {activeFilter === "kids"
+                                ? t.filters.kids
+                                : event.type === "concert"
+                                ? t.filters.concert
+                                : event.type === "theatre"
+                                ? t.filters.theatre
+                                : event.type === "exhibition"
+                                ? t.filters.exhibition
+                                : t.filters.all}
                             </span>
                           </div>
 
                           <div className="all-events-card-body">
-                            <h2>{title}</h2>
+                            <h2>{event.title}</h2>
 
                             <p className="all-events-card-description">
-                              {shortDescription}
+                              {event.shortDescription}
                             </p>
 
                             <div className="all-events-card-meta">
@@ -213,18 +283,16 @@ function AllEventsPage() {
                                   {t.date}
                                 </span>
                                 <span className="all-events-card-meta-value">
-                                  {date}
+                                  {formatEventDate(event.date, language)}
                                 </span>
                               </div>
-
-                              
 
                               <div className="all-events-card-meta-row">
                                 <span className="all-events-card-meta-label">
                                   {t.price}
                                 </span>
                                 <span className="all-events-card-meta-value">
-                                  {ticketPrice}
+                                  {event.ticketPrice}
                                 </span>
                               </div>
                             </div>

@@ -55,6 +55,31 @@ const placeInclude = {
   },
 };
 
+async function refreshPlaceRatingStats(placeId) {
+  const ratings = await prisma.placeRating.findMany({
+    where: { placeId },
+    select: { value: true },
+  });
+
+  const ratingCount = ratings.length;
+  const ratingAverage = ratingCount
+    ? ratings.reduce((sum, item) => sum + item.value, 0) / ratingCount
+    : 0;
+
+  await prisma.place.update({
+    where: { id: placeId },
+    data: {
+      ratingCount,
+      ratingAverage,
+    },
+  });
+
+  return {
+    ratingCount,
+    ratingAverage,
+  };
+}
+
 export async function createPlace(req, res) {
   try {
     const {
@@ -210,7 +235,7 @@ export async function getPlaces(req, res) {
 export async function getPlaceBySlug(req, res) {
   try {
     const { slug } = req.params;
-    const { lang } = req.query;
+    const { lang, browserToken } = req.query;
 
     const place = await prisma.place.findUnique({
       where: { slug },
@@ -253,7 +278,25 @@ export async function getPlaceBySlug(req, res) {
       });
     }
 
-    return res.json(place);
+    let userRating = 0;
+
+    if (browserToken && typeof browserToken === "string") {
+      const existingRating = await prisma.placeRating.findUnique({
+        where: {
+          placeId_browserToken: {
+            placeId: place.id,
+            browserToken,
+          },
+        },
+      });
+
+      userRating = existingRating?.value || 0;
+    }
+
+    return res.json({
+      ...place,
+      userRating,
+    });
   } catch (error) {
     console.error("GET PLACE BY SLUG ERROR:", error);
     return res.status(500).json({
@@ -419,6 +462,74 @@ export async function deletePlace(req, res) {
     console.error("DELETE PLACE ERROR:", error);
     return res.status(500).json({
       message: "Ошибка сервера при удалении места",
+    });
+  }
+}
+
+export async function ratePlace(req, res) {
+  try {
+    const placeId = Number(req.params.id);
+    const { browserToken, value } = req.body;
+
+    if (!placeId) {
+      return res.status(400).json({
+        message: "Некорректный id места",
+      });
+    }
+
+    if (!browserToken || typeof browserToken !== "string") {
+      return res.status(400).json({
+        message: "browserToken обязателен",
+      });
+    }
+
+    const numericValue = Number(value);
+
+    if (!Number.isInteger(numericValue) || numericValue < 1 || numericValue > 5) {
+      return res.status(400).json({
+        message: "Оценка должна быть целым числом от 1 до 5",
+      });
+    }
+
+    const place = await prisma.place.findUnique({
+      where: { id: placeId },
+    });
+
+    if (!place) {
+      return res.status(404).json({
+        message: "Место не найдено",
+      });
+    }
+
+    await prisma.placeRating.upsert({
+      where: {
+        placeId_browserToken: {
+          placeId,
+          browserToken,
+        },
+      },
+      update: {
+        value: numericValue,
+      },
+      create: {
+        placeId,
+        browserToken,
+        value: numericValue,
+      },
+    });
+
+    const stats = await refreshPlaceRatingStats(placeId);
+
+    return res.json({
+      message: "Оценка сохранена",
+      ratingAverage: stats.ratingAverage,
+      ratingCount: stats.ratingCount,
+      userRating: numericValue,
+    });
+  } catch (error) {
+    console.error("RATE PLACE ERROR:", error);
+    return res.status(500).json({
+      message: "Ошибка сервера при сохранении оценки",
     });
   }
 }

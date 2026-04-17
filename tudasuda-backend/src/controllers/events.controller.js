@@ -1,5 +1,69 @@
 import prisma from "../lib/prisma.js";
 
+function mapTranslationCreate(item) {
+  return {
+    locale: item.locale,
+    title: item.title,
+    shortDescription: item.shortDescription || null,
+    description: item.description || null,
+    address: item.address || null,
+    ticketPrice: item.ticketPrice || null,
+    venue: item.venue || null,
+    duration: item.duration || null,
+    ageLimit: item.ageLimit || null,
+    seoTitle: item.seoTitle || null,
+    seoDescription: item.seoDescription || null,
+  };
+}
+
+function mapSessionCreate(item) {
+  return {
+    startAt: new Date(item.startAt),
+    endAt: item.endAt ? new Date(item.endAt) : null,
+    price: item.price || null,
+    ticketUrl: item.ticketUrl || null,
+  };
+}
+
+function mapGalleryItemCreate(item) {
+  return {
+    image: item.image,
+    sortOrder: Number(item.sortOrder ?? 0),
+  };
+}
+
+function mapProgramItemCreate(item) {
+  return {
+    locale: item.locale,
+    value: item.value,
+    sortOrder: Number(item.sortOrder ?? 0),
+  };
+}
+
+function mapImportantInfoItemCreate(item) {
+  return {
+    locale: item.locale,
+    value: item.value,
+    sortOrder: Number(item.sortOrder ?? 0),
+  };
+}
+
+const eventInclude = {
+  translations: true,
+  sessions: {
+    orderBy: [{ startAt: "asc" }, { id: "asc" }],
+  },
+  galleryItems: {
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+  },
+  programItems: {
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+  },
+  importantInfoItems: {
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+  },
+};
+
 export async function createEvent(req, res) {
   try {
     const {
@@ -12,11 +76,20 @@ export async function createEvent(req, res) {
       mapEmbed,
       translations,
       sessions,
+      galleryItems,
+      programItems,
+      importantInfoItems,
     } = req.body;
 
     if (!slug || !type) {
       return res.status(400).json({
         message: "slug и type обязательны",
+      });
+    }
+
+    if (!Array.isArray(translations) || !translations.length) {
+      return res.status(400).json({
+        message: "Нужен хотя бы один перевод",
       });
     }
 
@@ -39,35 +112,35 @@ export async function createEvent(req, res) {
         coverImage: coverImage || null,
         ticketUrl: ticketUrl || null,
         mapEmbed: mapEmbed || null,
-        translations: translations?.length
-          ? {
-              create: translations.map((item) => ({
-                locale: item.locale,
-                title: item.title,
-                shortDescription: item.shortDescription || null,
-                description: item.description || null,
-                address: item.address || null,
-                ticketPrice: item.ticketPrice || null,
-                seoTitle: item.seoTitle || null,
-                seoDescription: item.seoDescription || null,
-              })),
-            }
-          : undefined,
-        sessions: sessions?.length
-          ? {
-              create: sessions.map((item) => ({
-                startAt: new Date(item.startAt),
-                endAt: item.endAt ? new Date(item.endAt) : null,
-                price: item.price || null,
-                ticketUrl: item.ticketUrl || null,
-              })),
-            }
-          : undefined,
+        translations: {
+          create: translations.map(mapTranslationCreate),
+        },
+        sessions:
+          Array.isArray(sessions) && sessions.length
+            ? {
+                create: sessions.map(mapSessionCreate),
+              }
+            : undefined,
+        galleryItems:
+          Array.isArray(galleryItems) && galleryItems.length
+            ? {
+                create: galleryItems.map(mapGalleryItemCreate),
+              }
+            : undefined,
+        programItems:
+          Array.isArray(programItems) && programItems.length
+            ? {
+                create: programItems.map(mapProgramItemCreate),
+              }
+            : undefined,
+        importantInfoItems:
+          Array.isArray(importantInfoItems) && importantInfoItems.length
+            ? {
+                create: importantInfoItems.map(mapImportantInfoItemCreate),
+              }
+            : undefined,
       },
-      include: {
-        translations: true,
-        sessions: true,
-      },
+      include: eventInclude,
     });
 
     return res.status(201).json(event);
@@ -105,10 +178,27 @@ export async function getEvents(req, res) {
             }
           : true,
         sessions: {
-          orderBy: {
-            startAt: "asc",
-          },
+          orderBy: [{ startAt: "asc" }, { id: "asc" }],
         },
+        galleryItems: {
+          orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+        },
+        programItems: lang
+          ? {
+              where: { locale: lang },
+              orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+            }
+          : {
+              orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+            },
+        importantInfoItems: lang
+          ? {
+              where: { locale: lang },
+              orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+            }
+          : {
+              orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+            },
       },
     });
 
@@ -135,10 +225,27 @@ export async function getEventBySlug(req, res) {
             }
           : true,
         sessions: {
-          orderBy: {
-            startAt: "asc",
-          },
+          orderBy: [{ startAt: "asc" }, { id: "asc" }],
         },
+        galleryItems: {
+          orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+        },
+        programItems: lang
+          ? {
+              where: { locale: lang },
+              orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+            }
+          : {
+              orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+            },
+        importantInfoItems: lang
+          ? {
+              where: { locale: lang },
+              orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+            }
+          : {
+              orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+            },
       },
     });
 
@@ -177,6 +284,9 @@ export async function updateEvent(req, res) {
       mapEmbed,
       translations,
       sessions,
+      galleryItems,
+      programItems,
+      importantInfoItems,
     } = req.body;
 
     const existingEvent = await prisma.event.findUnique({
@@ -209,6 +319,18 @@ export async function updateEvent(req, res) {
       where: { eventId },
     });
 
+    await prisma.eventGalleryItem.deleteMany({
+      where: { eventId },
+    });
+
+    await prisma.eventProgramItem.deleteMany({
+      where: { eventId },
+    });
+
+    await prisma.eventImportantInfoItem.deleteMany({
+      where: { eventId },
+    });
+
     const updatedEvent = await prisma.event.update({
       where: { id: eventId },
       data: {
@@ -222,39 +344,38 @@ export async function updateEvent(req, res) {
         coverImage: coverImage ?? existingEvent.coverImage,
         ticketUrl: ticketUrl ?? existingEvent.ticketUrl,
         mapEmbed: mapEmbed ?? existingEvent.mapEmbed,
-        translations: translations?.length
-          ? {
-              create: translations.map((item) => ({
-                locale: item.locale,
-                title: item.title,
-                shortDescription: item.shortDescription || null,
-                description: item.description || null,
-                address: item.address || null,
-                ticketPrice: item.ticketPrice || null,
-                seoTitle: item.seoTitle || null,
-                seoDescription: item.seoDescription || null,
-              })),
-            }
-          : undefined,
-        sessions: sessions?.length
-          ? {
-              create: sessions.map((item) => ({
-                startAt: new Date(item.startAt),
-                endAt: item.endAt ? new Date(item.endAt) : null,
-                price: item.price || null,
-                ticketUrl: item.ticketUrl || null,
-              })),
-            }
-          : undefined,
+        translations:
+          Array.isArray(translations) && translations.length
+            ? {
+                create: translations.map(mapTranslationCreate),
+              }
+            : undefined,
+        sessions:
+          Array.isArray(sessions) && sessions.length
+            ? {
+                create: sessions.map(mapSessionCreate),
+              }
+            : undefined,
+        galleryItems:
+          Array.isArray(galleryItems) && galleryItems.length
+            ? {
+                create: galleryItems.map(mapGalleryItemCreate),
+              }
+            : undefined,
+        programItems:
+          Array.isArray(programItems) && programItems.length
+            ? {
+                create: programItems.map(mapProgramItemCreate),
+              }
+            : undefined,
+        importantInfoItems:
+          Array.isArray(importantInfoItems) && importantInfoItems.length
+            ? {
+                create: importantInfoItems.map(mapImportantInfoItemCreate),
+              }
+            : undefined,
       },
-      include: {
-        translations: true,
-        sessions: {
-          orderBy: {
-            startAt: "asc",
-          },
-        },
-      },
+      include: eventInclude,
     });
 
     return res.json(updatedEvent);

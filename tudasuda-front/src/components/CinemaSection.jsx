@@ -1,12 +1,15 @@
-import { useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { cinemaEvents } from "../data/homePageData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
+
+const API_BASE_URL = "http://localhost:4000";
 
 function CinemaSection() {
   const { language } = useLanguage();
   const sliderRef = useRef(null);
+
+  const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const uiText = {
     ru: {
@@ -27,6 +30,47 @@ function CinemaSection() {
 
   const t = uiText[language] || uiText.ru;
 
+  useEffect(() => {
+    async function loadMovies() {
+      try {
+        setIsLoading(true);
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/movies?status=published&featured=true&lang=${language}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load featured movies");
+        }
+
+        const data = await response.json();
+        setMovies(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("LOAD FEATURED MOVIES ERROR:", error);
+        setMovies([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadMovies();
+  }, [language]);
+
+  const normalizedMovies = useMemo(() => {
+    return movies.map((movie) => {
+      const translation = movie.translations?.[0] || null;
+
+      return {
+        id: movie.id,
+        slug: movie.slug,
+        image: movie.posterImage || movie.coverImage,
+        title: translation?.title || "",
+        subtitle: translation?.genre || "",
+        location: translation?.country || "",
+      };
+    });
+  }, [movies]);
+
   const scrollSlider = (direction) => {
     const slider = sliderRef.current;
     if (!slider) return;
@@ -38,7 +82,7 @@ function CinemaSection() {
     });
   };
 
-  if (!cinemaEvents?.length) return null;
+  if (isLoading || !normalizedMovies.length) return null;
 
   return (
     <section className="cinema-section">
@@ -64,42 +108,34 @@ function CinemaSection() {
 
           <div ref={sliderRef} className="cinema-slider">
             <div className="cinema-track">
-              {cinemaEvents.map((movie) => {
-                const title = getLocalizedValue(movie.title, language);
-                const subtitle = getLocalizedValue(movie.subtitle, language);
-                const location = getLocalizedValue(movie.location, language);
-                const category = getLocalizedValue(movie.categoryLabel, language);
-
+              {normalizedMovies.map((movie) => {
                 return (
                   <article key={movie.id} className="cinema-card">
                     <Link
                       to={`/${language}/movies/${movie.slug}`}
                       className="cinema-card-link"
-                      aria-label={`${t.open}: ${title}`}
+                      aria-label={`${t.open}: ${movie.title}`}
                     >
                       <div className="cinema-poster-wrap">
                         <img
                           src={movie.image}
-                          alt={title}
+                          alt={movie.title}
                           className="cinema-poster"
                         />
-                        {category && (
-                          <span className="cinema-badge">{category}</span>
-                        )}
                       </div>
 
                       <div className="cinema-card-body">
-                        <h3>{title}</h3>
+                        <h3>{movie.title}</h3>
 
                         <div className="cinema-card-meta">
-                          {subtitle && (
+                          {movie.subtitle && (
                             <span className="cinema-card-subtitle">
-                              {subtitle}
+                              {movie.subtitle}
                             </span>
                           )}
-                          {location && (
+                          {movie.location && (
                             <span className="cinema-card-location">
-                              {location}
+                              {movie.location}
                             </span>
                           )}
                         </div>

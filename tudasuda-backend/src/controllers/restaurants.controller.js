@@ -55,6 +55,31 @@ const restaurantInclude = {
   },
 };
 
+async function refreshRestaurantRatingStats(restaurantId) {
+  const ratings = await prisma.restaurantRating.findMany({
+    where: { restaurantId },
+    select: { value: true },
+  });
+
+  const ratingCount = ratings.length;
+  const ratingAverage = ratingCount
+    ? ratings.reduce((sum, item) => sum + item.value, 0) / ratingCount
+    : 0;
+
+  await prisma.restaurant.update({
+    where: { id: restaurantId },
+    data: {
+      ratingCount,
+      ratingAverage,
+    },
+  });
+
+  return {
+    ratingCount,
+    ratingAverage,
+  };
+}
+
 export async function createRestaurant(req, res) {
   try {
     const {
@@ -121,21 +146,24 @@ export async function createRestaurant(req, res) {
         translations: {
           create: translations.map(mapTranslationCreate),
         },
-        prices: Array.isArray(prices) && prices.length
-          ? {
-              create: prices.map(mapPriceCreate),
-            }
-          : undefined,
-        dishes: Array.isArray(dishes) && dishes.length
-          ? {
-              create: dishes.map(mapDishCreate),
-            }
-          : undefined,
-        formats: Array.isArray(formats) && formats.length
-          ? {
-              create: formats.map(mapFormatCreate),
-            }
-          : undefined,
+        prices:
+          Array.isArray(prices) && prices.length
+            ? {
+                create: prices.map(mapPriceCreate),
+              }
+            : undefined,
+        dishes:
+          Array.isArray(dishes) && dishes.length
+            ? {
+                create: dishes.map(mapDishCreate),
+              }
+            : undefined,
+        formats:
+          Array.isArray(formats) && formats.length
+            ? {
+                create: formats.map(mapFormatCreate),
+              }
+            : undefined,
       },
       include: restaurantInclude,
     });
@@ -209,7 +237,7 @@ export async function getRestaurants(req, res) {
 export async function getRestaurantBySlug(req, res) {
   try {
     const { slug } = req.params;
-    const { lang } = req.query;
+    const { lang, browserToken } = req.query;
 
     const restaurant = await prisma.restaurant.findUnique({
       where: { slug },
@@ -252,7 +280,25 @@ export async function getRestaurantBySlug(req, res) {
       });
     }
 
-    return res.json(restaurant);
+    let userRating = 0;
+
+    if (browserToken && typeof browserToken === "string") {
+      const existingRating = await prisma.restaurantRating.findUnique({
+        where: {
+          restaurantId_browserToken: {
+            restaurantId: restaurant.id,
+            browserToken,
+          },
+        },
+      });
+
+      userRating = existingRating?.value || 0;
+    }
+
+    return res.json({
+      ...restaurant,
+      userRating,
+    });
   } catch (error) {
     console.error("GET RESTAURANT BY SLUG ERROR:", error);
     return res.status(500).json({
@@ -342,33 +388,44 @@ export async function updateRestaurant(req, res) {
         instagram: instagram ?? existingRestaurant.instagram,
         telegram: telegram ?? existingRestaurant.telegram,
         website: website ?? existingRestaurant.website,
-        parking: typeof parking === "boolean" ? parking : existingRestaurant.parking,
+        parking:
+          typeof parking === "boolean" ? parking : existingRestaurant.parking,
         wifi: typeof wifi === "boolean" ? wifi : existingRestaurant.wifi,
-        booking: typeof booking === "boolean" ? booking : existingRestaurant.booking,
-        delivery: typeof delivery === "boolean" ? delivery : existingRestaurant.delivery,
-        smoking: typeof smoking === "boolean" ? smoking : existingRestaurant.smoking,
-        terrace: typeof terrace === "boolean" ? terrace : existingRestaurant.terrace,
+        booking:
+          typeof booking === "boolean" ? booking : existingRestaurant.booking,
+        delivery:
+          typeof delivery === "boolean"
+            ? delivery
+            : existingRestaurant.delivery,
+        smoking:
+          typeof smoking === "boolean" ? smoking : existingRestaurant.smoking,
+        terrace:
+          typeof terrace === "boolean" ? terrace : existingRestaurant.terrace,
         music: typeof music === "boolean" ? music : existingRestaurant.music,
-        translations: Array.isArray(translations) && translations.length
-          ? {
-              create: translations.map(mapTranslationCreate),
-            }
-          : undefined,
-        prices: Array.isArray(prices) && prices.length
-          ? {
-              create: prices.map(mapPriceCreate),
-            }
-          : undefined,
-        dishes: Array.isArray(dishes) && dishes.length
-          ? {
-              create: dishes.map(mapDishCreate),
-            }
-          : undefined,
-        formats: Array.isArray(formats) && formats.length
-          ? {
-              create: formats.map(mapFormatCreate),
-            }
-          : undefined,
+        translations:
+          Array.isArray(translations) && translations.length
+            ? {
+                create: translations.map(mapTranslationCreate),
+              }
+            : undefined,
+        prices:
+          Array.isArray(prices) && prices.length
+            ? {
+                create: prices.map(mapPriceCreate),
+              }
+            : undefined,
+        dishes:
+          Array.isArray(dishes) && dishes.length
+            ? {
+                create: dishes.map(mapDishCreate),
+              }
+            : undefined,
+        formats:
+          Array.isArray(formats) && formats.length
+            ? {
+                create: formats.map(mapFormatCreate),
+              }
+            : undefined,
       },
       include: restaurantInclude,
     });
@@ -413,6 +470,74 @@ export async function deleteRestaurant(req, res) {
     console.error("DELETE RESTAURANT ERROR:", error);
     return res.status(500).json({
       message: "Ошибка сервера при удалении ресторана",
+    });
+  }
+}
+
+export async function rateRestaurant(req, res) {
+  try {
+    const restaurantId = Number(req.params.id);
+    const { browserToken, value } = req.body;
+
+    if (!restaurantId) {
+      return res.status(400).json({
+        message: "Некорректный id ресторана",
+      });
+    }
+
+    if (!browserToken || typeof browserToken !== "string") {
+      return res.status(400).json({
+        message: "browserToken обязателен",
+      });
+    }
+
+    const numericValue = Number(value);
+
+    if (!Number.isInteger(numericValue) || numericValue < 1 || numericValue > 5) {
+      return res.status(400).json({
+        message: "Оценка должна быть целым числом от 1 до 5",
+      });
+    }
+
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({
+        message: "Ресторан не найден",
+      });
+    }
+
+    await prisma.restaurantRating.upsert({
+      where: {
+        restaurantId_browserToken: {
+          restaurantId,
+          browserToken,
+        },
+      },
+      update: {
+        value: numericValue,
+      },
+      create: {
+        restaurantId,
+        browserToken,
+        value: numericValue,
+      },
+    });
+
+    const stats = await refreshRestaurantRatingStats(restaurantId);
+
+    return res.json({
+      message: "Оценка сохранена",
+      ratingAverage: stats.ratingAverage,
+      ratingCount: stats.ratingCount,
+      userRating: numericValue,
+    });
+  } catch (error) {
+    console.error("RATE RESTAURANT ERROR:", error);
+    return res.status(500).json({
+      message: "Ошибка сервера при сохранении оценки",
     });
   }
 }

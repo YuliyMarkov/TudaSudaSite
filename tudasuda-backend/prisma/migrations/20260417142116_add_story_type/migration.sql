@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Story" ADD COLUMN     "type" TEXT NOT NULL DEFAULT 'news';

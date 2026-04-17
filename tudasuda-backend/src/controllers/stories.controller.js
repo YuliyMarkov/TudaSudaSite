@@ -20,6 +20,7 @@ export async function createStory(req, res) {
     const {
       slug,
       status,
+      type,
       isFeatured,
       coverImage,
       publishedAt,
@@ -44,7 +45,7 @@ export async function createStory(req, res) {
 
     if (existingStory) {
       return res.status(409).json({
-        message: "Story с таким slug уже существует",
+        message: "Материал с таким slug уже существует",
       });
     }
 
@@ -52,6 +53,7 @@ export async function createStory(req, res) {
       data: {
         slug,
         status: status || "draft",
+        type: type || "news",
         isFeatured: Boolean(isFeatured),
         coverImage: coverImage || null,
         publishedAt: publishedAt ? new Date(publishedAt) : null,
@@ -66,19 +68,23 @@ export async function createStory(req, res) {
   } catch (error) {
     console.error("CREATE STORY ERROR:", error);
     return res.status(500).json({
-      message: "Ошибка сервера при создании story",
+      message: "Ошибка сервера при создании материала",
     });
   }
 }
 
 export async function getStories(req, res) {
   try {
-    const { status, lang, featured } = req.query;
+    const { status, type, lang, featured } = req.query;
 
     const where = {};
 
     if (status) {
       where.status = status;
+    }
+
+    if (type) {
+      where.type = type;
     }
 
     if (featured === "true") {
@@ -104,7 +110,7 @@ export async function getStories(req, res) {
   } catch (error) {
     console.error("GET STORIES ERROR:", error);
     return res.status(500).json({
-      message: "Ошибка сервера при получении stories",
+      message: "Ошибка сервера при получении материалов",
     });
   }
 }
@@ -127,7 +133,7 @@ export async function getStoryBySlug(req, res) {
 
     if (!story) {
       return res.status(404).json({
-        message: "Story не найдена",
+        message: "Материал не найден",
       });
     }
 
@@ -135,7 +141,7 @@ export async function getStoryBySlug(req, res) {
   } catch (error) {
     console.error("GET STORY BY SLUG ERROR:", error);
     return res.status(500).json({
-      message: "Ошибка сервера при получении story",
+      message: "Ошибка сервера при получении материала",
     });
   }
 }
@@ -146,13 +152,14 @@ export async function updateStory(req, res) {
 
     if (!storyId) {
       return res.status(400).json({
-        message: "Некорректный id story",
+        message: "Некорректный id материала",
       });
     }
 
     const {
       slug,
       status,
+      type,
       isFeatured,
       coverImage,
       publishedAt,
@@ -165,7 +172,7 @@ export async function updateStory(req, res) {
 
     if (!existingStory) {
       return res.status(404).json({
-        message: "Story не найдена",
+        message: "Материал не найден",
       });
     }
 
@@ -176,7 +183,7 @@ export async function updateStory(req, res) {
 
       if (slugTaken) {
         return res.status(409).json({
-          message: "Story с таким slug уже существует",
+          message: "Материал с таким slug уже существует",
         });
       }
     }
@@ -190,6 +197,7 @@ export async function updateStory(req, res) {
       data: {
         slug: slug ?? existingStory.slug,
         status: status ?? existingStory.status,
+        type: type ?? existingStory.type,
         isFeatured:
           typeof isFeatured === "boolean"
             ? isFeatured
@@ -197,7 +205,9 @@ export async function updateStory(req, res) {
         coverImage: coverImage ?? existingStory.coverImage,
         publishedAt:
           publishedAt !== undefined
-            ? (publishedAt ? new Date(publishedAt) : null)
+            ? publishedAt
+              ? new Date(publishedAt)
+              : null
             : existingStory.publishedAt,
         translations:
           Array.isArray(translations) && translations.length
@@ -213,7 +223,7 @@ export async function updateStory(req, res) {
   } catch (error) {
     console.error("UPDATE STORY ERROR:", error);
     return res.status(500).json({
-      message: "Ошибка сервера при обновлении story",
+      message: "Ошибка сервера при обновлении материала",
     });
   }
 }
@@ -224,7 +234,7 @@ export async function deleteStory(req, res) {
 
     if (!storyId) {
       return res.status(400).json({
-        message: "Некорректный id story",
+        message: "Некорректный id материала",
       });
     }
 
@@ -234,7 +244,7 @@ export async function deleteStory(req, res) {
 
     if (!existingStory) {
       return res.status(404).json({
-        message: "Story не найдена",
+        message: "Материал не найден",
       });
     }
 
@@ -243,12 +253,12 @@ export async function deleteStory(req, res) {
     });
 
     return res.json({
-      message: "Story удалена",
+      message: "Материал удалён",
     });
   } catch (error) {
     console.error("DELETE STORY ERROR:", error);
     return res.status(500).json({
-      message: "Ошибка сервера при удалении story",
+      message: "Ошибка сервера при удалении материала",
     });
   }
 }

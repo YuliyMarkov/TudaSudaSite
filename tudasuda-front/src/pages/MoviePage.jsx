@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { moviesData } from "../data/moviesData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
 import Seo from "../components/Seo";
 
+const API_BASE_URL = "http://localhost:4000";
+
 function formatDateLabel(dateString, language) {
-  const date = new Date(`${dateString}T00:00:00`);
+  const date = new Date(dateString);
 
   return new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
     day: "numeric",
@@ -15,44 +15,88 @@ function formatDateLabel(dateString, language) {
   }).format(date);
 }
 
-function toLocalIsoDate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function getBrowserToken() {
+  const storageKey = "movie-browser-token";
+  const existing = localStorage.getItem(storageKey);
+
+  if (existing) return existing;
+
+  const generated =
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `browser_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+  localStorage.setItem(storageKey, generated);
+  return generated;
 }
 
-function buildActualScheduleEntries(schedule) {
-  if (!schedule) return [];
+function groupSessionsByDateAndCinema(sessions = []) {
+  const groupedByDate = new Map();
 
-  const sourceKeys = Object.keys(schedule).sort((a, b) => a.localeCompare(b));
-  if (!sourceKeys.length) return [];
+  sessions.forEach((session) => {
+    if (!session.sessionDate) return;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    const dateKey = new Date(session.sessionDate).toISOString().split("T")[0];
 
-  return sourceKeys.map((sourceKey, index) => {
-    const actualDate = new Date(today);
-    actualDate.setDate(today.getDate() + index);
+    if (!groupedByDate.has(dateKey)) {
+      groupedByDate.set(dateKey, new Map());
+    }
 
-    return {
-      sourceKey,
-      displayDate: toLocalIsoDate(actualDate),
-      sessions: schedule[sourceKey] || [],
-    };
+    const cinemasMap = groupedByDate.get(dateKey);
+    const cinemaKey = session.cinemaName || "—";
+
+    if (!cinemasMap.has(cinemaKey)) {
+      cinemasMap.set(cinemaKey, []);
+    }
+
+    cinemasMap.get(cinemaKey).push({
+      time: session.sessionTime,
+      url: session.ticketUrl,
+      hallName: session.hallName,
+      price: session.price,
+    });
   });
+
+  return Array.from(groupedByDate.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([dateKey, cinemasMap]) => ({
+      displayDate: dateKey,
+      sessions: Array.from(cinemasMap.entries()).map(([cinema, sessions]) => ({
+        cinema,
+        sessions: sessions.sort((a, b) => a.time.localeCompare(b.time)),
+      })),
+    }));
 }
 
-function getLocalMovieRating(slug) {
-  if (!slug) return 0;
+function formatDuration(durationMinutes, language) {
+  if (!durationMinutes || Number.isNaN(Number(durationMinutes))) return "";
 
-  const saved = localStorage.getItem(`movie-rating-${slug}`);
-  return saved ? Number(saved) : 0;
+  const total = Number(durationMinutes);
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+
+  if (language === "uz") {
+    if (hours && minutes) return `${hours} soat ${minutes} daqiqa`;
+    if (hours) return `${hours} soat`;
+    return `${minutes} daqiqa`;
+  }
+
+  if (hours && minutes) return `${hours} ч ${minutes} мин`;
+  if (hours) return `${hours} ч`;
+  return `${minutes} мин`;
 }
 
-function saveLocalMovieRating(slug, value) {
-  if (!slug) return;
-  localStorage.setItem(`movie-rating-${slug}`, String(value));
+function formatPremiere(dateString, language) {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
 }
 
 function MoviePage() {
@@ -60,7 +104,11 @@ function MoviePage() {
   const { slug } = useParams();
   const sessionsRef = useRef(null);
 
-  const movie = moviesData.find((item) => item.slug === slug);
+  const [browserToken, setBrowserToken] = useState("");
+  const [movie, setMovie] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [isRatingLoading, setIsRatingLoading] = useState(false);
 
   const uiText = {
     ru: {
@@ -83,6 +131,12 @@ function MoviePage() {
       yourRating: "Оцените фильм:",
       starsAria: "Поставить оценку",
       noSessions: "Нет сеансов",
+      loading: "Загрузка фильма...",
+      error: "Не удалось загрузить фильм.",
+      averageRating: "Средняя оценка",
+      votes: "голосов",
+      ratingError: "Не удалось сохранить оценку.",
+      noData: "Уточняется",
     },
     uz: {
       back: "Filmlarga qaytish",
@@ -104,6 +158,12 @@ function MoviePage() {
       yourRating: "Filmni baholang:",
       starsAria: "Baho qo‘yish",
       noSessions: "Seanslar yo‘q",
+      loading: "Film yuklanmoqda...",
+      error: "Filmni yuklab bo‘lmadi.",
+      averageRating: "O‘rtacha baho",
+      votes: "ta ovoz",
+      ratingError: "Bahoni saqlab bo‘lmadi.",
+      noData: "Aniqlanmoqda",
     },
   };
 
@@ -111,15 +171,60 @@ function MoviePage() {
 
   const [selectedDateIndex, setSelectedDateIndex] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [userRating, setUserRating] = useState(() => getLocalMovieRating(slug));
+  const [userRating, setUserRating] = useState(0);
 
   useEffect(() => {
-    setUserRating(getLocalMovieRating(slug));
-  }, [slug]);
+    const token = getBrowserToken();
+    setBrowserToken(token);
+  }, []);
+
+  useEffect(() => {
+    if (!browserToken) return;
+
+    async function loadMovie() {
+      try {
+        setIsLoading(true);
+        setLoadError("");
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/movies/${slug}?lang=${language}&browserToken=${encodeURIComponent(browserToken)}`
+        );
+
+        if (response.status === 404) {
+          setMovie(null);
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Failed to load movie");
+        }
+
+        const data = await response.json();
+        setMovie(data);
+        setUserRating(data.userRating || 0);
+      } catch (error) {
+        console.error("LOAD MOVIE ERROR:", error);
+        setLoadError(t.error);
+        setMovie(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadMovie();
+  }, [slug, language, browserToken, t.error]);
 
   const scheduleEntries = useMemo(() => {
-    return buildActualScheduleEntries(movie?.schedule);
+    return groupSessionsByDateAndCinema(movie?.sessions || []);
   }, [movie]);
+
+  useEffect(() => {
+    setSelectedDateIndex(0);
+  }, [slug, language, movie?.id]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [slug, language, movie?.id]);
 
   const safeSelectedDateIndex =
     selectedDateIndex >= 0 && selectedDateIndex < scheduleEntries.length
@@ -129,33 +234,63 @@ function MoviePage() {
   const currentSelectedEntry = scheduleEntries[safeSelectedDateIndex] || null;
   const selectedSessions = currentSelectedEntry?.sessions || [];
 
-  const mediaSlides = useMemo(() => {
-    if (!movie) return [];
+  const normalizedMovie = useMemo(() => {
+    if (!movie) return null;
 
-    return [
-      ...(movie.trailer
+    const translation = movie.translations?.[0] || null;
+
+    const cast =
+      movie.castItems?.map((item) => item.name).filter(Boolean).join(", ") || "";
+
+    const mediaSlides = [
+      ...(movie.trailerUrl
         ? [
             {
               type: "trailer",
-              src: movie.trailer,
-              thumb: movie.poster,
-              alt: `${getLocalizedValue(movie.title, language)} — ${t.trailer}`,
+              src: movie.trailerUrl,
+              thumb: movie.posterImage || movie.coverImage,
+              alt: `${translation?.title || ""} — ${t.trailer}`,
             },
           ]
         : []),
-      ...(movie.gallery || []).map((img, index) => ({
+      ...(movie.galleryItems || []).map((item, index) => ({
         type: "image",
-        src: img,
-        thumb: img,
-        alt: `${getLocalizedValue(movie.title, language)} ${index + 1}`,
+        src: item.image,
+        thumb: item.image,
+        alt: `${translation?.title || ""} ${index + 1}`,
       })),
     ];
+
+    return {
+      id: movie.id,
+      slug: movie.slug,
+      poster: movie.posterImage,
+      cover: movie.coverImage,
+      title: translation?.title || "",
+      description: translation?.description || "",
+      genre: translation?.genre || "",
+      duration: formatDuration(movie.durationMinutes, language),
+      premiere: formatPremiere(movie.releaseDate, language),
+      country: translation?.country || "",
+      director: translation?.director || "",
+      cast,
+      age: movie.ageRating || "",
+      imdb: movie.imdbRating || "",
+      kp: movie.kpRating || "",
+      ratingAverage: movie.ratingAverage || 0,
+      ratingCount: movie.ratingCount || 0,
+      mediaSlides,
+    };
   }, [movie, language, t.trailer]);
 
   const safeActiveIndex =
-    activeIndex >= 0 && activeIndex < mediaSlides.length ? activeIndex : 0;
+    normalizedMovie &&
+    activeIndex >= 0 &&
+    activeIndex < normalizedMovie.mediaSlides.length
+      ? activeIndex
+      : 0;
 
-  const activeSlide = mediaSlides[safeActiveIndex];
+  const activeSlide = normalizedMovie?.mediaSlides?.[safeActiveIndex];
 
   const scrollToSessions = () => {
     sessionsRef.current?.scrollIntoView({
@@ -164,12 +299,86 @@ function MoviePage() {
     });
   };
 
-  const handleUserRating = (value) => {
-    setUserRating(value);
-    saveLocalMovieRating(slug, value);
+  const handleUserRating = async (value) => {
+    if (!movie?.id || !browserToken || isRatingLoading) return;
+
+    try {
+      setIsRatingLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/api/movies/${movie.id}/rate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          browserToken,
+          value,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save movie rating");
+      }
+
+      const data = await response.json();
+
+      setUserRating(data.userRating || value);
+      setMovie((prev) =>
+        prev
+          ? {
+              ...prev,
+              ratingAverage:
+                typeof data.ratingAverage === "number"
+                  ? data.ratingAverage
+                  : prev.ratingAverage,
+              ratingCount:
+                typeof data.ratingCount === "number"
+                  ? data.ratingCount
+                  : prev.ratingCount,
+              userRating: data.userRating || value,
+            }
+          : prev
+      );
+    } catch (error) {
+      console.error("RATE MOVIE ERROR:", error);
+      alert(t.ratingError);
+    } finally {
+      setIsRatingLoading(false);
+    }
   };
 
-  if (!movie) {
+  if (isLoading) {
+    return (
+      <main className="main">
+        <section className="movie-page">
+          <div className="container">
+            <div className="movie-not-found">
+              <p>{t.loading}</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="main">
+        <section className="movie-page">
+          <div className="container">
+            <div className="movie-not-found">
+              <h1>{t.error}</h1>
+              <Link to={`/${language}/cinema`} className="back-link">
+                {t.back}
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (!normalizedMovie) {
     return (
       <main className="main">
         <section className="movie-page">
@@ -187,26 +396,27 @@ function MoviePage() {
     );
   }
 
-  const title = getLocalizedValue(movie.title, language);
-  const description = getLocalizedValue(movie.description, language);
-  const genre = getLocalizedValue(movie.info?.genre, language);
-  const duration = getLocalizedValue(movie.info?.duration, language);
-  const premiere = getLocalizedValue(movie.info?.premiere, language);
-  const country = getLocalizedValue(movie.info?.country, language);
-  const director = getLocalizedValue(movie.info?.director, language);
-
-  const cast = Array.isArray(movie.info?.cast)
-    ? movie.info.cast
-        .map((item) => getLocalizedValue(item, language) || item)
-        .filter(Boolean)
-        .join(", ")
-    : getLocalizedValue(movie.info?.cast, language) || "";
+  const {
+    poster,
+    title,
+    description,
+    genre,
+    duration,
+    premiere,
+    country,
+    director,
+    cast,
+    age,
+    imdb,
+    kp,
+    ratingAverage,
+    ratingCount,
+    mediaSlides,
+  } = normalizedMovie;
 
   const rating =
-    movie.info?.imdb || movie.info?.kp
-      ? `IMDb ${movie.info.imdb || "-"} / ${t.kinopoisk} ${
-          movie.info.kp || "-"
-        }`
+    imdb || kp
+      ? `IMDb ${imdb || "-"} / ${t.kinopoisk} ${kp || "-"}`
       : "";
 
   const goPrev = () => {
@@ -219,7 +429,7 @@ function MoviePage() {
 
   return (
     <>
-      <Seo title={title} description={description} />
+      <Seo title={title} description={description} image={poster} />
 
       <main className="main">
         <section className="movie-page">
@@ -234,7 +444,7 @@ function MoviePage() {
 
             <div className="movie-hero">
               <div className="movie-poster-wrap">
-                <img src={movie.poster} alt={title} className="movie-poster" />
+                <img src={poster} alt={title} className="movie-poster" />
               </div>
 
               <div className="movie-info">
@@ -242,15 +452,9 @@ function MoviePage() {
 
                 <div className="movie-meta">
                   {genre && <span className="movie-meta-chip">{genre}</span>}
-                  {duration && (
-                    <span className="movie-meta-chip">{duration}</span>
-                  )}
-                  {movie.info?.age && (
-                    <span className="movie-meta-chip">{movie.info.age}</span>
-                  )}
-                  {premiere && (
-                    <span className="movie-meta-chip">{premiere}</span>
-                  )}
+                  {duration && <span className="movie-meta-chip">{duration}</span>}
+                  {age && <span className="movie-meta-chip">{age}</span>}
+                  {premiere && <span className="movie-meta-chip">{premiere}</span>}
                 </div>
 
                 <div className="movie-details">
@@ -282,6 +486,15 @@ function MoviePage() {
                     </div>
                   )}
 
+                  <div className="movie-detail-row">
+                    <span className="movie-detail-label">{t.rating}:</span>
+                    <span className="movie-detail-value">
+                      {ratingAverage > 0
+                        ? `${ratingAverage.toFixed(1)} / 5 (${ratingCount} ${t.votes})`
+                        : `0 / 5 (${ratingCount} ${t.votes})`}
+                    </span>
+                  </div>
+
                   <div className="movie-user-rating-row">
                     <span className="movie-detail-label">{t.yourRating}</span>
 
@@ -300,6 +513,7 @@ function MoviePage() {
                           onClick={() => handleUserRating(value)}
                           aria-label={`${t.starsAria} ${value}`}
                           aria-pressed={userRating === value}
+                          disabled={isRatingLoading}
                         >
                           ★
                         </button>
@@ -429,8 +643,8 @@ function MoviePage() {
                     <div className="movie-session-buttons">
                       {cinemaItem.sessions.map((session) => (
                         <a
-                          key={`${cinemaItem.cinema}-${session.time}`}
-                          href={session.url}
+                          key={`${cinemaItem.cinema}-${session.time}-${index}`}
+                          href={session.url || "#"}
                           className="movie-session-button"
                           target="_blank"
                           rel="noopener noreferrer"

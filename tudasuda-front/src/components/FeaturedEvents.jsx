@@ -1,60 +1,68 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Hls from "hls.js";
-import { featuredEvents } from "../data/homePageData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
 
-function getEventLink(language, event) {
-  switch (event.linkType) {
-    case "movies":
-      return event.slug
-        ? `/${language}/movies/${event.slug}`
-        : `/${language}/cinema`;
+const API_BASE_URL = "http://localhost:4000";
 
+function buildSlideLink(language, slide) {
+  const linkType = slide.linkType || "custom";
+  const linkUrl = slide.linkUrl || "";
+
+  if (linkType === "custom") {
+    if (!linkUrl) return `/${language}`;
+    if (linkUrl.startsWith("http://") || linkUrl.startsWith("https://")) {
+      return linkUrl;
+    }
+    if (linkUrl.startsWith("/")) return linkUrl;
+    return `/${language}/${linkUrl}`;
+  }
+
+  switch (linkType) {
     case "stories":
-      return event.slug
-        ? `/${language}/stories/${event.slug}`
-        : `/${language}`;
+      return slide.linkUrl
+        ? `/${language}/stories/${slide.linkUrl}`
+        : `/${language}/stories`;
 
+    case "movies":
     case "cinema":
-      return event.slug
-        ? `/${language}/movies/${event.slug}`
+      return slide.linkUrl
+        ? `/${language}/movies/${slide.linkUrl}`
         : `/${language}/cinema`;
 
     case "event":
-      return event.slug
-        ? `/${language}/events/${event.slug}`
+      return slide.linkUrl
+        ? `/${language}/events/${slide.linkUrl}`
         : `/${language}/events`;
 
     case "concerts":
-      return event.slug
-        ? `/${language}/events/${event.slug}`
+      return slide.linkUrl
+        ? `/${language}/events/${slide.linkUrl}`
         : `/${language}/events?filter=concert`;
 
     case "theatre":
-      return event.slug
-        ? `/${language}/events/${event.slug}`
+      return slide.linkUrl
+        ? `/${language}/events/${slide.linkUrl}`
         : `/${language}/events?filter=theatre`;
 
     case "exhibitions":
-      return event.slug
-        ? `/${language}/events/${event.slug}`
+      return slide.linkUrl
+        ? `/${language}/events/${slide.linkUrl}`
         : `/${language}/events?filter=exhibition`;
 
     case "kids":
-      return event.slug
-        ? `/${language}/events/${event.slug}`
+      return slide.linkUrl
+        ? `/${language}/events/${slide.linkUrl}`
         : `/${language}/events?filter=kids`;
 
     case "restaurants":
-      return event.slug
-        ? `/${language}/restaurants/${event.slug}`
+      return slide.linkUrl
+        ? `/${language}/restaurants/${slide.linkUrl}`
         : `/${language}/restaurants`;
 
     case "places":
-      return event.slug
-        ? `/${language}/places/${event.slug}`
+      return slide.linkUrl
+        ? `/${language}/places/${slide.linkUrl}`
         : `/${language}/places`;
 
     default:
@@ -65,6 +73,8 @@ function getEventLink(language, event) {
 function FeaturedEvents() {
   const { language } = useLanguage();
 
+  const [slides, setSlides] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -90,7 +100,59 @@ function FeaturedEvents() {
   };
 
   const t = uiText[language] || uiText.ru;
-  const totalSlides = featuredEvents.length;
+
+  useEffect(() => {
+    async function loadSlides() {
+      try {
+        setIsLoading(true);
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/hero-slides?lang=${language}&activeOnly=true`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load hero slides");
+        }
+
+        const data = await response.json();
+        setSlides(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("LOAD HERO SLIDES ERROR:", error);
+        setSlides([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadSlides();
+  }, [language]);
+
+  const normalizedSlides = useMemo(() => {
+    return slides
+      .filter((item) => item.isActive !== false)
+      .map((item) => {
+        const translation = item.translations?.[0] || null;
+
+        return {
+          id: item.id,
+          title: translation?.title || "",
+          subtitle: translation?.subtitle || "",
+          poster: item.previewImage,
+          hoverMediaType: item.hoverMediaType || "image",
+          hoverMediaUrl: item.hoverMediaUrl || "",
+          linkType: item.linkType || "custom",
+          linkUrl: item.linkUrl || "",
+        };
+      })
+      .filter((item) => item.poster);
+  }, [slides]);
+
+  const totalSlides = normalizedSlides.length;
+
+  useEffect(() => {
+    setCurrentSlide(0);
+    setIsHovered(false);
+  }, [language, totalSlides]);
 
   const goToPrev = () => {
     setCurrentSlide((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
@@ -143,9 +205,10 @@ function FeaturedEvents() {
     });
     hlsRefs.current = [];
 
-    featuredEvents.forEach((event, index) => {
+    normalizedSlides.forEach((slide, index) => {
       const videoEl = videoRefs.current[index];
-      const videoSrc = event.video || event.videoEmbed;
+      const videoSrc =
+        slide.hoverMediaType === "video" ? slide.hoverMediaUrl : "";
 
       if (!videoEl || !videoSrc) return;
 
@@ -179,7 +242,7 @@ function FeaturedEvents() {
       });
       hlsRefs.current = [];
     };
-  }, []);
+  }, [normalizedSlides]);
 
   useEffect(() => {
     videoRefs.current.forEach((video, index) => {
@@ -192,13 +255,13 @@ function FeaturedEvents() {
         try {
           video.currentTime = 0;
         } catch {
-          /* ignore */
+          // ignore
         }
       }
     });
   }, [currentSlide, isHovered]);
 
-  if (!featuredEvents?.length) return null;
+  if (isLoading || !normalizedSlides.length) return null;
 
   return (
     <section className="featured-events">
@@ -222,18 +285,50 @@ function FeaturedEvents() {
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            {featuredEvents.map((event, index) => {
+            {normalizedSlides.map((slide, index) => {
               const positionClass = getSlidePosition(index);
-              const title = getLocalizedValue(event.title, language);
-              const subtitle = getLocalizedValue(event.subtitle, language);
-              const alt = getLocalizedValue(event.alt, language);
-              const videoSrc = event.video || event.videoEmbed;
-              const hasVideo = Boolean(videoSrc);
-              const href = getEventLink(language, event);
+              const title = slide.title;
+              const subtitle = slide.subtitle;
+              const alt = slide.title;
+              const hasVideo =
+                slide.hoverMediaType === "video" && Boolean(slide.hoverMediaUrl);
+              const href = buildSlideLink(language, slide);
+              const isExternal =
+                href.startsWith("http://") || href.startsWith("https://");
+
+              const content = (
+                <>
+                  <div className="event-slide-media">
+                    <img
+                      src={slide.poster}
+                      alt={alt || title}
+                      className="event-slide-poster"
+                    />
+
+                    {hasVideo ? (
+                      <video
+                        ref={(el) => {
+                          videoRefs.current[index] = el;
+                        }}
+                        className="event-slide-video"
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : null}
+                  </div>
+
+                  <div className="event-slide-overlay">
+                    <h3>{title}</h3>
+                    {subtitle ? <p>{subtitle}</p> : null}
+                  </div>
+                </>
+              );
 
               return (
                 <article
-                  key={event.slug || index}
+                  key={slide.id}
                   className={`event-slide ${positionClass}`}
                   onMouseEnter={() => {
                     if (index === currentSlide) setIsHovered(true);
@@ -245,43 +340,37 @@ function FeaturedEvents() {
                     if (index !== currentSlide) goToSlide(index);
                   }}
                 >
-                  <Link
-                    to={href}
-                    className="event-slide-link"
-                    aria-label={`${t.open}: ${title}`}
-                    onClick={(e) => {
-                      if (index !== currentSlide) {
-                        e.preventDefault();
-                        goToSlide(index);
-                      }
-                    }}
-                  >
-                    <div className="event-slide-media">
-                      <img
-                        src={event.poster}
-                        alt={alt || title}
-                        className="event-slide-poster"
-                      />
-
-                      {hasVideo ? (
-                        <video
-                          ref={(el) => {
-                            videoRefs.current[index] = el;
-                          }}
-                          className="event-slide-video"
-                          muted
-                          loop
-                          playsInline
-                          preload="metadata"
-                        />
-                      ) : null}
-                    </div>
-
-                    <div className="event-slide-overlay">
-                      <h3>{title}</h3>
-                      {subtitle ? <p>{subtitle}</p> : null}
-                    </div>
-                  </Link>
+                  {isExternal ? (
+                    <a
+                      href={href}
+                      className="event-slide-link"
+                      aria-label={`${t.open}: ${title}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        if (index !== currentSlide) {
+                          e.preventDefault();
+                          goToSlide(index);
+                        }
+                      }}
+                    >
+                      {content}
+                    </a>
+                  ) : (
+                    <Link
+                      to={href}
+                      className="event-slide-link"
+                      aria-label={`${t.open}: ${title}`}
+                      onClick={(e) => {
+                        if (index !== currentSlide) {
+                          e.preventDefault();
+                          goToSlide(index);
+                        }
+                      }}
+                    >
+                      {content}
+                    </Link>
+                  )}
                 </article>
               );
             })}

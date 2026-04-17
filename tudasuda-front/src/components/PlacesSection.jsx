@@ -1,10 +1,14 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { placesEvents } from "../data/homePageData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
+
+const API_BASE_URL = "http://localhost:4000";
 
 function PlacesSection() {
   const { language } = useLanguage();
+
+  const [places, setPlaces] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const uiText = {
     ru: {
@@ -21,7 +25,49 @@ function PlacesSection() {
 
   const t = uiText[language] || uiText.ru;
 
-  if (!placesEvents?.length) return null;
+  useEffect(() => {
+    async function loadPlaces() {
+      try {
+        setIsLoading(true);
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/places?status=published&lang=${language}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load places");
+        }
+
+        const data = await response.json();
+        setPlaces(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("LOAD PLACES SECTION ERROR:", error);
+        setPlaces([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadPlaces();
+  }, [language]);
+
+  const normalizedPlaces = useMemo(() => {
+    return places.slice(0, 6).map((place) => {
+      const translation = place.translations?.[0] || null;
+
+      return {
+        id: place.id,
+        slug: place.slug,
+        image: place.coverImage,
+        title: translation?.title || "",
+        subtitle: translation?.type || "",
+        location: translation?.address || "",
+        category: translation?.category || "",
+      };
+    });
+  }, [places]);
+
+  if (isLoading || !normalizedPlaces.length) return null;
 
   return (
     <section className="places-section">
@@ -36,42 +82,37 @@ function PlacesSection() {
         </div>
 
         <div className="places-grid">
-          {placesEvents.map((place) => {
-            const title = getLocalizedValue(place.title, language);
-            const subtitle = getLocalizedValue(place.subtitle, language);
-            const location = getLocalizedValue(place.location, language);
-            const category = getLocalizedValue(place.categoryLabel, language);
-
+          {normalizedPlaces.map((place) => {
             return (
               <article key={place.id} className="places-card">
                 <Link
                   to={`/${language}/places/${place.slug}`}
                   className="places-card-link"
-                  aria-label={`${t.open}: ${title}`}
+                  aria-label={`${t.open}: ${place.title}`}
                 >
                   <div className="places-card-image-wrap">
                     <img
                       src={place.image}
-                      alt={title}
+                      alt={place.title}
                       className="places-card-image"
                     />
-                    {category && (
-                      <span className="places-card-badge">{category}</span>
+                    {place.category && (
+                      <span className="places-card-badge">{place.category}</span>
                     )}
                   </div>
 
                   <div className="places-card-body">
-                    <h3>{title}</h3>
+                    <h3>{place.title}</h3>
 
                     <div className="places-card-meta">
-                      {subtitle && (
+                      {place.subtitle && (
                         <span className="places-card-subtitle">
-                          {subtitle}
+                          {place.subtitle}
                         </span>
                       )}
-                      {location && (
+                      {place.location && (
                         <span className="places-card-location">
-                          {location}
+                          {place.location}
                         </span>
                       )}
                     </div>

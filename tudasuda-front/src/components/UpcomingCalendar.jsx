@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { upcomingEvents } from "../data/homePageData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
+
+const API_BASE_URL = "http://localhost:4000";
 
 function toIsoDate(date) {
   const year = date.getFullYear();
@@ -42,34 +42,74 @@ function formatDateLabel(dateString, language) {
   };
 }
 
-function getUpcomingEventLink(language, event, categoryLabel) {
-  const normalizedCategory = String(categoryLabel || "").trim().toLowerCase();
+function groupEventsByDate(events = []) {
+  const grouped = new Map();
 
-  const eventCategories = [
-    "концерт",
-    "театр",
-    "выставка",
-    "детям",
-    "шоу",
-    "konsert",
-    "teatr",
-    "ko‘rgazma",
-    "korgazma",
-    "bolalar",
-    "shou",
-  ];
+  events.forEach((event) => {
+    const firstSession = event.sessions?.[0];
+    if (!firstSession?.startAt) return;
 
-  if (eventCategories.includes(normalizedCategory) && event.slug) {
-    return `/${language}/events/${event.slug}`;
-  }
+    const dateKey = new Date(firstSession.startAt).toISOString().split("T")[0];
 
-  return `/${language}/events`;
+    if (!grouped.has(dateKey)) {
+      grouped.set(dateKey, []);
+    }
+
+    grouped.get(dateKey).push(event);
+  });
+
+  return grouped;
+}
+
+function normalizeUpcomingEvent(event) {
+  const translation = event.translations?.[0] || null;
+
+  return {
+    id: event.id,
+    slug: event.slug,
+    image: event.coverImage,
+    title: translation?.title || "",
+    location: translation?.address || "",
+    category:
+      event.isForKids
+        ? "kids"
+        : event.type === "concert"
+        ? "concert"
+        : event.type === "theatre"
+        ? "theatre"
+        : event.type === "exhibition"
+        ? "exhibition"
+        : "",
+  };
+}
+
+function getEventCategoryLabel(category, language) {
+  const labels = {
+    ru: {
+      concert: "Концерт",
+      theatre: "Театр",
+      exhibition: "Выставка",
+      kids: "Детям",
+    },
+    uz: {
+      concert: "Konsert",
+      theatre: "Teatr",
+      exhibition: "Ko‘rgazma",
+      kids: "Bolalar uchun",
+    },
+  };
+
+  return labels[language]?.[category] || labels.ru?.[category] || "";
 }
 
 function UpcomingCalendar() {
   const { language } = useLanguage();
   const activeDateRef = useRef(null);
   const sliderRef = useRef(null);
+
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const uiText = {
     ru: {
@@ -79,6 +119,8 @@ function UpcomingCalendar() {
       open: "Открыть событие",
       prev: "Предыдущие события",
       next: "Следующие события",
+      loading: "Загрузка событий...",
+      error: "Не удалось загрузить события",
     },
     uz: {
       title: "Kalendar",
@@ -87,10 +129,42 @@ function UpcomingCalendar() {
       open: "Tadbirni ochish",
       prev: "Oldingi tadbirlar",
       next: "Keyingi tadbirlar",
+      loading: "Tadbirlar yuklanmoqda...",
+      error: "Tadbirlarni yuklab bo‘lmadi",
     },
   };
 
   const t = uiText[language] || uiText.ru;
+
+  useEffect(() => {
+    async function loadEvents() {
+      try {
+        setIsLoading(true);
+        setLoadError("");
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/events?status=published&lang=${language}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load events");
+        }
+
+        const data = await response.json();
+        setEvents(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("LOAD UPCOMING EVENTS ERROR:", error);
+        setEvents([]);
+        setLoadError(t.error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadEvents();
+  }, [language, t.error]);
+
+    const groupedEvents = useMemo(() => groupEventsByDate(events), [events]);
 
   const todayIso = useMemo(() => {
     return toIsoDate(new Date());
@@ -106,8 +180,9 @@ function UpcomingCalendar() {
   const [selectedDate, setSelectedDate] = useState(todayIso);
 
   const filteredEvents = useMemo(() => {
-    return upcomingEvents.filter((event) => event.date === selectedDate);
-  }, [selectedDate]);
+    const items = groupedEvents.get(selectedDate) || [];
+    return items.map((event) => normalizeUpcomingEvent(event));
+  }, [groupedEvents, selectedDate]);
 
   useEffect(() => {
     if (activeDateRef.current) {
@@ -152,7 +227,7 @@ function UpcomingCalendar() {
           {calendarDates.map((date) => {
             const { weekday, day, month } = formatDateLabel(date, language);
             const isActive = date === selectedDate;
-            const hasEvents = upcomingEvents.some((event) => event.date === date);
+            const hasEvents = groupedEvents.has(date);
 
             return (
               <button
@@ -175,7 +250,11 @@ function UpcomingCalendar() {
           })}
         </div>
 
-        {filteredEvents.length ? (
+        {isLoading ? (
+          <div className="upcoming-calendar-empty">{t.loading}</div>
+        ) : loadError ? (
+          <div className="upcoming-calendar-empty">{loadError}</div>
+        ) : filteredEvents.length ? (
           <div className="upcoming-calendar-slider-wrap">
             <button
               className="upcoming-calendar-nav prev"
@@ -189,22 +268,19 @@ function UpcomingCalendar() {
             <div ref={sliderRef} className="upcoming-calendar-slider">
               <div className="upcoming-calendar-track">
                 {filteredEvents.map((event) => {
-                  const title = getLocalizedValue(event.title, language);
-                  const location = getLocalizedValue(event.location, language);
-                  const category = getLocalizedValue(event.categoryLabel, language);
-                  const href = getUpcomingEventLink(language, event, category);
+                  const category = getEventCategoryLabel(event.category, language);
 
                   return (
                     <article key={event.id} className="upcoming-event-card">
                       <Link
-                        to={href}
+                        to={`/${language}/events/${event.slug}`}
                         className="upcoming-event-link"
-                        aria-label={`${t.open}: ${title}`}
+                        aria-label={`${t.open}: ${event.title}`}
                       >
                         <div className="upcoming-event-image-wrap">
                           <img
                             src={event.image}
-                            alt={title}
+                            alt={event.title}
                             className="upcoming-event-image"
                           />
                           {category && (
@@ -215,12 +291,12 @@ function UpcomingCalendar() {
                         </div>
 
                         <div className="upcoming-event-body">
-                          <h3>{title}</h3>
+                          <h3>{event.title}</h3>
 
                           <div className="upcoming-event-meta">
-                            {location && (
+                            {event.location && (
                               <span className="upcoming-event-location">
-                                {location}
+                                {event.location}
                               </span>
                             )}
                           </div>

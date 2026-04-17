@@ -1,12 +1,15 @@
-import { useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { theatreEvents } from "../data/homePageData";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
+
+const API_BASE_URL = "http://localhost:4000";
 
 function TheatreSection() {
   const { language } = useLanguage();
   const sliderRef = useRef(null);
+
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const uiText = {
     ru: {
@@ -15,6 +18,7 @@ function TheatreSection() {
       open: "Открыть",
       prev: "Назад",
       next: "Вперед",
+      badge: "Театр",
     },
     uz: {
       title: "Teatr",
@@ -22,10 +26,54 @@ function TheatreSection() {
       open: "Ochish",
       prev: "Orqaga",
       next: "Oldinga",
+      badge: "Teatr",
     },
   };
 
   const t = uiText[language] || uiText.ru;
+
+  useEffect(() => {
+    async function loadTheatreEvents() {
+      try {
+        setIsLoading(true);
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/events?status=published&lang=${language}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load theatre events");
+        }
+
+        const data = await response.json();
+        setEvents(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("LOAD THEATRE EVENTS ERROR:", error);
+        setEvents([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadTheatreEvents();
+  }, [language]);
+
+  const theatreEvents = useMemo(() => {
+    return events
+      .filter((item) => item.type === "theatre")
+      .map((item) => {
+        const translation = item.translations?.[0] || null;
+
+        return {
+          id: item.id,
+          slug: item.slug,
+          image: item.coverImage,
+          title: translation?.title || "",
+          subtitle: translation?.shortDescription || "",
+          location: translation?.address || "",
+        };
+      });
+  }, [events]);
 
   const scrollSlider = (direction) => {
     const slider = sliderRef.current;
@@ -38,7 +86,7 @@ function TheatreSection() {
     });
   };
 
-  if (!theatreEvents?.length) return null;
+  if (isLoading || !theatreEvents.length) return null;
 
   return (
     <section className="theatre-section">
@@ -65,38 +113,32 @@ function TheatreSection() {
           <div ref={sliderRef} className="theatre-slider">
             <div className="theatre-track">
               {theatreEvents.map((item) => {
-                const title = getLocalizedValue(item.title, language);
-                const subtitle = getLocalizedValue(item.subtitle, language);
-                const location = getLocalizedValue(item.location, language);
-                const category = getLocalizedValue(
-                  item.categoryLabel,
-                  language
-                );
-
                 return (
                   <article key={item.id} className="theatre-card">
                     <Link
                       to={`/${language}/events/${item.slug}`}
                       className="theatre-card-link"
-                      aria-label={`${t.open}: ${title}`}
+                      aria-label={`${t.open}: ${item.title}`}
                     >
                       <div className="theatre-image-wrap">
                         <img
                           src={item.image}
-                          alt={title}
+                          alt={item.title}
                           className="theatre-image"
                         />
-                        <span className="theatre-badge">{category}</span>
+                        <span className="theatre-badge">{t.badge}</span>
                       </div>
 
                       <div className="theatre-body">
-                        <h3>{title}</h3>
+                        <h3>{item.title}</h3>
 
                         <div className="theatre-meta">
-                          <span>{subtitle}</span>
-                          <span className="theatre-location">
-                            {location}
-                          </span>
+                          {item.subtitle && <span>{item.subtitle}</span>}
+                          {item.location && (
+                            <span className="theatre-location">
+                              {item.location}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </Link>

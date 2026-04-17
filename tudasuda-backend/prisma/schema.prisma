@@ -149,3 +149,229 @@ model RestaurantFormatTag {
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
+
+model Place {
+  id         Int      @id @default(autoincrement())
+  slug       String   @unique
+  status     String   @default("draft")
+  coverImage String?
+  mapEmbed   String?
+  phone      String?
+
+  instagram  String?
+  telegram   String?
+  website    String?
+
+  parking    Boolean  @default(false)
+  wifi       Boolean  @default(false)
+  booking    Boolean  @default(false)
+  family     Boolean  @default(false)
+  terrace    Boolean  @default(false)
+  photoZone  Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  translations PlaceTranslation[]
+  prices       PlacePriceItem[]
+  highlights   PlaceHighlight[]
+  suitableFor  PlaceSuitableForTag[]
+}
+
+model PlaceTranslation {
+  id             Int    @id @default(autoincrement())
+  placeId        Int
+  locale         String
+
+  title          String
+  type           String?
+  category       String?
+  address        String?
+  workingHours   String?
+  priceLabel     String?
+  description    String?
+  features       String?
+  mustVisit      String?
+
+  seoTitle       String?
+  seoDescription String?
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([placeId, locale])
+}
+
+model PlacePriceItem {
+  id        Int    @id @default(autoincrement())
+  placeId   Int
+  locale    String
+  value     String
+  sortOrder Int    @default(0)
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+}
+
+model PlaceHighlight {
+  id        Int    @id @default(autoincrement())
+  placeId   Int
+  locale    String
+  title     String
+  image     String?
+  sortOrder Int    @default(0)
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+}
+
+model PlaceSuitableForTag {
+  id        Int    @id @default(autoincrement())
+  placeId   Int
+  locale    String
+  value     String
+  sortOrder Int    @default(0)
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+}
+
+model Movie {
+  id              Int      @id @default(autoincrement())
+  slug            String   @unique
+  status          String   @default("draft")
+  isFeatured      Boolean  @default(false)
+
+  posterImage     String?
+  coverImage      String?
+  trailerUrl      String?
+
+  releaseDate     DateTime?
+  durationMinutes Int?
+  ageRating       String?
+  imdbRating      String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  translations    MovieTranslation[]
+  sessions        MovieSession[]
+}
+
+model MovieTranslation {
+  id             Int    @id @default(autoincrement())
+  movieId        Int
+  locale         String
+
+  title          String
+  excerpt        String?
+  description    String?
+  genre          String?
+  country        String?
+
+  seoTitle       String?
+  seoDescription String?
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([movieId, locale])
+}
+
+model MovieSession {
+  id        Int      @id @default(autoincrement())
+  movieId   Int
+
+  startAt   DateTime
+  endAt     DateTime?
+  hallName  String?
+  price     String?
+  ticketUrl String?
+
+  createdAt DateTime @default(now())
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+}
+
+model Story {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  status      String   @default("draft")
+  isFeatured  Boolean  @default(false)
+  coverImage  String?
+  publishedAt DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  translations StoryTranslation[]
+}
+
+model StoryTranslation {
+  id             Int    @id @default(autoincrement())
+  storyId        Int
+  locale         String
+
+  title          String
+  excerpt        String?
+  content        String?
+
+  seoTitle       String?
+  seoDescription String?
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, locale])
+}
+
+model HeroSlide {
+  id             Int      @id @default(autoincrement())
+  sortOrder      Int      @default(0)
+  isActive       Boolean  @default(true)
+
+  previewImage   String
+  hoverMediaType String   @default("image")
+  hoverMediaUrl  String?
+
+  linkType       String   @default("custom")
+  linkUrl        String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  translations   HeroSlideTranslation[]
+}
+
+model HeroSlideTranslation {
+  id             Int    @id @default(autoincrement())
+  heroSlideId    Int
+  locale         String
+
+  title          String
+  subtitle       String?
+
+  heroSlide HeroSlide @relation(fields: [heroSlideId], references: [id], onDelete: Cascade)
+
+  @@unique([heroSlideId, locale])
+}
+
+model Reel {
+  id         Int      @id @default(autoincrement())
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+
+  coverImage String
+  videoUrl   String
+  sourceType String   @default("instagram")
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  translations ReelTranslation[]
+}
+
+model ReelTranslation {
+  id        Int    @id @default(autoincrement())
+  reelId    Int
+  locale    String
+  title     String?
+
+  reel Reel @relation(fields: [reelId], references: [id], onDelete: Cascade)
+
+  @@unique([reelId, locale])
+}

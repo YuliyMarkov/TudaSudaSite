@@ -6,42 +6,97 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  admin
+  editor
+}
+
+enum PublishStatus {
+  draft
+  published
+  archived
+}
+
+enum Locale {
+  ru
+  uz
+}
+
+enum EventType {
+  concert
+  theatre
+  exhibition
+  kids
+  festival
+  standup
+  masterclass
+  other
+}
+
+enum HeroHoverMediaType {
+  image
+  video
+}
+
+enum HeroLinkType {
+  custom
+  movie
+  event
+  place
+  restaurant
+  story
+}
+
+enum ReelSourceType {
+  instagram
+  youtube
+  tiktok
+  other
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
   name         String?
   passwordHash String
-  role         String   @default("admin")
+  role         UserRole @default(admin)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
 model Event {
-  id                 Int      @id @default(autoincrement())
-  slug               String   @unique
-  status             String   @default("draft")
-  type               String
-  isForKids          Boolean  @default(false)
-  coverImage         String?
-  ticketUrl          String?
-  mapEmbed           String?
-
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id          Int           @id @default(autoincrement())
+  slug        String        @unique
+  status      PublishStatus @default(draft)
+  type        EventType     @default(other)
+  isForKids   Boolean       @default(false)
+  isFeatured  Boolean       @default(false)
+  coverImage  String?
+  posterImage String?
+  ticketUrl   String?
+  mapEmbed    String?
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   translations       EventTranslation[]
   sessions           EventSession[]
   galleryItems       EventGalleryItem[]
   programItems       EventProgramItem[]
   importantInfoItems EventImportantInfoItem[]
+
+  @@index([status])
+  @@index([type])
+  @@index([isFeatured])
+  @@index([publishedAt])
 }
 
 model EventTranslation {
-  id               Int    @id @default(autoincrement())
+  id               Int     @id @default(autoincrement())
   eventId          Int
-  locale           String
-
+  locale           Locale
   title            String
+  subtitle         String?
   shortDescription String?
   description      String?
   address          String?
@@ -49,98 +104,108 @@ model EventTranslation {
   venue            String?
   duration         String?
   ageLimit         String?
-
   seoTitle         String?
   seoDescription   String?
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, locale])
+  @@index([locale])
 }
 
 model EventSession {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   eventId   Int
-
   startAt   DateTime
   endAt     DateTime?
-
   price     String?
   ticketUrl String?
-
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, startAt])
 }
 
 model EventGalleryItem {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   eventId   Int
   image     String
-  sortOrder Int    @default(0)
+  altRu     String?
+  altUz     String?
+  sortOrder Int     @default(0)
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, sortOrder])
 }
 
 model EventProgramItem {
   id        Int    @id @default(autoincrement())
   eventId   Int
-  locale    String
+  locale    Locale
   value     String
   sortOrder Int    @default(0)
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, locale, sortOrder])
 }
 
 model EventImportantInfoItem {
   id        Int    @id @default(autoincrement())
   eventId   Int
-  locale    String
+  locale    Locale
   value     String
   sortOrder Int    @default(0)
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, locale, sortOrder])
 }
 
 model Restaurant {
-  id            Int      @id @default(autoincrement())
-  slug          String   @unique
-  status        String   @default("draft")
+  id            Int           @id @default(autoincrement())
+  slug          String        @unique
+  status        PublishStatus @default(draft)
+  isFeatured    Boolean       @default(false)
   coverImage    String?
   mapEmbed      String?
   phone         String?
-
   instagram     String?
   telegram      String?
   website       String?
+  parking       Boolean       @default(false)
+  wifi          Boolean       @default(false)
+  booking       Boolean       @default(false)
+  delivery      Boolean       @default(false)
+  smoking       Boolean       @default(false)
+  terrace       Boolean       @default(false)
+  music         Boolean       @default(false)
+  ratingAverage Float         @default(0)
+  ratingCount   Int           @default(0)
+  publishedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  parking       Boolean  @default(false)
-  wifi          Boolean  @default(false)
-  booking       Boolean  @default(false)
-  delivery      Boolean  @default(false)
-  smoking       Boolean  @default(false)
-  terrace       Boolean  @default(false)
-  music         Boolean  @default(false)
+  translations RestaurantTranslation[]
+  prices       RestaurantPriceItem[]
+  dishes       RestaurantDish[]
+  formats      RestaurantFormatTag[]
+  ratings      RestaurantRating[]
 
-  ratingAverage Float    @default(0)
-  ratingCount   Int      @default(0)
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  translations  RestaurantTranslation[]
-  prices        RestaurantPriceItem[]
-  dishes        RestaurantDish[]
-  formats       RestaurantFormatTag[]
-  ratings       RestaurantRating[]
+  @@index([status])
+  @@index([isFeatured])
+  @@index([publishedAt])
 }
 
 model RestaurantTranslation {
-  id             Int    @id @default(autoincrement())
+  id             Int     @id @default(autoincrement())
   restaurantId   Int
-  locale         String
-
+  locale         Locale
   title          String
+  subtitle       String?
   type           String?
   cuisine        String?
   address        String?
@@ -149,44 +214,51 @@ model RestaurantTranslation {
   description    String?
   atmosphere     String?
   mustVisit      String?
-
   seoTitle       String?
   seoDescription String?
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, locale])
+  @@index([locale])
 }
 
 model RestaurantPriceItem {
   id           Int    @id @default(autoincrement())
   restaurantId Int
-  locale       String
+  locale       Locale
   value        String
   sortOrder    Int    @default(0)
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, locale, sortOrder])
 }
 
 model RestaurantDish {
-  id           Int    @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   restaurantId Int
   image        String?
-  locale       String
+  locale       Locale
   title        String
-  sortOrder    Int    @default(0)
+  description  String?
+  sortOrder    Int     @default(0)
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, locale, sortOrder])
 }
 
 model RestaurantFormatTag {
   id           Int    @id @default(autoincrement())
   restaurantId Int
-  locale       String
+  locale       Locale
   value        String
   sortOrder    Int    @default(0)
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, locale, sortOrder])
 }
 
 model RestaurantRating {
@@ -200,46 +272,49 @@ model RestaurantRating {
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, browserToken])
+  @@index([restaurantId])
 }
 
 model Place {
-  id            Int      @id @default(autoincrement())
-  slug          String   @unique
-  status        String   @default("draft")
+  id            Int           @id @default(autoincrement())
+  slug          String        @unique
+  status        PublishStatus @default(draft)
+  isFeatured    Boolean       @default(false)
   coverImage    String?
   mapEmbed      String?
   phone         String?
-
   instagram     String?
   telegram      String?
   website       String?
+  parking       Boolean       @default(false)
+  wifi          Boolean       @default(false)
+  booking       Boolean       @default(false)
+  family        Boolean       @default(false)
+  terrace       Boolean       @default(false)
+  photoZone     Boolean       @default(false)
+  ratingAverage Float         @default(0)
+  ratingCount   Int           @default(0)
+  publishedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  parking       Boolean  @default(false)
-  wifi          Boolean  @default(false)
-  booking       Boolean  @default(false)
-  family        Boolean  @default(false)
-  terrace       Boolean  @default(false)
-  photoZone     Boolean  @default(false)
+  translations PlaceTranslation[]
+  prices       PlacePriceItem[]
+  highlights   PlaceHighlight[]
+  suitableFor  PlaceSuitableForTag[]
+  ratings      PlaceRating[]
 
-  ratingAverage Float    @default(0)
-  ratingCount   Int      @default(0)
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  translations  PlaceTranslation[]
-  prices        PlacePriceItem[]
-  highlights    PlaceHighlight[]
-  suitableFor   PlaceSuitableForTag[]
-  ratings       PlaceRating[]
+  @@index([status])
+  @@index([isFeatured])
+  @@index([publishedAt])
 }
 
 model PlaceTranslation {
-  id             Int    @id @default(autoincrement())
+  id             Int     @id @default(autoincrement())
   placeId        Int
-  locale         String
-
+  locale         Locale
   title          String
+  subtitle       String?
   type           String?
   category       String?
   address        String?
@@ -248,44 +323,51 @@ model PlaceTranslation {
   description    String?
   features       String?
   mustVisit      String?
-
   seoTitle       String?
   seoDescription String?
 
   place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
 
   @@unique([placeId, locale])
+  @@index([locale])
 }
 
 model PlacePriceItem {
   id        Int    @id @default(autoincrement())
   placeId   Int
-  locale    String
+  locale    Locale
   value     String
   sortOrder Int    @default(0)
 
   place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@index([placeId, locale, sortOrder])
 }
 
 model PlaceHighlight {
-  id        Int    @id @default(autoincrement())
-  placeId   Int
-  locale    String
-  title     String
-  image     String?
-  sortOrder Int    @default(0)
+  id          Int     @id @default(autoincrement())
+  placeId     Int
+  locale      Locale
+  title       String
+  description String?
+  image       String?
+  sortOrder   Int     @default(0)
 
   place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@index([placeId, locale, sortOrder])
 }
 
 model PlaceSuitableForTag {
   id        Int    @id @default(autoincrement())
   placeId   Int
-  locale    String
+  locale    Locale
   value     String
   sortOrder Int    @default(0)
 
   place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@index([placeId, locale, sortOrder])
 }
 
 model PlaceRating {
@@ -299,90 +381,101 @@ model PlaceRating {
   place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
 
   @@unique([placeId, browserToken])
+  @@index([placeId])
 }
 
 model Movie {
-  id              Int      @id @default(autoincrement())
-  slug            String   @unique
-  status          String   @default("draft")
-  isFeatured      Boolean  @default(false)
-
+  id              Int           @id @default(autoincrement())
+  slug            String        @unique
+  status          PublishStatus @default(draft)
+  isFeatured      Boolean       @default(false)
   posterImage     String?
   coverImage      String?
   trailerUrl      String?
-
   releaseDate     DateTime?
   durationMinutes Int?
   ageRating       String?
   imdbRating      String?
   kpRating        String?
+  ratingAverage   Float         @default(0)
+  ratingCount     Int           @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  ratingAverage   Float    @default(0)
-  ratingCount     Int      @default(0)
+  translations MovieTranslation[]
+  sessions     MovieSession[]
+  galleryItems MovieGalleryItem[]
+  castItems    MovieCastItem[]
+  ratings      MovieRating[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  translations    MovieTranslation[]
-  sessions        MovieSession[]
-  galleryItems    MovieGalleryItem[]
-  castItems       MovieCastItem[]
-  ratings         MovieRating[]
+  @@index([status])
+  @@index([isFeatured])
+  @@index([releaseDate])
+  @@index([publishedAt])
 }
 
 model MovieTranslation {
-  id             Int    @id @default(autoincrement())
+  id             Int     @id @default(autoincrement())
   movieId        Int
-  locale         String
-
+  locale         Locale
   title          String
+  subtitle       String?
   excerpt        String?
   description    String?
   genre          String?
   country        String?
   director       String?
-
   seoTitle       String?
   seoDescription String?
 
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@unique([movieId, locale])
+  @@index([locale])
 }
 
 model MovieSession {
-  id          Int      @id @default(autoincrement())
-  movieId      Int
-
-  sessionDate DateTime
-  sessionTime String
-  cinemaName  String
-  hallName    String?
-  price       String?
-  ticketUrl   String?
-
-  createdAt   DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  movieId    Int
+  startAt    DateTime
+  cinemaName String
+  hallName   String?
+  price      String?
+  ticketUrl  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([movieId, startAt])
 }
 
 model MovieGalleryItem {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   movieId   Int
   image     String
-  sortOrder Int    @default(0)
+  altRu     String?
+  altUz     String?
+  sortOrder Int     @default(0)
 
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([movieId, sortOrder])
 }
 
 model MovieCastItem {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   movieId   Int
-  locale    String
+  locale    Locale
   name      String
-  sortOrder Int    @default(0)
+  role      String?
+  image     String?
+  sortOrder Int     @default(0)
 
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([movieId, locale, sortOrder])
 }
 
 model MovieRating {
@@ -396,93 +489,102 @@ model MovieRating {
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@unique([movieId, browserToken])
+  @@index([movieId])
 }
 
 model Story {
-  id           Int      @id @default(autoincrement())
-  slug         String   @unique
-  status       String   @default("draft")
-  type         String   @default("news")
-  isFeatured   Boolean  @default(false)
-  coverImage   String?
-  publishedAt  DateTime?
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          Int           @id @default(autoincrement())
+  slug        String        @unique
+  status      PublishStatus @default(draft)
+  type        String        @default("news")
+  isFeatured  Boolean       @default(false)
+  coverImage  String?
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   translations StoryTranslation[]
+
+  @@index([status])
+  @@index([type])
+  @@index([isFeatured])
+  @@index([publishedAt])
 }
 
 model StoryTranslation {
-  id             Int    @id @default(autoincrement())
+  id             Int     @id @default(autoincrement())
   storyId        Int
-  locale         String
-
+  locale         Locale
   title          String
   excerpt        String?
   content        String?
-
   seoTitle       String?
   seoDescription String?
 
   story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
 
   @@unique([storyId, locale])
+  @@index([locale])
 }
 
 model HeroSlide {
-  id             Int      @id @default(autoincrement())
-  sortOrder      Int      @default(0)
-  isActive       Boolean  @default(true)
+  id                 Int                @id @default(autoincrement())
+  sortOrder          Int                @default(0)
+  isActive           Boolean            @default(true)
+  previewImage       String
+  hoverMediaType     HeroHoverMediaType @default(image)
+  hoverMediaUrl      String?
+  linkType           HeroLinkType       @default(custom)
+  linkUrl            String?
+  linkedMovieId      Int?
+  linkedEventId      Int?
+  linkedPlaceId      Int?
+  linkedRestaurantId Int?
+  linkedStoryId      Int?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
-  previewImage   String
-  hoverMediaType String   @default("image")
-  hoverMediaUrl  String?
+  translations HeroSlideTranslation[]
 
-  linkType       String   @default("custom")
-  linkUrl        String?
-
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  translations   HeroSlideTranslation[]
+  @@index([isActive, sortOrder])
 }
 
 model HeroSlideTranslation {
-  id          Int    @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   heroSlideId Int
-  locale      String
-
+  locale      Locale
   title       String
   subtitle    String?
 
   heroSlide HeroSlide @relation(fields: [heroSlideId], references: [id], onDelete: Cascade)
 
   @@unique([heroSlideId, locale])
+  @@index([locale])
 }
 
 model Reel {
-  id           Int      @id @default(autoincrement())
-  sortOrder    Int      @default(0)
-  isActive     Boolean  @default(true)
-
-  coverImage   String
-  videoUrl     String
-  sourceType   String   @default("instagram")
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         Int            @id @default(autoincrement())
+  sortOrder  Int            @default(0)
+  isActive   Boolean        @default(true)
+  coverImage String
+  videoUrl   String
+  sourceType ReelSourceType @default(instagram)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 
   translations ReelTranslation[]
+
+  @@index([isActive, sortOrder])
 }
 
 model ReelTranslation {
-  id        Int    @id @default(autoincrement())
-  reelId    Int
-  locale    String
-  title     String?
+  id     Int     @id @default(autoincrement())
+  reelId Int
+  locale Locale
+  title  String?
 
   reel Reel @relation(fields: [reelId], references: [id], onDelete: Cascade)
 
   @@unique([reelId, locale])
+  @@index([locale])
 }

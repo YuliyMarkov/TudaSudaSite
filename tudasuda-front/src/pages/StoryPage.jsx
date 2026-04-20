@@ -2,27 +2,9 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
+import StoryContentRenderer from "../components/StoryContentRenderer";
 
 const API_BASE_URL = "http://localhost:4000";
-
-function normalizeContent(content, fallbackText = "") {
-  if (!content) {
-    return fallbackText ? [fallbackText] : [];
-  }
-
-  if (Array.isArray(content)) {
-    return content.filter(Boolean);
-  }
-
-  if (typeof content === "string" && content.trim()) {
-    return content
-      .split(/\n{2,}/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  return fallbackText ? [fallbackText] : [];
-}
 
 function StoryPage() {
   const { lang, slug } = useParams();
@@ -34,6 +16,23 @@ function StoryPage() {
   const [stories, setStories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+
+  const uiText = {
+    ru: {
+      back: "← Назад ко всем материалам",
+      news: "Новость",
+      article: "Статья",
+      related: "Похожие материалы",
+    },
+    uz: {
+      back: "← Barcha materiallarga qaytish",
+      news: "Yangilik",
+      article: "Maqola",
+      related: "O‘xshash materiallar",
+    },
+  };
+
+  const t = uiText[currentLang] || uiText.ru;
 
   useEffect(() => {
     async function loadData() {
@@ -50,6 +49,7 @@ function StoryPage() {
 
         if (storyResponse.status === 404) {
           setStory(null);
+          setStories([]);
           return;
         }
 
@@ -75,29 +75,11 @@ function StoryPage() {
     loadData();
   }, [slug, currentLang]);
 
-  const uiText = {
-    ru: {
-      back: "← Назад ко всем материалам",
-      news: "Новость",
-      articles: "Статья",
-      related: "Похожие материалы",
-    },
-    uz: {
-      back: "← Barcha materiallarga qaytish",
-      news: "Yangilik",
-      articles: "Maqola",
-      related: "O‘xshash materiallar",
-    },
-  };
-
-  const t = uiText[currentLang] || uiText.ru;
-
   const normalizedStory = useMemo(() => {
     if (!story) return null;
 
     const translation = story.translations?.[0] || null;
     const shortText = translation?.excerpt || "";
-    const paragraphs = normalizeContent(translation?.content, shortText);
 
     return {
       slug: story.slug,
@@ -105,7 +87,8 @@ function StoryPage() {
       image: story.coverImage,
       title: translation?.title || "",
       shortText,
-      paragraphs,
+      content: translation?.content || "",
+      contentJson: translation?.contentJson || null,
       seoTitle: translation?.seoTitle || translation?.title || "",
       seoDescription: translation?.seoDescription || shortText || "",
     };
@@ -160,8 +143,8 @@ function StoryPage() {
   const storyTypeLabel =
     normalizedStory.type === "news"
       ? t.news
-      : normalizedStory.type === "articles"
-      ? t.articles
+      : normalizedStory.type === "article"
+      ? t.article
       : "";
 
   return (
@@ -198,15 +181,14 @@ function StoryPage() {
                 <div className="story-page-lead">{normalizedStory.shortText}</div>
               ) : null}
 
-              <div className="story-page-body">
-                {normalizedStory.paragraphs.map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
-              </div>
+              <StoryContentRenderer
+                contentJson={normalizedStory.contentJson}
+                fallbackHtml={normalizedStory.content}
+              />
             </div>
           </article>
 
-          {relatedStories.length > 0 && (
+          {relatedStories.length > 0 ? (
             <section className="story-related-section">
               <h2>{t.related}</h2>
 
@@ -215,8 +197,8 @@ function StoryPage() {
                   const typeLabel =
                     item.type === "news"
                       ? t.news
-                      : item.type === "articles"
-                      ? t.articles
+                      : item.type === "article"
+                      ? t.article
                       : "";
 
                   return (
@@ -241,7 +223,7 @@ function StoryPage() {
                 })}
               </div>
             </section>
-          )}
+          ) : null}
         </div>
       </main>
     </>

@@ -518,6 +518,7 @@ model StoryTranslation {
   title          String
   excerpt        String?
   content        String?
+  contentJson    Json?
   seoTitle       String?
   seoDescription String?
 

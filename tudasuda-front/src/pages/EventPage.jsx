@@ -31,6 +31,53 @@ function formatTime(dateString, language) {
   }).format(date);
 }
 
+function normalizeTextContent(value) {
+  if (!value || typeof value !== "string") return [];
+
+  return value
+    .split(/\n{2,}/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function extractMapSrc(mapEmbed) {
+  if (!mapEmbed || typeof mapEmbed !== "string") return "";
+
+  const trimmed = mapEmbed.trim();
+
+  if (!trimmed) return "";
+
+  if (trimmed.startsWith("<iframe")) {
+    const match = trimmed.match(/src=["']([^"']+)["']/i);
+    return match?.[1] || "";
+  }
+
+  return trimmed;
+}
+
+function getCategoryLabel(event, t) {
+  if (event.isForKids) return t.kids;
+
+  switch (event.type) {
+    case "concert":
+      return t.concert;
+    case "theatre":
+      return t.theatre;
+    case "exhibition":
+      return t.exhibition;
+    case "festival":
+      return t.festival;
+    case "standup":
+      return t.standup;
+    case "masterclass":
+      return t.masterclass;
+    case "kids":
+      return t.kids;
+    default:
+      return t.all;
+  }
+}
+
 function EventPage() {
   const { slug } = useParams();
   const { language } = useLanguage();
@@ -63,14 +110,19 @@ function EventPage() {
       concert: "Концерты",
       theatre: "Спектакли",
       exhibition: "Выставки",
+      festival: "Фестивали",
+      standup: "Стендап",
+      masterclass: "Мастер-классы",
       kids: "Для детей",
       all: "Событие",
       noDate: "Уточняется",
       noTime: "Уточняется",
       noVenue: "Уточняется",
+      noAddress: "Уточняется",
       noDuration: "Уточняется",
       noAge: "Уточняется",
       noPrice: "Уточняется",
+      noDescription: "Описание скоро появится.",
     },
     uz: {
       home: "Bosh sahifa",
@@ -95,18 +147,27 @@ function EventPage() {
       concert: "Konsertlar",
       theatre: "Spektakllar",
       exhibition: "Ko‘rgazmalar",
+      festival: "Festivallar",
+      standup: "Stendap",
+      masterclass: "Master-klasslar",
       kids: "Bolalar uchun",
       all: "Tadbir",
       noDate: "Aniqlanmoqda",
       noTime: "Aniqlanmoqda",
       noVenue: "Aniqlanmoqda",
+      noAddress: "Aniqlanmoqda",
       noDuration: "Aniqlanmoqda",
       noAge: "Aniqlanmoqda",
       noPrice: "Aniqlanmoqda",
+      noDescription: "Tavsif tez orada qo‘shiladi.",
     },
   };
 
   const t = uiText[language] || uiText.ru;
+  const errorText =
+    language === "uz"
+      ? "Tadbirni yuklab bo‘lmadi."
+      : "Не удалось загрузить событие.";
 
   useEffect(() => {
     async function loadEvent() {
@@ -131,7 +192,7 @@ function EventPage() {
         setEvent(data);
       } catch (error) {
         console.error("LOAD EVENT ERROR:", error);
-        setLoadError(t.error);
+        setLoadError(errorText);
         setEvent(null);
       } finally {
         setIsLoading(false);
@@ -139,40 +200,33 @@ function EventPage() {
     }
 
     loadEvent();
-  }, [slug, language, t.error]);
+  }, [slug, language, errorText]);
 
   const normalizedEvent = useMemo(() => {
     if (!event) return null;
 
     const translation = event.translations?.[0] || null;
-    const firstSession = event.sessions?.[0] || null;
-
-    const categoryLabel = event.isForKids
-      ? t.kids
-      : event.type === "concert"
-      ? t.concert
-      : event.type === "theatre"
-      ? t.theatre
-      : event.type === "exhibition"
-      ? t.exhibition
-      : t.all;
+    const sessions = Array.isArray(event.sessions) ? event.sessions : [];
+    const firstSession = sessions[0] || null;
 
     return {
       slug: event.slug,
-      cover: event.coverImage,
-      ticketUrl: firstSession?.ticketUrl || event.ticketUrl,
-      mapEmbed: event.mapEmbed,
+      cover: event.coverImage || event.posterImage || "",
+      poster: event.posterImage || "",
+      ticketUrl: firstSession?.ticketUrl || event.ticketUrl || "",
+      mapSrc: extractMapSrc(event.mapEmbed),
       title: translation?.title || "",
+      subtitle: translation?.subtitle || "",
       description: translation?.description || "",
+      descriptionParagraphs: normalizeTextContent(translation?.description),
       shortDescription: translation?.shortDescription || "",
-      categoryLabel,
+      categoryLabel: getCategoryLabel(event, t),
       venue: translation?.venue || "",
       address: translation?.address || "",
-      date: firstSession?.startAt || null,
-      time: firstSession?.startAt || null,
       duration: translation?.duration || "",
       ageLimit: translation?.ageLimit || "",
       ticketPrice: translation?.ticketPrice || firstSession?.price || "",
+      sessions,
       gallery:
         event.galleryItems?.map((item) => item.image).filter(Boolean) || [],
       program:
@@ -180,6 +234,12 @@ function EventPage() {
       importantInfo:
         event.importantInfoItems?.map((item) => item.value).filter(Boolean) ||
         [],
+      seoTitle: translation?.seoTitle || translation?.title || "",
+      seoDescription:
+        translation?.seoDescription ||
+        translation?.shortDescription ||
+        translation?.description ||
+        "",
     };
   }, [event, t]);
 
@@ -203,7 +263,7 @@ function EventPage() {
         <section className="event-page">
           <div className="container">
             <div className="event-not-found">
-              <h1>{t.error}</h1>
+              <h1>{loadError}</h1>
               <Link to={`/${language}/events`} className="back-link">
                 {t.back}
               </Link>
@@ -234,12 +294,13 @@ function EventPage() {
 
   const {
     title,
+    subtitle,
     description,
+    descriptionParagraphs,
+    shortDescription,
     categoryLabel,
     venue,
     address,
-    date,
-    time,
     duration,
     ageLimit,
     ticketPrice,
@@ -247,13 +308,20 @@ function EventPage() {
     gallery,
     program,
     importantInfo,
-    mapEmbed,
+    mapSrc,
     ticketUrl,
+    sessions,
+    seoTitle,
+    seoDescription,
   } = normalizedEvent;
 
   return (
     <>
-      <Seo title={title} description={description} image={cover} />
+      <Seo
+        title={seoTitle || title}
+        description={seoDescription || shortDescription || title}
+        image={cover}
+      />
 
       <main className="main">
         <section className="event-page">
@@ -268,7 +336,9 @@ function EventPage() {
 
             <div className="event-hero">
               <div className="event-cover-wrap">
-                <img src={cover} alt={title} className="event-cover" />
+                {cover ? (
+                  <img src={cover} alt={title} className="event-cover" />
+                ) : null}
               </div>
 
               <div className="event-info">
@@ -276,20 +346,30 @@ function EventPage() {
 
                 <h1>{title}</h1>
 
-                <p className="event-description">{description}</p>
+                {subtitle ? <p className="event-subtitle">{subtitle}</p> : null}
+
+                {shortDescription ? (
+                  <p className="event-description">{shortDescription}</p>
+                ) : description ? (
+                  <p className="event-description">{description}</p>
+                ) : null}
 
                 <div className="event-meta-grid">
                   <div className="event-meta-card">
                     <span className="event-meta-label">{t.date}</span>
                     <span className="event-meta-value">
-                      {date ? formatDate(date, language) : t.noDate}
+                      {sessions[0]?.startAt
+                        ? formatDate(sessions[0].startAt, language)
+                        : t.noDate}
                     </span>
                   </div>
 
                   <div className="event-meta-card">
                     <span className="event-meta-label">{t.time}</span>
                     <span className="event-meta-value">
-                      {time ? formatTime(time, language) : t.noTime}
+                      {sessions[0]?.startAt
+                        ? formatTime(sessions[0].startAt, language)
+                        : t.noTime}
                     </span>
                   </div>
 
@@ -303,7 +383,7 @@ function EventPage() {
                   <div className="event-meta-card">
                     <span className="event-meta-label">{t.address}</span>
                     <span className="event-meta-value">
-                      {address || t.noVenue}
+                      {address || t.noAddress}
                     </span>
                   </div>
 
@@ -330,7 +410,7 @@ function EventPage() {
                     </span>
                   </div>
 
-                  {ticketUrl && (
+                  {ticketUrl ? (
                     <a
                       href={ticketUrl}
                       target="_blank"
@@ -339,12 +419,12 @@ function EventPage() {
                     >
                       {t.buyTickets}
                     </a>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
 
-            {gallery?.length > 0 && (
+            {gallery?.length > 0 ? (
               <div className="event-content-card">
                 <h2>{t.gallery}</h2>
                 <div className="event-gallery-grid">
@@ -355,12 +435,27 @@ function EventPage() {
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
             <div className="event-sections">
               <div className="event-content-card">
                 <h2>{t.about}</h2>
-                <p className="event-text">{description}</p>
+
+                {descriptionParagraphs.length ? (
+                  <div className="event-text-content">
+                    {descriptionParagraphs.map((paragraph, index) => (
+                      <p className="event-text" key={index}>
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                ) : description ? (
+                  <p className="event-text">{description}</p>
+                ) : shortDescription ? (
+                  <p className="event-text">{shortDescription}</p>
+                ) : (
+                  <p className="event-text">{t.noDescription}</p>
+                )}
               </div>
 
               {!!program?.length && (
@@ -387,19 +482,19 @@ function EventPage() {
 
               <AdBlock />
 
-              {mapEmbed && (
+              {mapSrc ? (
                 <div className="event-content-card event-map-card">
                   <h2>{t.map}</h2>
                   <div className="event-map-wrap">
                     <iframe
-                      src={mapEmbed}
+                      src={mapSrc}
                       title={`${title} map`}
                       loading="lazy"
                       allowFullScreen
                     />
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </section>

@@ -1,55 +1,83 @@
 import prisma from "../lib/prisma.js";
 
-function mapTranslationCreate(item) {
+function normalizeStatus(status) {
+  if (status === "published") return "published";
+  if (status === "archived") return "archived";
+  return "draft";
+}
+
+function normalizeType(type) {
+  const allowed = [
+    "concert",
+    "theatre",
+    "exhibition",
+    "kids",
+    "festival",
+    "standup",
+    "masterclass",
+    "other",
+  ];
+
+  return allowed.includes(type) ? type : "other";
+}
+
+function normalizeLocale(locale) {
+  return locale === "uz" ? "uz" : "ru";
+}
+
+function mapTranslationCreate(item = {}) {
   return {
-    locale: item.locale,
-    title: item.title,
-    shortDescription: item.shortDescription || null,
-    description: item.description || null,
-    address: item.address || null,
-    ticketPrice: item.ticketPrice || null,
-    venue: item.venue || null,
-    duration: item.duration || null,
-    ageLimit: item.ageLimit || null,
-    seoTitle: item.seoTitle || null,
-    seoDescription: item.seoDescription || null,
+    locale: normalizeLocale(item.locale),
+    title: item.title?.trim() || "",
+    subtitle: item.subtitle?.trim() || null,
+    shortDescription: item.shortDescription?.trim() || null,
+    description: item.description?.trim() || null,
+    address: item.address?.trim() || null,
+    ticketPrice: item.ticketPrice?.trim() || null,
+    venue: item.venue?.trim() || null,
+    duration: item.duration?.trim() || null,
+    ageLimit: item.ageLimit?.trim() || null,
+    seoTitle: item.seoTitle?.trim() || null,
+    seoDescription: item.seoDescription?.trim() || null,
   };
 }
 
-function mapSessionCreate(item) {
+function mapSessionCreate(item = {}) {
   return {
     startAt: new Date(item.startAt),
     endAt: item.endAt ? new Date(item.endAt) : null,
-    price: item.price || null,
-    ticketUrl: item.ticketUrl || null,
+    price: item.price?.trim() || null,
+    ticketUrl: item.ticketUrl?.trim() || null,
   };
 }
 
-function mapGalleryItemCreate(item) {
+function mapGalleryItemCreate(item = {}) {
   return {
-    image: item.image,
+    image: item.image?.trim() || "",
     sortOrder: Number(item.sortOrder ?? 0),
   };
 }
 
-function mapProgramItemCreate(item) {
+function mapProgramItemCreate(item = {}) {
   return {
-    locale: item.locale,
-    value: item.value,
+    locale: normalizeLocale(item.locale),
+    value: item.value?.trim() || "",
     sortOrder: Number(item.sortOrder ?? 0),
   };
 }
 
-function mapImportantInfoItemCreate(item) {
+function mapImportantInfoItemCreate(item = {}) {
   return {
-    locale: item.locale,
-    value: item.value,
+    locale: normalizeLocale(item.locale),
+    value: item.value?.trim() || "",
     sortOrder: Number(item.sortOrder ?? 0),
   };
 }
 
 const eventInclude = {
-  translations: true,
+  translations: {
+    orderBy: [{ locale: "asc" }],
+  },
   sessions: {
     orderBy: [{ startAt: "asc" }, { id: "asc" }],
   },
@@ -71,9 +99,12 @@ export async function createEvent(req, res) {
       status,
       type,
       isForKids,
+      isFeatured,
       coverImage,
+      posterImage,
       ticketUrl,
       mapEmbed,
+      publishedAt,
       translations,
       sessions,
       galleryItems,
@@ -81,7 +112,7 @@ export async function createEvent(req, res) {
       importantInfoItems,
     } = req.body;
 
-    if (!slug || !type) {
+    if (!slug?.trim() || !type) {
       return res.status(400).json({
         message: "slug и type обязательны",
       });
@@ -93,8 +124,18 @@ export async function createEvent(req, res) {
       });
     }
 
+    const hasRuTitle = translations.some(
+      (item) => normalizeLocale(item.locale) === "ru" && item.title?.trim()
+    );
+
+    if (!hasRuTitle) {
+      return res.status(400).json({
+        message: "Нужен хотя бы русский перевод с title",
+      });
+    }
+
     const existingEvent = await prisma.event.findUnique({
-      where: { slug },
+      where: { slug: slug.trim() },
     });
 
     if (existingEvent) {
@@ -105,38 +146,49 @@ export async function createEvent(req, res) {
 
     const event = await prisma.event.create({
       data: {
-        slug,
-        status: status || "draft",
-        type,
+        slug: slug.trim(),
+        status: normalizeStatus(status),
+        type: normalizeType(type),
         isForKids: Boolean(isForKids),
-        coverImage: coverImage || null,
-        ticketUrl: ticketUrl || null,
-        mapEmbed: mapEmbed || null,
+        isFeatured: Boolean(isFeatured),
+        coverImage: coverImage?.trim() || null,
+        posterImage: posterImage?.trim() || null,
+        ticketUrl: ticketUrl?.trim() || null,
+        mapEmbed: mapEmbed?.trim() || null,
+        publishedAt: publishedAt ? new Date(publishedAt) : null,
         translations: {
           create: translations.map(mapTranslationCreate),
         },
         sessions:
           Array.isArray(sessions) && sessions.length
             ? {
-                create: sessions.map(mapSessionCreate),
+                create: sessions
+                  .filter((item) => item.startAt)
+                  .map(mapSessionCreate),
               }
             : undefined,
         galleryItems:
           Array.isArray(galleryItems) && galleryItems.length
             ? {
-                create: galleryItems.map(mapGalleryItemCreate),
+                create: galleryItems
+                  .filter((item) => item.image)
+                  .map(mapGalleryItemCreate),
               }
             : undefined,
         programItems:
           Array.isArray(programItems) && programItems.length
             ? {
-                create: programItems.map(mapProgramItemCreate),
+                create: programItems
+                  .filter((item) => item.value)
+                  .map(mapProgramItemCreate),
               }
             : undefined,
         importantInfoItems:
           Array.isArray(importantInfoItems) && importantInfoItems.length
             ? {
-                create: importantInfoItems.map(mapImportantInfoItemCreate),
+                create: importantInfoItems
+                  .filter((item) => item.value)
+                  .map(mapImportantInfoItemCreate),
               }
             : undefined,
       },
@@ -154,29 +206,37 @@ export async function createEvent(req, res) {
 
 export async function getEvents(req, res) {
   try {
-    const { status, type, lang } = req.query;
+    const { status, type, lang, admin, featured } = req.query;
 
     const where = {};
 
-    if (status) {
-      where.status = status;
+    if (admin === "true") {
+      if (status) {
+        where.status = normalizeStatus(status);
+      }
+    } else {
+      where.status = "published";
     }
 
     if (type) {
-      where.type = type;
+      where.type = normalizeType(type);
+    }
+
+    if (featured === "true") {
+      where.isFeatured = true;
     }
 
     const events = await prisma.event.findMany({
       where,
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
       include: {
         translations: lang
           ? {
-              where: { locale: lang },
+              where: { locale: normalizeLocale(lang) },
             }
-          : true,
+          : {
+              orderBy: [{ locale: "asc" }],
+            },
         sessions: {
           orderBy: [{ startAt: "asc" }, { id: "asc" }],
         },
@@ -185,7 +245,7 @@ export async function getEvents(req, res) {
         },
         programItems: lang
           ? {
-              where: { locale: lang },
+              where: { locale: normalizeLocale(lang) },
               orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
             }
           : {
@@ -193,7 +253,7 @@ export async function getEvents(req, res) {
             },
         importantInfoItems: lang
           ? {
-              where: { locale: lang },
+              where: { locale: normalizeLocale(lang) },
               orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
             }
           : {
@@ -211,19 +271,54 @@ export async function getEvents(req, res) {
   }
 }
 
+export async function getEventById(req, res) {
+  try {
+    const eventId = Number(req.params.id);
+
+    if (!eventId || Number.isNaN(eventId)) {
+      return res.status(400).json({
+        message: "Некорректный id события",
+      });
+    }
+
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: eventInclude,
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Событие не найдено",
+      });
+    }
+
+    return res.json(event);
+  } catch (error) {
+    console.error("GET EVENT BY ID ERROR:", error);
+    return res.status(500).json({
+      message: "Ошибка сервера при получении события",
+    });
+  }
+}
+
 export async function getEventBySlug(req, res) {
   try {
     const { slug } = req.params;
     const { lang } = req.query;
 
-    const event = await prisma.event.findUnique({
-      where: { slug },
+    const event = await prisma.event.findFirst({
+      where: {
+        slug,
+        status: "published",
+      },
       include: {
         translations: lang
           ? {
-              where: { locale: lang },
+              where: { locale: normalizeLocale(lang) },
             }
-          : true,
+          : {
+              orderBy: [{ locale: "asc" }],
+            },
         sessions: {
           orderBy: [{ startAt: "asc" }, { id: "asc" }],
         },
@@ -232,7 +327,7 @@ export async function getEventBySlug(req, res) {
         },
         programItems: lang
           ? {
-              where: { locale: lang },
+              where: { locale: normalizeLocale(lang) },
               orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
             }
           : {
@@ -240,7 +335,7 @@ export async function getEventBySlug(req, res) {
             },
         importantInfoItems: lang
           ? {
-              where: { locale: lang },
+              where: { locale: normalizeLocale(lang) },
               orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
             }
           : {
@@ -268,7 +363,7 @@ export async function updateEvent(req, res) {
   try {
     const eventId = Number(req.params.id);
 
-    if (!eventId) {
+    if (!eventId || Number.isNaN(eventId)) {
       return res.status(400).json({
         message: "Некорректный id события",
       });
@@ -279,9 +374,12 @@ export async function updateEvent(req, res) {
       status,
       type,
       isForKids,
+      isFeatured,
       coverImage,
+      posterImage,
       ticketUrl,
       mapEmbed,
+      publishedAt,
       translations,
       sessions,
       galleryItems,
@@ -291,6 +389,7 @@ export async function updateEvent(req, res) {
 
     const existingEvent = await prisma.event.findUnique({
       where: { id: eventId },
+      include: eventInclude,
     });
 
     if (!existingEvent) {
@@ -299,9 +398,9 @@ export async function updateEvent(req, res) {
       });
     }
 
-    if (slug && slug !== existingEvent.slug) {
+    if (slug && slug.trim() !== existingEvent.slug) {
       const slugTaken = await prisma.event.findUnique({
-        where: { slug },
+        where: { slug: slug.trim() },
       });
 
       if (slugTaken) {
@@ -334,44 +433,78 @@ export async function updateEvent(req, res) {
     const updatedEvent = await prisma.event.update({
       where: { id: eventId },
       data: {
-        slug: slug ?? existingEvent.slug,
-        status: status ?? existingEvent.status,
-        type: type ?? existingEvent.type,
+        slug: slug !== undefined ? slug.trim() : existingEvent.slug,
+        status: status !== undefined ? normalizeStatus(status) : existingEvent.status,
+        type: type !== undefined ? normalizeType(type) : existingEvent.type,
         isForKids:
-          typeof isForKids === "boolean"
-            ? isForKids
-            : existingEvent.isForKids,
-        coverImage: coverImage ?? existingEvent.coverImage,
-        ticketUrl: ticketUrl ?? existingEvent.ticketUrl,
-        mapEmbed: mapEmbed ?? existingEvent.mapEmbed,
+          typeof isForKids === "boolean" ? isForKids : existingEvent.isForKids,
+        isFeatured:
+          typeof isFeatured === "boolean"
+            ? isFeatured
+            : existingEvent.isFeatured,
+        coverImage:
+          coverImage !== undefined
+            ? coverImage?.trim() || null
+            : existingEvent.coverImage,
+        posterImage:
+          posterImage !== undefined
+            ? posterImage?.trim() || null
+            : existingEvent.posterImage,
+        ticketUrl:
+          ticketUrl !== undefined
+            ? ticketUrl?.trim() || null
+            : existingEvent.ticketUrl,
+        mapEmbed:
+          mapEmbed !== undefined
+            ? mapEmbed?.trim() || null
+            : existingEvent.mapEmbed,
+        publishedAt:
+          publishedAt !== undefined
+            ? publishedAt
+              ? new Date(publishedAt)
+              : null
+            : existingEvent.publishedAt,
+
         translations:
           Array.isArray(translations) && translations.length
             ? {
                 create: translations.map(mapTranslationCreate),
               }
             : undefined,
+
         sessions:
           Array.isArray(sessions) && sessions.length
             ? {
-                create: sessions.map(mapSessionCreate),
+                create: sessions
+                  .filter((item) => item.startAt)
+                  .map(mapSessionCreate),
               }
             : undefined,
+
         galleryItems:
           Array.isArray(galleryItems) && galleryItems.length
             ? {
-                create: galleryItems.map(mapGalleryItemCreate),
+                create: galleryItems
+                  .filter((item) => item.image)
+                  .map(mapGalleryItemCreate),
               }
             : undefined,
+
         programItems:
           Array.isArray(programItems) && programItems.length
             ? {
-                create: programItems.map(mapProgramItemCreate),
+                create: programItems
+                  .filter((item) => item.value)
+                  .map(mapProgramItemCreate),
               }
             : undefined,
+
         importantInfoItems:
           Array.isArray(importantInfoItems) && importantInfoItems.length
             ? {
-                create: importantInfoItems.map(mapImportantInfoItemCreate),
+                create: importantInfoItems
+                  .filter((item) => item.value)
+                  .map(mapImportantInfoItemCreate),
               }
             : undefined,
       },
@@ -391,7 +524,7 @@ export async function deleteEvent(req, res) {
   try {
     const eventId = Number(req.params.id);
 
-    if (!eventId) {
+    if (!eventId || Number.isNaN(eventId)) {
       return res.status(400).json({
         message: "Некорректный id события",
       });

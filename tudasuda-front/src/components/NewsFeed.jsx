@@ -1,65 +1,119 @@
 import { Link } from "react-router-dom";
-import { featuredNews } from "../data/homePageData";
+import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../context/useLanguage";
-import { getLocalizedValue } from "../utils/getLocalizedValue";
 
-function getNewsLink(language, item) {
-  switch (item.linkType) {
-    case "events":
-      return `/${language}/events/${item.slug}`;
-    case "movies":
-      return `/${language}/movies/${item.slug}`;
-    case "places":
-      return `/${language}/places/${item.slug}`;
-    case "news":
-    default:
-      return `/${language}/news/${item.slug}`;
-  }
-}
+const API_BASE_URL = "http://localhost:4000";
 
 function NewsFeed() {
   const { language } = useLanguage();
+  const [stories, setStories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const uiText = {
     ru: {
       title: "Новости Узбекистана",
       more: "Смотреть ещё",
+      error: "Не удалось загрузить материалы.",
     },
     uz: {
       title: "O‘zbekiston yangiliklari",
       more: "Yana ko‘rish",
+      error: "Materiallarni yuklab bo‘lmadi.",
     },
   };
 
   const t = uiText[language] || uiText.ru;
+  const errorText =
+    language === "uz"
+      ? "Materiallarni yuklab bo‘lmadi."
+      : "Не удалось загрузить материалы.";
+
+  useEffect(() => {
+    async function loadStories() {
+      try {
+        setIsLoading(true);
+        setLoadError("");
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/stories?status=published&lang=${language}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load stories");
+        }
+
+        const data = await response.json();
+        setStories(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("LOAD NEWS FEED ERROR:", error);
+        setLoadError(errorText);
+        setStories([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadStories();
+  }, [language, errorText]);
+
+  const normalizedStories = useMemo(() => {
+    return stories
+      .map((item) => {
+        const translation = item.translations?.[0] || null;
+
+        return {
+          id: item.id,
+          slug: item.slug,
+          type: item.type || "news",
+          image: item.coverImage,
+          title: translation?.title || "",
+          text: translation?.excerpt || "",
+          publishedAt: item.publishedAt || item.createdAt,
+          isFeatured: Boolean(item.isFeatured),
+        };
+      })
+      .sort((a, b) => {
+        if (a.isFeatured !== b.isFeatured) {
+          return Number(b.isFeatured) - Number(a.isFeatured);
+        }
+
+        const aDate = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+        const bDate = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+
+        return bDate - aDate;
+      })
+      .slice(0, 6);
+  }, [stories]);
 
   return (
     <section className="content-grid">
       <section className="news-feed-section">
         <div className="news-feed-header">
           <h2>{t.title}</h2>
-          <Link to={`/${language}/category/uzbekistan`} className="news-more">
+          <Link to={`/${language}/stories`} className="news-more">
             {t.more} <span className="arrow">→</span>
           </Link>
         </div>
 
-        <div className="news-feed">
-          {featuredNews.slice(0, 6).map((item, index) => {
-            const title = getLocalizedValue(item.title, language);
-            const text = getLocalizedValue(item.text, language);
-            const href = getNewsLink(language, item);
-
-            return (
-              <article className="news-card" key={index}>
-                <Link to={href} className="news-card-link">
-                  <img src={item.image} alt={title} />
-                  <h3>{title}</h3>
-                  <p>{text}</p>
+        {isLoading ? null : loadError ? (
+          <div className="news-feed-empty">{loadError}</div>
+        ) : normalizedStories.length ? (
+          <div className="news-feed">
+            {normalizedStories.map((item) => (
+              <article className="news-card" key={item.id}>
+                <Link
+                  to={`/${language}/stories/${item.slug}`}
+                  className="news-card-link"
+                >
+                  {item.image ? <img src={item.image} alt={item.title} /> : null}
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
                 </Link>
               </article>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : null}
       </section>
     </section>
   );

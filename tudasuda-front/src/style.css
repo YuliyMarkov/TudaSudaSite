@@ -10450,3 +10450,63 @@ body.dark-theme .place-social-link:hover {
   gap: 18px;
   margin-top: 18px !important;
 }
+
+.story-rich-content {
+  line-height: 1.7;
+}
+
+.story-rich-content p {
+  margin: 0 0 16px;
+}
+
+.story-rich-content h2,
+.story-rich-content h3 {
+  margin: 28px 0 14px;
+}
+
+.story-rich-content ul,
+.story-rich-content ol {
+  margin: 0 0 18px;
+  padding-left: 22px;
+}
+
+.story-rich-content li {
+  margin-bottom: 8px;
+}
+
+.story-rich-content a {
+  text-decoration: underline;
+}
+
+.story-content-image {
+  margin: 20px 0;
+}
+
+.story-content-image img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 16px;
+}
+
+.story-content-embed {
+  margin: 24px 0;
+}
+
+.story-content-embed.youtube iframe {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+}
+
+.story-content-embed.telegram {
+  padding: 14px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.story-content-embed.telegram a {
+  word-break: break-word;
+}

@@ -16,15 +16,15 @@ function AllStoriesPage() {
     ru: {
       title: "Новости и статьи",
       description:
-        "Городские новости, редакционные материалы, статьи и полезные подборки о Ташкенте и Узбекистане.",
+        "Городские новости, редакционные материалы и статьи о Ташкенте и Узбекистане.",
       filters: {
         all: "Все",
         news: "Новости",
-        articles: "Статьи",
+        article: "Статьи",
       },
       typeLabels: {
         news: "Новость",
-        articles: "Статья",
+        article: "Статья",
       },
       loading: "Загрузка материалов...",
       error: "Не удалось загрузить материалы.",
@@ -33,15 +33,15 @@ function AllStoriesPage() {
     uz: {
       title: "Yangiliklar va maqolalar",
       description:
-        "Toshkent va O‘zbekiston haqidagi shahar yangiliklari, tahririyat materiallari va foydali maqolalar.",
+        "Toshkent va O‘zbekiston haqidagi shahar yangiliklari, tahririyat materiallari va maqolalar.",
       filters: {
         all: "Barchasi",
         news: "Yangiliklar",
-        articles: "Maqolalar",
+        article: "Maqolalar",
       },
       typeLabels: {
         news: "Yangilik",
-        articles: "Maqola",
+        article: "Maqola",
       },
       loading: "Materiallar yuklanmoqda...",
       error: "Materiallarni yuklab bo‘lmadi.",
@@ -50,6 +50,9 @@ function AllStoriesPage() {
   };
 
   const t = uiText[language] || uiText.ru;
+  const errorText = language === "uz"
+    ? "Materiallarni yuklab bo‘lmadi."
+    : "Не удалось загрузить материалы.";
 
   useEffect(() => {
     async function loadStories() {
@@ -69,7 +72,7 @@ function AllStoriesPage() {
         setStories(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("LOAD STORIES ERROR:", error);
-        setLoadError(t.error);
+        setLoadError(errorText);
         setStories([]);
       } finally {
         setIsLoading(false);
@@ -77,7 +80,7 @@ function AllStoriesPage() {
     }
 
     loadStories();
-  }, [language, t.error]);
+  }, [language, errorText]);
 
   const normalizedStories = useMemo(() => {
     return stories.map((item) => {
@@ -129,10 +132,10 @@ function AllStoriesPage() {
 
               <button
                 type="button"
-                className={activeFilter === "articles" ? "active" : ""}
-                onClick={() => setActiveFilter("articles")}
+                className={activeFilter === "article" ? "active" : ""}
+                onClick={() => setActiveFilter("article")}
               >
-                {t.filters.articles}
+                {t.filters.article}
               </button>
             </div>
           </div>
@@ -155,7 +158,9 @@ function AllStoriesPage() {
                       to={`/${language}/stories/${item.slug}`}
                       className="all-news-card-link"
                     >
-                      {item.image ? <img src={item.image} alt={item.title} /> : null}
+                      {item.image ? (
+                        <img src={item.image} alt={item.title} />
+                      ) : null}
 
                       <div className="all-news-card-body">
                         {typeLabel ? (

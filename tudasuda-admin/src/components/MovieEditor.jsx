@@ -27,9 +27,9 @@ function MovieEditor({
   form,
   onChange,
   onTranslationChange,
-  onSessionChange,
-  addSession,
-  removeSession,
+  onCalendarDateChange,
+  addCalendarDate,
+  removeCalendarDate,
   onGalleryChange,
   addGalleryItem,
   removeGalleryItem,
@@ -170,6 +170,17 @@ function MovieEditor({
               value={toInputValue(form.trailerUrl)}
               onChange={onChange}
               placeholder="https://youtube.com/... или embed-ссылка"
+            />
+          </label>
+
+          <label className="admin-field admin-field--full">
+            <span>Ссылка на покупку билетов</span>
+            <input
+              type="url"
+              name="buyTicketsUrl"
+              value={toInputValue(form.buyTicketsUrl)}
+              onChange={onChange}
+              placeholder="https://... ссылка на сторонний сервис"
             />
           </label>
         </div>
@@ -370,30 +381,30 @@ function MovieEditor({
       <section className="admin-card">
         <div className="admin-section-header">
           <div>
-            <h2>Сеансы</h2>
-            <p>Именно отсюда у тебя строится расписание на странице фильма.</p>
+            <h2>Даты показа для календаря</h2>
+            <p>Эти даты нужны только для вывода фильма в календаре на сайте.</p>
           </div>
 
           <button
             type="button"
             className="admin-secondary-btn"
-            onClick={addSession}
+            onClick={addCalendarDate}
           >
-            Добавить сеанс
+            Добавить дату
           </button>
         </div>
 
         <div className="admin-stack">
-          {form.sessions.length ? (
-            form.sessions.map((session, index) => (
-              <div className="admin-nested-card" key={`session-${index}`}>
+          {form.calendarDates.length ? (
+            form.calendarDates.map((item, index) => (
+              <div className="admin-nested-card" key={`calendar-date-${index}`}>
                 <div className="admin-section-header">
-                  <h3>Сеанс #{index + 1}</h3>
+                  <h3>Дата #{index + 1}</h3>
 
                   <button
                     type="button"
                     className="admin-danger-btn"
-                    onClick={() => removeSession(index)}
+                    onClick={() => removeCalendarDate(index)}
                   >
                     Удалить
                   </button>
@@ -404,79 +415,18 @@ function MovieEditor({
                     <span>Дата</span>
                     <input
                       type="date"
-                      value={session.sessionDate}
+                      value={item.date}
                       onChange={(event) =>
-                        onSessionChange(index, "sessionDate", event.target.value)
+                        onCalendarDateChange(index, "date", event.target.value)
                       }
                       required
-                    />
-                  </label>
-
-                  <label className="admin-field">
-                    <span>Время</span>
-                    <input
-                      type="time"
-                      value={session.sessionTime}
-                      onChange={(event) =>
-                        onSessionChange(index, "sessionTime", event.target.value)
-                      }
-                      required
-                    />
-                  </label>
-
-                  <label className="admin-field">
-                    <span>Кинотеатр</span>
-                    <input
-                      type="text"
-                      value={session.cinemaName}
-                      onChange={(event) =>
-                        onSessionChange(index, "cinemaName", event.target.value)
-                      }
-                      placeholder="Compass Cinema"
-                      required
-                    />
-                  </label>
-
-                  <label className="admin-field">
-                    <span>Зал</span>
-                    <input
-                      type="text"
-                      value={toInputValue(session.hallName)}
-                      onChange={(event) =>
-                        onSessionChange(index, "hallName", event.target.value)
-                      }
-                      placeholder="Зал 3"
-                    />
-                  </label>
-
-                  <label className="admin-field">
-                    <span>Цена</span>
-                    <input
-                      type="text"
-                      value={toInputValue(session.price)}
-                      onChange={(event) =>
-                        onSessionChange(index, "price", event.target.value)
-                      }
-                      placeholder="от 50 000 сумов"
-                    />
-                  </label>
-
-                  <label className="admin-field admin-field--full">
-                    <span>Ссылка на билеты</span>
-                    <input
-                      type="url"
-                      value={toInputValue(session.ticketUrl)}
-                      onChange={(event) =>
-                        onSessionChange(index, "ticketUrl", event.target.value)
-                      }
-                      placeholder="https://..."
                     />
                   </label>
                 </div>
               </div>
             ))
           ) : (
-            <p>Сеансы пока не добавлены.</p>
+            <p>Даты для календаря пока не добавлены.</p>
           )}
         </div>
       </section>
@@ -627,7 +577,11 @@ function MovieEditor({
       </section>
 
       <div className="admin-form-actions">
-        <button type="submit" className="admin-primary-btn" disabled={isSubmitting}>
+        <button
+          type="submit"
+          className="admin-primary-btn"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Сохранение..." : submitLabel}
         </button>
       </div>

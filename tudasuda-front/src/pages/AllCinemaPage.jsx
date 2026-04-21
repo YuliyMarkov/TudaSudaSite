@@ -63,24 +63,6 @@ function getCurrentCinemaWeekRange() {
   };
 }
 
-function groupSessionsByDate(sessions = []) {
-  const grouped = new Map();
-
-  sessions.forEach((session) => {
-    if (!session.sessionDate) return;
-
-    const dateKey = new Date(session.sessionDate).toISOString().split("T")[0];
-
-    if (!grouped.has(dateKey)) {
-      grouped.set(dateKey, []);
-    }
-
-    grouped.get(dateKey).push(session);
-  });
-
-  return grouped;
-}
-
 function normalizeMovie(movie) {
   const translation = movie.translations?.[0] || null;
 
@@ -94,8 +76,16 @@ function normalizeMovie(movie) {
     releaseDate: movie.releaseDate
       ? new Date(movie.releaseDate).toISOString().split("T")[0]
       : "",
-    isFeatured: movie.isFeatured,
-    sessions: movie.sessions || [],
+    isFeatured: Boolean(movie.isFeatured),
+    calendarDates: Array.isArray(movie.calendarDates)
+      ? movie.calendarDates
+          .map((item) =>
+            item?.date
+              ? new Date(item.date).toISOString().split("T")[0]
+              : null
+          )
+          .filter(Boolean)
+      : [],
   };
 }
 
@@ -111,11 +101,10 @@ function AllCinemaPage() {
     ru: {
       title: "Кино",
       description:
-        "Киноафиша Ташкента: фильмы, премьеры, сеансы и подборка того, что сейчас идет в кино.",
+        "Киноафиша Ташкента: фильмы, премьеры и подборка того, что сейчас идет в кино.",
       premiereTitle: "Премьеры и скоро в кино",
       todayTitle: "Выберите дату",
       noResults: "На выбранную дату фильмов пока нет.",
-      sessions: "Сеансы",
       moreSessions: "Смотреть фильм",
       prevDates: "Предыдущие даты",
       nextDates: "Следующие даты",
@@ -125,11 +114,10 @@ function AllCinemaPage() {
     uz: {
       title: "Kino",
       description:
-        "Toshkent kinoafishasi: filmlar, premyeralar, seanslar va hozir kinoda bo‘lgan filmlar tanlovi.",
+        "Toshkent kinoafishasi: filmlar, premyeralar va hozir kinoda bo‘lgan filmlar tanlovi.",
       premiereTitle: "Premyeralar va tez orada kinoda",
       todayTitle: "Sanani tanlang",
       noResults: "Tanlangan sana uchun filmlar hozircha yo‘q.",
-      sessions: "Seanslar",
       moreSessions: "Filmni ko‘rish",
       prevDates: "Oldingi sanalar",
       nextDates: "Keyingi sanalar",
@@ -141,6 +129,8 @@ function AllCinemaPage() {
   const t = uiText[language] || uiText.ru;
 
   useEffect(() => {
+    let isMounted = true;
+
     async function loadMovies() {
       try {
         setIsLoading(true);
@@ -155,17 +145,27 @@ function AllCinemaPage() {
         }
 
         const data = await response.json();
+
+        if (!isMounted) return;
         setMovies(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("LOAD MOVIES ERROR:", error);
+
+        if (!isMounted) return;
         setLoadError(t.error);
         setMovies([]);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
     loadMovies();
+
+    return () => {
+      isMounted = false;
+    };
   }, [language, t.error]);
 
   const normalizedMovies = useMemo(
@@ -197,8 +197,7 @@ function AllCinemaPage() {
     if (!currentSelectedDate) return [];
 
     return normalizedMovies.filter((movie) => {
-      const groupedSessions = groupSessionsByDate(movie.sessions);
-      return groupedSessions.has(currentSelectedDate);
+      return movie.calendarDates.includes(currentSelectedDate);
     });
   }, [normalizedMovies, currentSelectedDate]);
 
@@ -238,40 +237,34 @@ function AllCinemaPage() {
               </div>
 
               <div className="all-cinema-premieres-grid">
-                {featuredPremieres.map((movie) => {
-                  return (
-                    <article key={movie.id} className="all-cinema-premiere-card">
-                      <Link
-                        to={`/${language}/movies/${movie.slug}`}
-                        className="all-cinema-premiere-link"
-                      >
-                        <div className="all-cinema-premiere-poster-wrap">
-                          <img
-                            src={movie.image}
-                            alt={movie.title}
-                            className="all-cinema-premiere-poster"
-                          />
-                        </div>
+                {featuredPremieres.map((movie) => (
+                  <article key={movie.id} className="all-cinema-premiere-card">
+                    <Link
+                      to={`/${language}/movies/${movie.slug}`}
+                      className="all-cinema-premiere-link"
+                    >
+                      <div className="all-cinema-premiere-poster-wrap">
+                        <img
+                          src={movie.image}
+                          alt={movie.title}
+                          className="all-cinema-premiere-poster"
+                        />
+                      </div>
 
-                        <div className="all-cinema-premiere-body">
-                          <h3>{movie.title}</h3>
+                      <div className="all-cinema-premiere-body">
+                        <h3>{movie.title}</h3>
 
-                          {movie.subtitle && (
-                            <p className="all-cinema-subtitle">
-                              {movie.subtitle}
-                            </p>
-                          )}
+                        {movie.subtitle ? (
+                          <p className="all-cinema-subtitle">{movie.subtitle}</p>
+                        ) : null}
 
-                          {movie.location && (
-                            <p className="all-cinema-location">
-                              {movie.location}
-                            </p>
-                          )}
-                        </div>
-                      </Link>
-                    </article>
-                  );
-                })}
+                        {movie.location ? (
+                          <p className="all-cinema-location">{movie.location}</p>
+                        ) : null}
+                      </div>
+                    </Link>
+                  </article>
+                ))}
               </div>
             </div>
           )}
@@ -344,70 +337,38 @@ function AllCinemaPage() {
               <div className="all-cinema-empty">{loadError}</div>
             ) : filteredMovies.length ? (
               <div className="all-cinema-grid all-cinema-grid--expanded">
-                {filteredMovies.map((movie) => {
-                  const groupedSessions = groupSessionsByDate(movie.sessions);
-                  const sessionsForDate = groupedSessions.get(currentSelectedDate) || [];
-                  const uniqueTimes = sessionsForDate
-                    .map((session) => session.sessionTime)
-                    .filter(Boolean)
-                    .slice(0, 4);
+                {filteredMovies.map((movie) => (
+                  <article key={movie.id} className="all-cinema-card">
+                    <Link
+                      to={`/${language}/movies/${movie.slug}`}
+                      className="all-cinema-card-link"
+                    >
+                      <div className="all-cinema-poster-wrap">
+                        <img
+                          src={movie.image}
+                          alt={movie.title}
+                          className="all-cinema-poster"
+                        />
+                      </div>
 
-                  return (
-                    <article key={movie.id} className="all-cinema-card">
-                      <Link
-                        to={`/${language}/movies/${movie.slug}`}
-                        className="all-cinema-card-link"
-                      >
-                        <div className="all-cinema-poster-wrap">
-                          <img
-                            src={movie.image}
-                            alt={movie.title}
-                            className="all-cinema-poster"
-                          />
-                        </div>
+                      <div className="all-cinema-card-body">
+                        <h3>{movie.title}</h3>
 
-                        <div className="all-cinema-card-body">
-                          <h3>{movie.title}</h3>
+                        {movie.subtitle ? (
+                          <p className="all-cinema-subtitle">{movie.subtitle}</p>
+                        ) : null}
 
-                          {movie.subtitle && (
-                            <p className="all-cinema-subtitle">
-                              {movie.subtitle}
-                            </p>
-                          )}
+                        {movie.location ? (
+                          <p className="all-cinema-location">{movie.location}</p>
+                        ) : null}
 
-                          {movie.location && (
-                            <p className="all-cinema-location">
-                              {movie.location}
-                            </p>
-                          )}
-
-                          {uniqueTimes.length > 0 && (
-                            <div className="all-cinema-sessions">
-                              <span className="all-cinema-sessions-label">
-                                {t.sessions}
-                              </span>
-
-                              <div className="all-cinema-sessions-list">
-                                {uniqueTimes.map((time, i) => (
-                                  <span
-                                    key={`${movie.id}-${currentSelectedDate}-${time}-${i}`}
-                                    className="all-cinema-session-chip"
-                                  >
-                                    {time}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          <span className="all-cinema-more-link">
-                            {t.moreSessions}
-                          </span>
-                        </div>
-                      </Link>
-                    </article>
-                  );
-                })}
+                        <span className="all-cinema-more-link">
+                          {t.moreSessions}
+                        </span>
+                      </div>
+                    </Link>
+                  </article>
+                ))}
               </div>
             ) : (
               <div className="all-cinema-empty">{t.noResults}</div>

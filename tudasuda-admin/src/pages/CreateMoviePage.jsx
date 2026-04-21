@@ -11,6 +11,7 @@ function buildInitialForm() {
     posterImage: "",
     coverImage: "",
     trailerUrl: "",
+    buyTicketsUrl: "",
     releaseDate: "",
     durationMinutes: "",
     ageRating: "",
@@ -38,15 +39,10 @@ function buildInitialForm() {
         seoDescription: "",
       },
     },
-    sessions: [],
+    calendarDates: [],
     galleryItems: [],
     castItems: [],
   };
-}
-
-function buildSessionStartAt(sessionDate, sessionTime) {
-  if (!sessionDate || !sessionTime) return null;
-  return `${sessionDate}T${sessionTime}:00`;
 }
 
 function buildPayload(form) {
@@ -57,6 +53,7 @@ function buildPayload(form) {
     posterImage: form.posterImage.trim() || null,
     coverImage: form.coverImage.trim() || null,
     trailerUrl: form.trailerUrl.trim() || null,
+    buyTicketsUrl: form.buyTicketsUrl.trim() || null,
     releaseDate: form.releaseDate || null,
     durationMinutes: form.durationMinutes ? Number(form.durationMinutes) : null,
     ageRating: form.ageRating.trim() || null,
@@ -86,19 +83,14 @@ function buildPayload(form) {
         seoDescription: form.translations.uz.seoDescription.trim() || null,
       },
     ].filter((item) => item.title),
-    sessions: form.sessions
-      .filter(
-        (item) =>
-          item.sessionDate.trim() &&
-          item.sessionTime.trim() &&
-          item.cinemaName.trim()
-      )
-      .map((item) => ({
-        startAt: buildSessionStartAt(item.sessionDate, item.sessionTime),
-        cinemaName: item.cinemaName.trim(),
-        hallName: item.hallName.trim() || null,
-        price: item.price.trim() || null,
-        ticketUrl: item.ticketUrl.trim() || null,
+    calendarDates: form.calendarDates
+      .filter((item) => item.date.trim())
+      .map((item, index) => ({
+        date: item.date,
+        sortOrder:
+          item.sortOrder !== "" && item.sortOrder !== null
+            ? Number(item.sortOrder)
+            : index,
       })),
     galleryItems: form.galleryItems
       .filter((item) => item.image.trim())
@@ -150,36 +142,34 @@ function CreateMoviePage() {
     }));
   }
 
-  function handleSessionChange(index, field, value) {
+  function handleCalendarDateChange(index, field, value) {
     setForm((prev) => ({
       ...prev,
-      sessions: prev.sessions.map((item, itemIndex) =>
+      calendarDates: prev.calendarDates.map((item, itemIndex) =>
         itemIndex === index ? { ...item, [field]: value } : item
       ),
     }));
   }
 
-  function addSession() {
+  function addCalendarDate() {
     setForm((prev) => ({
       ...prev,
-      sessions: [
-        ...prev.sessions,
+      calendarDates: [
+        ...prev.calendarDates,
         {
-          sessionDate: "",
-          sessionTime: "",
-          cinemaName: "",
-          hallName: "",
-          price: "",
-          ticketUrl: "",
+          date: "",
+          sortOrder: prev.calendarDates.length,
         },
       ],
     }));
   }
 
-  function removeSession(index) {
+  function removeCalendarDate(index) {
     setForm((prev) => ({
       ...prev,
-      sessions: prev.sessions.filter((_, itemIndex) => itemIndex !== index),
+      calendarDates: prev.calendarDates.filter(
+        (_, itemIndex) => itemIndex !== index
+      ),
     }));
   }
 
@@ -268,7 +258,9 @@ function CreateMoviePage() {
       <div className="admin-section-header">
         <div>
           <h1>Создать фильм</h1>
-          <p>Новая карточка фильма для афиши, страницы фильма и расписания.</p>
+          <p>
+            Новая карточка фильма для афиши, страницы фильма и календаря.
+          </p>
         </div>
       </div>
 
@@ -280,9 +272,9 @@ function CreateMoviePage() {
         form={{ ...form, onSubmit: handleSubmit }}
         onChange={handleChange}
         onTranslationChange={handleTranslationChange}
-        onSessionChange={handleSessionChange}
-        addSession={addSession}
-        removeSession={removeSession}
+        onCalendarDateChange={handleCalendarDateChange}
+        addCalendarDate={addCalendarDate}
+        removeCalendarDate={removeCalendarDate}
         onGalleryChange={handleGalleryChange}
         addGalleryItem={addGalleryItem}
         removeGalleryItem={removeGalleryItem}

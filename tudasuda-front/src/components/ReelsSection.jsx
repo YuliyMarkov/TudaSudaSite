@@ -6,13 +6,10 @@ const INSTAGRAM_URL = "https://www.instagram.com/digest.uzbekistan/";
 
 function ReelsSection({ onOpenReel }) {
   const { language } = useLanguage();
-
   const viewportRef = useRef(null);
   const trackRef = useRef(null);
-
   const [reels, setReels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [index, setIndex] = useState(0);
   const [step, setStep] = useState(0);
   const [visibleCount, setVisibleCount] = useState(1);
@@ -70,12 +67,12 @@ function ReelsSection({ onOpenReel }) {
         return {
           id: item.id,
           image: item.coverImage,
-          video: item.videoUrl,
+          videoUrl: item.videoUrl,
           title: translation?.title || "",
           sourceType: item.sourceType || "instagram",
         };
       })
-      .filter((item) => item.image && item.video);
+      .filter((item) => item.image && item.videoUrl);
   }, [reels]);
 
   const totalItems = normalizedReels.length + 1;
@@ -95,10 +92,10 @@ function ReelsSection({ onOpenReel }) {
       const trackStyle = window.getComputedStyle(trackRef.current);
       const gap = parseFloat(trackStyle.columnGap || trackStyle.gap || "0") || 0;
       const fullStep = itemWidth + gap;
-
       const viewportWidth = viewportRef.current.getBoundingClientRect().width;
 
       let nextVisibleCount = Math.floor((viewportWidth + gap) / fullStep);
+
       if (!Number.isFinite(nextVisibleCount) || nextVisibleCount < 1) {
         nextVisibleCount = 1;
       }
@@ -134,79 +131,63 @@ function ReelsSection({ onOpenReel }) {
 
   return (
     <section className="reels-section">
-      <div className="reels-header">
-        <h2>{t.title}</h2>
+      <div className="section-header section-header--reels">
+        <h2 className="section-title">{t.title}</h2>
 
-        <div className="reels-controls">
+        <div className="section-nav">
           <button
-            className="reels-btn"
             type="button"
+            className="section-nav-btn"
             onClick={prev}
             disabled={index === 0}
             aria-label={t.prev}
           >
-            &#10094;
+            ❮
           </button>
 
           <button
-            className="reels-btn"
             type="button"
+            className="section-nav-btn"
             onClick={next}
             disabled={index >= maxIndex}
             aria-label={t.next}
           >
-            &#10095;
+            ❯
           </button>
         </div>
       </div>
 
       <div className="reels-viewport" ref={viewportRef}>
-        <ul
-          className="reels-track"
+        <div
+          className="reels-list"
           ref={trackRef}
-          style={{
-            transform: `translateX(-${index * step}px)`,
-          }}
+          style={{ transform: `translateX(-${index * step}px)` }}
         >
           {normalizedReels.map((reel) => (
-            <li className="reels-list-item" key={reel.id}>
-              <div className="reels-card">
-                <button
-                  className="reels-card-preview"
-                  type="button"
-                  onClick={() => onOpenReel(reel.video)}
-                  aria-label={reel.title || t.title}
-                >
-                  <span className="reels-card-image">
-                    <img src={reel.image} alt={reel.title || ""} />
-                  </span>
-
-                  <span className="reels-card-play">▶</span>
-                </button>
-
-                <a
-                  className="reels-card-link"
-                  href={INSTAGRAM_URL}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                >
-                  {t.instagram}
-                </a>
+            <button
+              key={reel.id}
+              type="button"
+              className="reels-list-item"
+              onClick={() => onOpenReel(reel)}
+              aria-label={reel.title || t.title}
+            >
+              <img src={reel.image} alt={reel.title || t.title} />
+              <div className="reels-list-overlay">
+                <span className="reels-list-play">▶</span>
+                <span className="reels-list-badge">{t.instagram}</span>
               </div>
-            </li>
+            </button>
           ))}
 
-          <li className="reels-list-item-more">
-            <a
-              className="reels-more-card"
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-            >
-              {t.allVideos}
-            </a>
-          </li>
-        </ul>
+          <a
+            className="reels-list-item-more"
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t.allVideos}
+          </a>
+        </div>
       </div>
     </section>
   );

@@ -14,11 +14,13 @@ export async function fetchAdminStories() {
     headers: getAuthHeaders(),
   });
 
+  const data = await response.json().catch(() => null);
+
   if (!response.ok) {
-    throw new Error("Не удалось загрузить материалы");
+    throw new Error(data?.message || "Не удалось загрузить материалы");
   }
 
-  return response.json();
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchStoryById(id) {

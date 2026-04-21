@@ -1,19 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
 
 const API_BASE_URL = "http://localhost:4000";
-
-function formatDateLabel(dateString, language) {
-  const date = new Date(dateString);
-
-  return new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
-    day: "numeric",
-    month: "long",
-    weekday: "short",
-  }).format(date);
-}
 
 function getBrowserToken() {
   const storageKey = "movie-browser-token";
@@ -28,44 +18,6 @@ function getBrowserToken() {
 
   localStorage.setItem(storageKey, generated);
   return generated;
-}
-
-function groupSessionsByDateAndCinema(sessions = []) {
-  const groupedByDate = new Map();
-
-  sessions.forEach((session) => {
-    if (!session.sessionDate) return;
-
-    const dateKey = new Date(session.sessionDate).toISOString().split("T")[0];
-
-    if (!groupedByDate.has(dateKey)) {
-      groupedByDate.set(dateKey, new Map());
-    }
-
-    const cinemasMap = groupedByDate.get(dateKey);
-    const cinemaKey = session.cinemaName || "—";
-
-    if (!cinemasMap.has(cinemaKey)) {
-      cinemasMap.set(cinemaKey, []);
-    }
-
-    cinemasMap.get(cinemaKey).push({
-      time: session.sessionTime,
-      url: session.ticketUrl,
-      hallName: session.hallName,
-      price: session.price,
-    });
-  });
-
-  return Array.from(groupedByDate.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([dateKey, cinemasMap]) => ({
-      displayDate: dateKey,
-      sessions: Array.from(cinemasMap.entries()).map(([cinema, sessions]) => ({
-        cinema,
-        sessions: sessions.sort((a, b) => a.time.localeCompare(b.time)),
-      })),
-    }));
 }
 
 function formatDuration(durationMinutes, language) {
@@ -102,18 +54,17 @@ function formatPremiere(dateString, language) {
 function MoviePage() {
   const { language } = useLanguage();
   const { slug } = useParams();
-  const sessionsRef = useRef(null);
 
   const [browserToken, setBrowserToken] = useState("");
   const [movie, setMovie] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [isRatingLoading, setIsRatingLoading] = useState(false);
+  const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false);
 
   const uiText = {
     ru: {
       back: "Назад к фильмам",
-      sessions: "Сеансы",
       notFoundTitle: "Фильм не найден",
       notFoundText: "Похоже, такого фильма пока нет в афише.",
       media: "Трейлер и кадры",
@@ -130,17 +81,18 @@ function MoviePage() {
       buyTickets: "Купить билеты",
       yourRating: "Оцените фильм:",
       starsAria: "Поставить оценку",
-      noSessions: "Нет сеансов",
       loading: "Загрузка фильма...",
       error: "Не удалось загрузить фильм.",
       averageRating: "Средняя оценка",
       votes: "голосов",
       ratingError: "Не удалось сохранить оценку.",
-      noData: "Уточняется",
+      ticketsModalTitle: "Покупка билетов",
+      ticketsModalClose: "Закрыть",
+      ticketsUnavailable: "Ссылка на покупку билетов пока недоступна.",
+      openInNewTab: "Открыть сервис билетов в новой вкладке",
     },
     uz: {
       back: "Filmlarga qaytish",
-      sessions: "Seanslar",
       notFoundTitle: "Film topilmadi",
       notFoundText: "Aftidan, bunday film hali afishada yo‘q.",
       media: "Treyler va kadrlar",
@@ -157,19 +109,20 @@ function MoviePage() {
       buyTickets: "Chipta sotib olish",
       yourRating: "Filmni baholang:",
       starsAria: "Baho qo‘yish",
-      noSessions: "Seanslar yo‘q",
       loading: "Film yuklanmoqda...",
       error: "Filmni yuklab bo‘lmadi.",
       averageRating: "O‘rtacha baho",
       votes: "ta ovoz",
       ratingError: "Bahoni saqlab bo‘lmadi.",
-      noData: "Aniqlanmoqda",
+      ticketsModalTitle: "Chipta xarid qilish",
+      ticketsModalClose: "Yopish",
+      ticketsUnavailable: "Chipta xarid qilish havolasi hozircha mavjud emas.",
+      openInNewTab: "Chipta xizmatini yangi oynada ochish",
     },
   };
 
   const t = uiText[language] || uiText.ru;
 
-  const [selectedDateIndex, setSelectedDateIndex] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [userRating, setUserRating] = useState(0);
 
@@ -214,25 +167,26 @@ function MoviePage() {
     loadMovie();
   }, [slug, language, browserToken, t.error]);
 
-  const scheduleEntries = useMemo(() => {
-    return groupSessionsByDateAndCinema(movie?.sessions || []);
-  }, [movie]);
-
-  useEffect(() => {
-    setSelectedDateIndex(0);
-  }, [slug, language, movie?.id]);
-
   useEffect(() => {
     setActiveIndex(0);
+    setIsTicketsModalOpen(false);
   }, [slug, language, movie?.id]);
 
-  const safeSelectedDateIndex =
-    selectedDateIndex >= 0 && selectedDateIndex < scheduleEntries.length
-      ? selectedDateIndex
-      : 0;
+  useEffect(() => {
+    if (!isTicketsModalOpen) return;
 
-  const currentSelectedEntry = scheduleEntries[safeSelectedDateIndex] || null;
-  const selectedSessions = currentSelectedEntry?.sessions || [];
+    function handleKeydown(event) {
+      if (event.key === "Escape") {
+        setIsTicketsModalOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleKeydown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeydown);
+    };
+  }, [isTicketsModalOpen]);
 
   const normalizedMovie = useMemo(() => {
     if (!movie) return null;
@@ -280,6 +234,7 @@ function MoviePage() {
       ratingAverage: movie.ratingAverage || 0,
       ratingCount: movie.ratingCount || 0,
       mediaSlides,
+      buyTicketsUrl: movie.buyTicketsUrl || "",
     };
   }, [movie, language, t.trailer]);
 
@@ -291,13 +246,6 @@ function MoviePage() {
       : 0;
 
   const activeSlide = normalizedMovie?.mediaSlides?.[safeActiveIndex];
-
-  const scrollToSessions = () => {
-    sessionsRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
 
   const handleUserRating = async (value) => {
     if (!movie?.id || !browserToken || isRatingLoading) return;
@@ -412,6 +360,7 @@ function MoviePage() {
     ratingAverage,
     ratingCount,
     mediaSlides,
+    buyTicketsUrl,
   } = normalizedMovie;
 
   const rating =
@@ -425,6 +374,15 @@ function MoviePage() {
 
   const goNext = () => {
     setActiveIndex((prev) => (prev === mediaSlides.length - 1 ? 0 : prev + 1));
+  };
+
+  const openTicketsModal = () => {
+    if (!buyTicketsUrl) return;
+    setIsTicketsModalOpen(true);
+  };
+
+  const closeTicketsModal = () => {
+    setIsTicketsModalOpen(false);
   };
 
   return (
@@ -534,7 +492,8 @@ function MoviePage() {
                 <button
                   type="button"
                   className="buy-tickets-btn"
-                  onClick={scrollToSessions}
+                  onClick={openTicketsModal}
+                  disabled={!buyTicketsUrl}
                 >
                   🎟 {t.buyTickets}
                 </button>
@@ -613,64 +572,55 @@ function MoviePage() {
                 </div>
               </div>
             )}
-
-            <div className="movie-schedule-section" ref={sessionsRef}>
-              <h2>{t.sessions}</h2>
-
-              <div className="movie-date-tabs">
-                {scheduleEntries.map((item, index) => (
-                  <button
-                    key={`${item.displayDate}-${index}`}
-                    type="button"
-                    className={`movie-date-tab ${
-                      safeSelectedDateIndex === index ? "active" : ""
-                    }`}
-                    onClick={() => setSelectedDateIndex(index)}
-                  >
-                    {formatDateLabel(item.displayDate, language)}
-                  </button>
-                ))}
-              </div>
-
-              <div className="movie-cinemas-list">
-                {selectedSessions.map((cinemaItem, index) => (
-                  <div
-                    className="movie-cinema-card"
-                    key={`${cinemaItem.cinema}-${index}`}
-                  >
-                    <h3>{cinemaItem.cinema}</h3>
-
-                    <div className="movie-session-buttons">
-                      {cinemaItem.sessions.map((session) => (
-                        <a
-                          key={`${cinemaItem.cinema}-${session.time}-${index}`}
-                          href={session.url || "#"}
-                          className="movie-session-button"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {session.time}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-                {!selectedSessions.length && (
-                  <div className="movie-cinema-card">
-                    <h3>—</h3>
-                    <div className="movie-session-buttons">
-                      <span className="movie-session-button">
-                        {t.noSessions}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </section>
       </main>
+
+      {isTicketsModalOpen && (
+        <div className="tickets-modal-backdrop" onClick={closeTicketsModal}>
+          <div
+            className="tickets-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="tickets-modal-close"
+              onClick={closeTicketsModal}
+              aria-label={t.ticketsModalClose}
+            >
+              ✕
+            </button>
+
+            <div className="tickets-modal-header">
+              <h2>{t.ticketsModalTitle}</h2>
+            </div>
+
+            {buyTicketsUrl ? (
+              <>
+                <div className="tickets-modal-frame-wrap">
+                  <iframe
+                    src={buyTicketsUrl}
+                    title={`${title} tickets`}
+                    className="tickets-modal-iframe"
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  />
+                </div>
+
+                <a
+                  href={buyTicketsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="tickets-modal-external-link"
+                >
+                  {t.openInNewTab}
+                </a>
+              </>
+            ) : (
+              <div className="tickets-modal-empty">{t.ticketsUnavailable}</div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

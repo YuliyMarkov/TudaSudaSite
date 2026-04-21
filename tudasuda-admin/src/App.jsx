@@ -6,41 +6,40 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+
+import DashboardPage from "./pages/DashboardPage";
+
 import StoriesPage from "./pages/StoriesPage";
 import CreateStoryPage from "./pages/CreateStoryPage";
 import EditStoryPage from "./pages/EditStoryPage";
+
 import EventsPage from "./pages/EventsPage";
 import CreateEventPage from "./pages/CreateEventPage";
 import EditEventPage from "./pages/EditEventPage";
-import PlacesPage from "./pages/PlacesPage";
-import CreatePlacePage from "./pages/CreatePlacePage";
-import EditPlacePage from "./pages/EditPlacePage";
+
 import MoviesPage from "./pages/MoviesPage";
 import CreateMoviePage from "./pages/CreateMoviePage";
 import EditMoviePage from "./pages/EditMoviePage";
+
+import PlacesPage from "./pages/PlacesPage";
+import CreatePlacePage from "./pages/CreatePlacePage";
+import EditPlacePage from "./pages/EditPlacePage";
+
+import RestaurantsPage from "./pages/RestaurantsPage";
+import CreateRestaurantPage from "./pages/CreateRestaurantPage";
+import EditRestaurantPage from "./pages/EditRestaurantPage";
+
+import HeroSlidesPage from "./pages/HeroSlidesPage";
+import CreateHeroSlidePage from "./pages/CreateHeroSlidePage";
+import EditHeroSlidePage from "./pages/EditHeroSlidePage";
+
+import ReelsPage from "./pages/ReelsPage";
+import CreateReelPage from "./pages/CreateReelPage";
+import EditReelPage from "./pages/EditReelPage";
+
 import LoginPage from "./pages/LoginPage";
+
 import { clearStoredToken, getStoredToken } from "./api/auth";
-
-function DashboardPage() {
-  return (
-    <div className="admin-page">
-      <h1>Админка TudaSuda</h1>
-      <p>
-        Добро пожаловать. Сейчас подключены разделы материалов, событий и
-        фильмов.
-      </p>
-    </div>
-  );
-}
-
-function RestaurantsPage() {
-  return (
-    <div className="admin-page">
-      <h1>Рестораны</h1>
-      <p>Этот раздел подключим следующим этапом.</p>
-    </div>
-  );
-}
 
 function NotFoundPage() {
   return (
@@ -57,6 +56,8 @@ function AdminLayout() {
 
   const navItems = [
     { to: "/dashboard", label: "Главная" },
+    { to: "/hero-slides", label: "Слайдер главной" },
+    { to: "/reels", label: "Рилсы" },
     { to: "/stories", label: "Материалы" },
     { to: "/events", label: "События" },
     { to: "/movies", label: "Фильмы" },
@@ -105,24 +106,52 @@ function AdminLayout() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
 
+          {/* HERO SLIDES */}
+          <Route path="/hero-slides" element={<HeroSlidesPage />} />
+          <Route
+            path="/hero-slides/create"
+            element={<CreateHeroSlidePage />}
+          />
+          <Route
+            path="/hero-slides/:id/edit"
+            element={<EditHeroSlidePage />}
+          />
+
+          {/* REELS */}
+          <Route path="/reels" element={<ReelsPage />} />
+          <Route path="/reels/create" element={<CreateReelPage />} />
+          <Route path="/reels/:id/edit" element={<EditReelPage />} />
+
+          {/* STORIES */}
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/create" element={<CreateStoryPage />} />
           <Route path="/stories/:id/edit" element={<EditStoryPage />} />
 
+          {/* EVENTS */}
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/create" element={<CreateEventPage />} />
           <Route path="/events/:id/edit" element={<EditEventPage />} />
 
+          {/* MOVIES */}
           <Route path="/movies" element={<MoviesPage />} />
           <Route path="/movies/create" element={<CreateMoviePage />} />
           <Route path="/movies/:id/edit" element={<EditMoviePage />} />
 
-          <Route path="/places" element={<PlacesPage />} />
-          <Route path="/restaurants" element={<RestaurantsPage />} />
-
+          {/* PLACES */}
           <Route path="/places" element={<PlacesPage />} />
           <Route path="/places/create" element={<CreatePlacePage />} />
           <Route path="/places/:id/edit" element={<EditPlacePage />} />
+
+          {/* RESTAURANTS */}
+          <Route path="/restaurants" element={<RestaurantsPage />} />
+          <Route
+            path="/restaurants/create"
+            element={<CreateRestaurantPage />}
+          />
+          <Route
+            path="/restaurants/:id/edit"
+            element={<EditRestaurantPage />}
+          />
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
@@ -145,7 +174,11 @@ function App() {
       <Route
         path="/*"
         element={
-          isAuthenticated ? <AdminLayout /> : <Navigate to="/login" replace />
+          isAuthenticated ? (
+            <AdminLayout />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
     </Routes>

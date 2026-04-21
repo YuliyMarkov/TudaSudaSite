@@ -20,7 +20,7 @@ export async function fetchAdminEvents() {
     throw new Error(data?.message || "Не удалось загрузить события");
   }
 
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchEventById(id) {

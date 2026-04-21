@@ -1,82 +1,80 @@
-function ReelsModal({ isOpen, videoUrl, onClose }) {
-  if (!isOpen) return null;
+import { useEffect, useMemo } from "react";
+
+function normalizeInstagramUrl(url) {
+  if (!url) return "";
+
+  try {
+    const parsed = new URL(url);
+
+    if (
+      parsed.hostname.includes("instagram.com") &&
+      !parsed.pathname.endsWith("/embed")
+    ) {
+      const cleanPath = parsed.pathname.replace(/\/+$/, "");
+      return `https://www.instagram.com${cleanPath}/embed`;
+    }
+
+    return url;
+  } catch {
+    return url;
+  }
+}
+
+function ReelsModal({ isOpen, reel, onClose }) {
+  const isInstagram = reel?.sourceType === "instagram";
+  const embedUrl = useMemo(() => {
+    return isInstagram ? normalizeInstagramUrl(reel?.videoUrl) : reel?.videoUrl;
+  }, [isInstagram, reel?.videoUrl]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleKeydown(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeydown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeydown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !reel) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 99999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div
-        onClick={onClose}
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(0,0,0,0.85)",
-        }}
-      />
-
-      <div
-        style={{
-          position: "relative",
-          zIndex: 2,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "12px",
-        }}
-      >
+    <div className="reels-modal-backdrop" onClick={onClose}>
+      <div className="reels-modal" onClick={(event) => event.stopPropagation()}>
         <button
           type="button"
+          className="reels-modal-close"
           onClick={onClose}
-          style={{
-            position: "absolute",
-            top: "-40px",
-            right: "0",
-            background: "rgba(255,255,255,0.15)",
-            backdropFilter: "blur(6px)",
-            WebkitBackdropFilter: "blur(6px)",
-            color: "#fff",
-            border: "none",
-            borderRadius: "10px",
-            padding: "10px 14px",
-            fontSize: "22px",
-            lineHeight: 1,
-            cursor: "pointer",
-          }}
+          aria-label="Закрыть"
         >
           ✕
         </button>
 
-        <div
-          style={{
-            width: "min(420px, calc(100vw - 32px))",
-            aspectRatio: "9 / 16",
-            background: "#000",
-            borderRadius: "16px",
-            overflow: "hidden",
-          }}
-        >
-          <iframe
-            src={videoUrl}
-            title="Instagram Reel"
-            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share;"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-            style={{
-              width: "100%",
-              height: "100%",
-              border: "none",
-              display: "block",
-              background: "#000",
-            }}
+        {isInstagram ? (
+          <div className="reels-modal-frame-wrap">
+            <iframe
+              src={embedUrl}
+              title={reel.title || "Instagram Reel"}
+              className="reels-modal-iframe"
+              allowTransparency="true"
+              allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            />
+          </div>
+        ) : (
+          <video
+            src={reel.videoUrl}
+            className="reels-modal-video"
+            controls
+            autoPlay
+            playsInline
           />
-        </div>
+        )}
       </div>
     </div>
   );

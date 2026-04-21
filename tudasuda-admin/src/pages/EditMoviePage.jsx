@@ -12,6 +12,7 @@ function buildEmptyForm() {
     posterImage: "",
     coverImage: "",
     trailerUrl: "",
+    buyTicketsUrl: "",
     releaseDate: "",
     durationMinutes: "",
     ageRating: "",
@@ -39,7 +40,7 @@ function buildEmptyForm() {
         seoDescription: "",
       },
     },
-    sessions: [],
+    calendarDates: [],
     galleryItems: [],
     castItems: [],
   };
@@ -61,21 +62,6 @@ function toDateInputValue(value) {
   return `${year}-${month}-${day}`;
 }
 
-function toTimeInputValue(value) {
-  if (!value) return "";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-
-  return `${hours}:${minutes}`;
-}
-
 function mapMovieToForm(movie) {
   const ru =
     movie?.translations?.find((item) => item.locale === "ru") || null;
@@ -90,6 +76,12 @@ function mapMovieToForm(movie) {
     posterImage: movie.posterImage || "",
     coverImage: movie.coverImage || "",
     trailerUrl: movie.trailerUrl || "",
+    buyTicketsUrl:
+      movie.buyTicketsUrl ||
+      movie.ticketUrl ||
+      (Array.isArray(movie.sessions)
+        ? movie.sessions.find((item) => item.ticketUrl)?.ticketUrl || ""
+        : ""),
     releaseDate: toDateInputValue(movie.releaseDate),
     durationMinutes:
       movie.durationMinutes !== null && movie.durationMinutes !== undefined
@@ -120,14 +112,13 @@ function mapMovieToForm(movie) {
         seoDescription: uz?.seoDescription || "",
       },
     },
-    sessions: Array.isArray(movie.sessions)
-      ? movie.sessions.map((item) => ({
-          sessionDate: toDateInputValue(item.startAt),
-          sessionTime: toTimeInputValue(item.startAt),
-          cinemaName: item.cinemaName || "",
-          hallName: item.hallName || "",
-          price: item.price || "",
-          ticketUrl: item.ticketUrl || "",
+    calendarDates: Array.isArray(movie.calendarDates)
+      ? movie.calendarDates.map((item, index) => ({
+          date: toDateInputValue(item.date),
+          sortOrder:
+            item.sortOrder !== null && item.sortOrder !== undefined
+              ? String(item.sortOrder)
+              : String(index),
         }))
       : [],
     galleryItems: Array.isArray(movie.galleryItems)
@@ -152,11 +143,6 @@ function mapMovieToForm(movie) {
   };
 }
 
-function buildSessionStartAt(sessionDate, sessionTime) {
-  if (!sessionDate || !sessionTime) return null;
-  return `${sessionDate}T${sessionTime}:00`;
-}
-
 function buildPayload(form) {
   return {
     slug: form.slug.trim(),
@@ -165,6 +151,7 @@ function buildPayload(form) {
     posterImage: form.posterImage.trim() || null,
     coverImage: form.coverImage.trim() || null,
     trailerUrl: form.trailerUrl.trim() || null,
+    buyTicketsUrl: form.buyTicketsUrl.trim() || null,
     releaseDate: form.releaseDate || null,
     durationMinutes: form.durationMinutes ? Number(form.durationMinutes) : null,
     ageRating: form.ageRating.trim() || null,
@@ -194,19 +181,14 @@ function buildPayload(form) {
         seoDescription: form.translations.uz.seoDescription.trim() || null,
       },
     ].filter((item) => item.title),
-    sessions: form.sessions
-      .filter(
-        (item) =>
-          item.sessionDate.trim() &&
-          item.sessionTime.trim() &&
-          item.cinemaName.trim()
-      )
-      .map((item) => ({
-        startAt: buildSessionStartAt(item.sessionDate, item.sessionTime),
-        cinemaName: item.cinemaName.trim(),
-        hallName: item.hallName.trim() || null,
-        price: item.price.trim() || null,
-        ticketUrl: item.ticketUrl.trim() || null,
+    calendarDates: form.calendarDates
+      .filter((item) => item.date.trim())
+      .map((item, index) => ({
+        date: item.date,
+        sortOrder:
+          item.sortOrder !== "" && item.sortOrder !== null
+            ? Number(item.sortOrder)
+            : index,
       })),
     galleryItems: form.galleryItems
       .filter((item) => item.image.trim())
@@ -297,36 +279,34 @@ function EditMoviePage() {
     }));
   }
 
-  function handleSessionChange(index, field, value) {
+  function handleCalendarDateChange(index, field, value) {
     setForm((prev) => ({
       ...prev,
-      sessions: prev.sessions.map((item, itemIndex) =>
+      calendarDates: prev.calendarDates.map((item, itemIndex) =>
         itemIndex === index ? { ...item, [field]: value } : item
       ),
     }));
   }
 
-  function addSession() {
+  function addCalendarDate() {
     setForm((prev) => ({
       ...prev,
-      sessions: [
-        ...prev.sessions,
+      calendarDates: [
+        ...prev.calendarDates,
         {
-          sessionDate: "",
-          sessionTime: "",
-          cinemaName: "",
-          hallName: "",
-          price: "",
-          ticketUrl: "",
+          date: "",
+          sortOrder: prev.calendarDates.length,
         },
       ],
     }));
   }
 
-  function removeSession(index) {
+  function removeCalendarDate(index) {
     setForm((prev) => ({
       ...prev,
-      sessions: prev.sessions.filter((_, itemIndex) => itemIndex !== index),
+      calendarDates: prev.calendarDates.filter(
+        (_, itemIndex) => itemIndex !== index
+      ),
     }));
   }
 
@@ -433,7 +413,10 @@ function EditMoviePage() {
       <div className="admin-section-header">
         <div>
           <h1>Редактировать фильм</h1>
-          <p>Изменение карточки фильма, сеансов, галереи и актёрского состава.</p>
+          <p>
+            Изменение карточки фильма, календарных дат, галереи и актёрского
+            состава.
+          </p>
         </div>
       </div>
 
@@ -445,9 +428,9 @@ function EditMoviePage() {
         form={{ ...form, onSubmit: handleSubmit }}
         onChange={handleChange}
         onTranslationChange={handleTranslationChange}
-        onSessionChange={handleSessionChange}
-        addSession={addSession}
-        removeSession={removeSession}
+        onCalendarDateChange={handleCalendarDateChange}
+        addCalendarDate={addCalendarDate}
+        removeCalendarDate={removeCalendarDate}
         onGalleryChange={handleGalleryChange}
         addGalleryItem={addGalleryItem}
         removeGalleryItem={removeGalleryItem}

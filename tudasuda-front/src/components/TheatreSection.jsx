@@ -33,12 +33,14 @@ function TheatreSection() {
   const t = uiText[language] || uiText.ru;
 
   useEffect(() => {
+    let isMounted = true;
+
     async function loadTheatreEvents() {
       try {
         setIsLoading(true);
 
         const response = await fetch(
-          `${API_BASE_URL}/api/events?status=published&lang=${language}`
+          `${API_BASE_URL}/api/events?status=published&type=theatre&lang=${language}`
         );
 
         if (!response.ok) {
@@ -46,32 +48,57 @@ function TheatreSection() {
         }
 
         const data = await response.json();
+
+        if (!isMounted) return;
         setEvents(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("LOAD THEATRE EVENTS ERROR:", error);
+
+        if (!isMounted) return;
         setEvents([]);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
     loadTheatreEvents();
+
+    return () => {
+      isMounted = false;
+    };
   }, [language]);
 
   const theatreEvents = useMemo(() => {
     return events
-      .filter((item) => item.type === "theatre")
       .map((item) => {
         const translation = item.translations?.[0] || null;
 
         return {
           id: item.id,
           slug: item.slug,
-          image: item.coverImage,
+          image: item.coverImage || item.posterImage || "",
           title: translation?.title || "",
-          subtitle: translation?.shortDescription || "",
-          location: translation?.address || "",
+          subtitle:
+            translation?.shortDescription ||
+            translation?.subtitle ||
+            "",
+          location: translation?.venue || translation?.address || "",
+          isFeatured: Boolean(item.isFeatured),
+          publishedAt: item.publishedAt || item.createdAt || null,
         };
+      })
+      .filter((item) => item.slug && item.title && item.image)
+      .sort((a, b) => {
+        if (a.isFeatured !== b.isFeatured) {
+          return a.isFeatured ? -1 : 1;
+        }
+
+        const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+        const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+
+        return dateB - dateA;
       });
   }, [events]);
 
@@ -80,6 +107,7 @@ function TheatreSection() {
     if (!slider) return;
 
     const scrollAmount = slider.clientWidth * 0.8;
+
     slider.scrollBy({
       left: direction === "next" ? scrollAmount : -scrollAmount,
       behavior: "smooth",
@@ -94,7 +122,10 @@ function TheatreSection() {
         <div className="theatre-header">
           <h2>{t.title}</h2>
 
-          <Link to={`/${language}/events?filter=theatre`} className="theatre-more">
+          <Link
+            to={`/${language}/events?filter=theatre`}
+            className="theatre-more"
+          >
             {t.more}
             <span className="arrow">→</span>
           </Link>
@@ -112,39 +143,37 @@ function TheatreSection() {
 
           <div ref={sliderRef} className="theatre-slider">
             <div className="theatre-track">
-              {theatreEvents.map((item) => {
-                return (
-                  <article key={item.id} className="theatre-card">
-                    <Link
-                      to={`/${language}/events/${item.slug}`}
-                      className="theatre-card-link"
-                      aria-label={`${t.open}: ${item.title}`}
-                    >
-                      <div className="theatre-image-wrap">
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="theatre-image"
-                        />
-                        <span className="theatre-badge">{t.badge}</span>
-                      </div>
+              {theatreEvents.map((item) => (
+                <article key={item.id} className="theatre-card">
+                  <Link
+                    to={`/${language}/events/${item.slug}`}
+                    className="theatre-card-link"
+                    aria-label={`${t.open}: ${item.title}`}
+                  >
+                    <div className="theatre-image-wrap">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="theatre-image"
+                      />
+                      <span className="theatre-badge">{t.badge}</span>
+                    </div>
 
-                      <div className="theatre-body">
-                        <h3>{item.title}</h3>
+                    <div className="theatre-body">
+                      <h3>{item.title}</h3>
 
-                        <div className="theatre-meta">
-                          {item.subtitle && <span>{item.subtitle}</span>}
-                          {item.location && (
-                            <span className="theatre-location">
-                              {item.location}
-                            </span>
-                          )}
-                        </div>
+                      <div className="theatre-meta">
+                        {item.subtitle ? <span>{item.subtitle}</span> : null}
+                        {item.location ? (
+                          <span className="theatre-location">
+                            {item.location}
+                          </span>
+                        ) : null}
                       </div>
-                    </Link>
-                  </article>
-                );
-              })}
+                    </div>
+                  </Link>
+                </article>
+              ))}
             </div>
           </div>
 

@@ -392,6 +392,7 @@ model Movie {
   posterImage     String?
   coverImage      String?
   trailerUrl      String?
+  buyTicketsUrl   String?
   releaseDate     DateTime?
   durationMinutes Int?
   ageRating       String?
@@ -403,11 +404,11 @@ model Movie {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  translations MovieTranslation[]
-  sessions     MovieSession[]
-  galleryItems MovieGalleryItem[]
-  castItems    MovieCastItem[]
-  ratings      MovieRating[]
+  translations  MovieTranslation[]
+  calendarDates MovieCalendarDate[]
+  galleryItems  MovieGalleryItem[]
+  castItems     MovieCastItem[]
+  ratings       MovieRating[]
 
   @@index([status])
   @@index([isFeatured])
@@ -435,20 +436,16 @@ model MovieTranslation {
   @@index([locale])
 }
 
-model MovieSession {
-  id         Int      @id @default(autoincrement())
-  movieId    Int
-  startAt    DateTime
-  cinemaName String
-  hallName   String?
-  price      String?
-  ticketUrl  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+model MovieCalendarDate {
+  id        Int      @id @default(autoincrement())
+  movieId   Int
+  date      DateTime
+  sortOrder Int      @default(0)
 
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
-  @@index([movieId, startAt])
+  @@index([movieId, date])
+  @@index([movieId, sortOrder])
 }
 
 model MovieGalleryItem {

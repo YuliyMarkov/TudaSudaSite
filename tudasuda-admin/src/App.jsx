@@ -1,10 +1,23 @@
-import { Navigate, Route, Routes, Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import StoriesPage from "./pages/StoriesPage";
 import CreateStoryPage from "./pages/CreateStoryPage";
 import EditStoryPage from "./pages/EditStoryPage";
 import EventsPage from "./pages/EventsPage";
 import CreateEventPage from "./pages/CreateEventPage";
 import EditEventPage from "./pages/EditEventPage";
+import PlacesPage from "./pages/PlacesPage";
+import CreatePlacePage from "./pages/CreatePlacePage";
+import EditPlacePage from "./pages/EditPlacePage";
+import MoviesPage from "./pages/MoviesPage";
+import CreateMoviePage from "./pages/CreateMoviePage";
+import EditMoviePage from "./pages/EditMoviePage";
 import LoginPage from "./pages/LoginPage";
 import { clearStoredToken, getStoredToken } from "./api/auth";
 
@@ -12,25 +25,10 @@ function DashboardPage() {
   return (
     <div className="admin-page">
       <h1>Админка TudaSuda</h1>
-      <p>Добро пожаловать. Разделы материалов и событий подключены.</p>
-    </div>
-  );
-}
-
-function MoviesPage() {
-  return (
-    <div className="admin-page">
-      <h1>Фильмы</h1>
-      <p>Этот раздел подключим следующим этапом.</p>
-    </div>
-  );
-}
-
-function PlacesPage() {
-  return (
-    <div className="admin-page">
-      <h1>Места</h1>
-      <p>Этот раздел подключим следующим этапом.</p>
+      <p>
+        Добро пожаловать. Сейчас подключены разделы материалов, событий и
+        фильмов.
+      </p>
     </div>
   );
 }
@@ -85,7 +83,9 @@ function AdminLayout() {
 
         <nav className="admin-nav">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.to;
+            const isActive =
+              location.pathname === item.to ||
+              location.pathname.startsWith(`${item.to}/`);
 
             return (
               <Link
@@ -114,8 +114,15 @@ function AdminLayout() {
           <Route path="/events/:id/edit" element={<EditEventPage />} />
 
           <Route path="/movies" element={<MoviesPage />} />
+          <Route path="/movies/create" element={<CreateMoviePage />} />
+          <Route path="/movies/:id/edit" element={<EditMoviePage />} />
+
           <Route path="/places" element={<PlacesPage />} />
           <Route path="/restaurants" element={<RestaurantsPage />} />
+
+          <Route path="/places" element={<PlacesPage />} />
+          <Route path="/places/create" element={<CreatePlacePage />} />
+          <Route path="/places/:id/edit" element={<EditPlacePage />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

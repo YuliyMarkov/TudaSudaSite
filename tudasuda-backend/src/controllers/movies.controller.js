@@ -14,10 +14,29 @@ function mapTranslationCreate(item) {
   };
 }
 
+function buildSessionStartAt(item) {
+  if (item.startAt) {
+    const parsed = new Date(item.startAt);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  if (item.sessionDate && item.sessionTime) {
+    const parsed = new Date(`${item.sessionDate}T${item.sessionTime}:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  return null;
+}
+
 function mapSessionCreate(item) {
+  const startAt = buildSessionStartAt(item);
+
+  if (!startAt) {
+    return null;
+  }
+
   return {
-    sessionDate: new Date(item.sessionDate),
-    sessionTime: item.sessionTime,
+    startAt,
     cinemaName: item.cinemaName,
     hallName: item.hallName || null,
     price: item.price || null,
@@ -40,15 +59,20 @@ function mapCastItemCreate(item) {
   };
 }
 
+function normalizeSessions(sessions) {
+  if (!Array.isArray(sessions) || !sessions.length) {
+    return [];
+  }
+
+  return sessions
+    .map(mapSessionCreate)
+    .filter((item) => item && item.cinemaName);
+}
+
 const movieInclude = {
   translations: true,
   sessions: {
-    orderBy: [
-      { sessionDate: "asc" },
-      { cinemaName: "asc" },
-      { sessionTime: "asc" },
-      { id: "asc" },
-    ],
+    orderBy: [{ startAt: "asc" }, { cinemaName: "asc" }, { id: "asc" }],
   },
   galleryItems: {
     orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
@@ -125,6 +149,8 @@ export async function createMovie(req, res) {
       });
     }
 
+    const normalizedSessions = normalizeSessions(sessions);
+
     const movie = await prisma.movie.create({
       data: {
         slug,
@@ -141,12 +167,11 @@ export async function createMovie(req, res) {
         translations: {
           create: translations.map(mapTranslationCreate),
         },
-        sessions:
-          Array.isArray(sessions) && sessions.length
-            ? {
-                create: sessions.map(mapSessionCreate),
-              }
-            : undefined,
+        sessions: normalizedSessions.length
+          ? {
+              create: normalizedSessions,
+            }
+          : undefined,
         galleryItems:
           Array.isArray(galleryItems) && galleryItems.length
             ? {
@@ -198,12 +223,7 @@ export async function getMovies(req, res) {
             }
           : true,
         sessions: {
-          orderBy: [
-            { sessionDate: "asc" },
-            { cinemaName: "asc" },
-            { sessionTime: "asc" },
-            { id: "asc" },
-          ],
+          orderBy: [{ startAt: "asc" }, { cinemaName: "asc" }, { id: "asc" }],
         },
         galleryItems: {
           orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
@@ -266,12 +286,7 @@ export async function getMovieBySlug(req, res) {
             }
           : true,
         sessions: {
-          orderBy: [
-            { sessionDate: "asc" },
-            { cinemaName: "asc" },
-            { sessionTime: "asc" },
-            { id: "asc" },
-          ],
+          orderBy: [{ startAt: "asc" }, { cinemaName: "asc" }, { id: "asc" }],
         },
         galleryItems: {
           orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
@@ -386,6 +401,8 @@ export async function updateMovie(req, res) {
       where: { movieId },
     });
 
+    const normalizedSessions = normalizeSessions(sessions);
+
     const updatedMovie = await prisma.movie.update({
       where: { id: movieId },
       data: {
@@ -419,12 +436,11 @@ export async function updateMovie(req, res) {
                 create: translations.map(mapTranslationCreate),
               }
             : undefined,
-        sessions:
-          Array.isArray(sessions) && sessions.length
-            ? {
-                create: sessions.map(mapSessionCreate),
-              }
-            : undefined,
+        sessions: normalizedSessions.length
+          ? {
+              create: normalizedSessions,
+            }
+          : undefined,
         galleryItems:
           Array.isArray(galleryItems) && galleryItems.length
             ? {

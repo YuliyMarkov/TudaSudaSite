@@ -11265,3 +11265,239 @@ body.dark-theme .search-result-card__link {
   display: none !important;
   content: none !important;
 }
+
+/* ===== FIX: theatre mobile ===== */
+
+@media (max-width: 700px) {
+  .theatre-section {
+    margin: 16px 0 24px;
+  }
+
+  .theatre-header {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .theatre-header h2 {
+    font-size: 22px;
+    line-height: 1.1;
+  }
+
+  .theatre-more {
+    font-size: 14px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .theatre-slider-wrap {
+    padding: 0;
+  }
+
+  .theatre-slider {
+    overflow-x: visible;
+  }
+
+  .theatre-track {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    width: 100%;
+    padding-bottom: 0;
+  }
+
+  .theatre-card {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .theatre-card-link {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .theatre-image-wrap {
+    margin-bottom: 0;
+    border-radius: 14px;
+  }
+
+  .theatre-image {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .theatre-card-body {
+    min-width: 0;
+    padding: 2px 0 0;
+  }
+
+  .theatre-card-body h3 {
+    font-size: 18px;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+
+  .theatre-card-body p,
+  .theatre-card-meta,
+  .theatre-location,
+  .theatre-date {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+}
+
+@media (max-width: 520px) {
+  .theatre-card-link {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .theatre-header h2 {
+    font-size: 20px;
+  }
+
+  .theatre-card-body h3 {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  .theatre-card-body p,
+  .theatre-card-meta,
+  .theatre-location,
+  .theatre-date {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .theatre-badge {
+    top: 8px;
+    left: 8px;
+    min-height: 24px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+}
+
+/* ===== FIX: cinema mobile ===== */
+
+@media (max-width: 700px) {
+  .cinema-section {
+    margin: 16px 0 24px;
+  }
+
+  .cinema-header {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .cinema-header h2 {
+    font-size: 22px;
+    line-height: 1.1;
+  }
+
+  .cinema-more {
+    font-size: 14px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .cinema-slider-wrap {
+    padding: 0;
+  }
+
+  .cinema-slider {
+    overflow-x: visible;
+  }
+
+  .cinema-track {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    width: 100%;
+    padding-bottom: 0;
+  }
+
+  .cinema-card {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  .cinema-card-link {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .cinema-poster-wrap {
+    margin-bottom: 0;
+    border-radius: 14px;
+  }
+
+  .cinema-poster {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .cinema-card-body {
+    min-width: 0;
+    padding: 2px 0 0;
+  }
+
+  .cinema-card-body h3 {
+    font-size: 18px;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+
+  .cinema-subtitle,
+  .cinema-location,
+  .cinema-card-body p {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+}
+
+@media (max-width: 520px) {
+  .cinema-card-link {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .cinema-header h2 {
+    font-size: 20px;
+  }
+
+  .cinema-card-body h3 {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  .cinema-subtitle,
+  .cinema-location,
+  .cinema-card-body p {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .cinema-badge {
+    top: 8px;
+    left: 8px;
+    min-height: 24px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+}

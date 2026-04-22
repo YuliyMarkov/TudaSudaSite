@@ -148,6 +148,7 @@ function Header() {
     () => localStorage.getItem("theme") === "dark"
   );
   const [weather, setWeather] = useState(null);
+  const [searchValue, setSearchValue] = useState("");
 
   const burgerBtnRef = useRef(null);
   const navRef = useRef(null);
@@ -251,6 +252,13 @@ function Header() {
 
   const handleSearchSubmit = (event) => {
     event.preventDefault();
+
+    const trimmedQuery = searchValue.trim();
+    if (!trimmedQuery) return;
+
+    navigate(`/${language}/search?q=${encodeURIComponent(trimmedQuery)}`);
+    setIsSearchOpen(false);
+    setIsMenuOpen(false);
   };
 
   const toggleMenu = () => {
@@ -322,6 +330,8 @@ function Header() {
                 className="header-inline-search-input"
                 placeholder={t.searchPlaceholder}
                 aria-label={t.searchPlaceholder}
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
               />
               <button type="submit" className="header-inline-search-btn">
                 {t.searchButton}
@@ -458,6 +468,8 @@ function Header() {
                 className="mobile-search-input"
                 placeholder={t.searchPlaceholder}
                 aria-label={t.searchPlaceholder}
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
               />
               <button type="submit" className="mobile-search-btn">
                 {t.searchButton}

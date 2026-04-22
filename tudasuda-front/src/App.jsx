@@ -21,6 +21,7 @@ import PlacePage from "./pages/PlacePage";
 import EventPage from "./pages/EventPage";
 import AllEventsPage from "./pages/AllEventsPage";
 import MoviePage from "./pages/MoviePage";
+import SearchPage from "./pages/SearchPage";
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,6 +46,8 @@ function App() {
         <Route path="/" element={<Navigate to="/ru" replace />} />
 
         <Route path="/:lang" element={<HomePage onOpenReel={open} />} />
+
+        <Route path="/:lang/search" element={<SearchPage />} />
 
         <Route path="/:lang/cinema" element={<AllCinemaPage />} />
         <Route path="/:lang/restaurants" element={<AllRestaurantsPage />} />

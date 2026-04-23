@@ -399,12 +399,7 @@ function Header() {
                 aria-pressed={language === "ru"}
                 onClick={() => handleLangChange("ru")}
               >
-                <span className="lang-btn-inner">
-                  <span className="lang-flag-img">
-                    <img src="/Icons/Flag_RU.webp" alt="RU" />
-                  </span>
-                  <span className="lang-text">RU</span>
-                </span>
+                RU
               </button>
 
               <button
@@ -414,12 +409,7 @@ function Header() {
                 aria-pressed={language === "uz"}
                 onClick={() => handleLangChange("uz")}
               >
-                <span className="lang-btn-inner">
-                  <span className="lang-flag-img">
-                    <img src="/Icons/Flag_UZ.webp" alt="UZ" />
-                  </span>
-                  <span className="lang-text">UZ</span>
-                </span>
+                UZ
               </button>
             </div>
 

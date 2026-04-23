@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../context/useLanguage";
 
 const API_BASE_URL = "http://localhost:4000";
-const INSTAGRAM_URL = "https://www.instagram.com/digest.uzbekistan/";
+const INSTAGRAM_URL = "https://www.instagram.com/tudasudauz/";
 
 function ReelsSection({ onOpenReel }) {
   const { language } = useLanguage();

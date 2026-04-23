@@ -11501,3 +11501,146 @@ body.dark-theme .search-result-card__link {
     font-size: 10px;
   }
 }
+
+@media (max-width: 700px) {
+  .header-shell {
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+
+  .header-top-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 84px;
+    column-gap: 14px;
+    row-gap: 12px;
+    margin-bottom: 0;
+    align-items: center;
+  }
+
+  .header-search-desktop,
+  .header-weather,
+  .socials {
+    display: none;
+  }
+
+  .logo {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .logo a {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .logo img {
+    max-height: 38px;
+    width: auto;
+    max-width: 100%;
+  }
+
+  .header-actions {
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .search-toggle,
+  .theme-toggle-btn,
+  .burger {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .search-toggle svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .lang-switch {
+    min-width: 70px;
+    height: 44px;
+    padding: 4px;
+    gap: 4px;
+    border-radius: 999px;
+  }
+
+  .lang-btn {
+    min-width: 0;
+    flex: 1 1 0;
+    height: 36px;
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  .header-mobile-search.active {
+    display: block;
+    margin-top: 14px;
+  }
+
+  .mobile-search-row {
+    gap: 10px;
+  }
+
+  .mobile-search-input {
+    height: 46px;
+    border-radius: 14px;
+    font-size: 14px;
+    padding: 0 14px;
+  }
+
+  .mobile-search-btn {
+    height: 46px;
+    min-width: 98px;
+    border-radius: 14px;
+    font-size: 14px;
+  }
+}
+
+.header-mobile-search.active {
+  padding-bottom: 16px;
+}
+
+@media (max-width: 420px) {
+  .container {
+    padding: 0 20px;
+  }
+
+  .header-top-row {
+    min-height: 78px;
+    column-gap: 10px;
+  }
+
+  .logo img {
+    max-height: 32px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .search-toggle,
+  .theme-toggle-btn,
+  .burger {
+    width: 40px;
+    height: 40px;
+  }
+
+  .lang-switch {
+    min-width: 64px;
+    height: 40px;
+    padding: 3px;
+  }
+
+  .lang-btn {
+    height: 34px;
+    font-size: 11px;
+    padding: 0 6px;
+  }
+}
+
+
+

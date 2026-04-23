@@ -11642,5 +11642,34 @@ body.dark-theme .search-result-card__link {
   }
 }
 
+@media (max-width: 700px) {
+  .reels-section {
+    padding: 20px 16px 24px;
+  }
 
+  .reels-track {
+    gap: 12px;
+  }
+
+  .reels-list-item,
+  .reels-list-item-more {
+    flex: 0 0 42%;
+  }
+
+  .reels-card,
+  .reels-more-card {
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  .reels-track {
+    gap: 10px;
+  }
+
+  .reels-list-item,
+  .reels-list-item-more {
+    flex: 0 0 39%;
+  }
+}
 

@@ -11673,14 +11673,14 @@ body.dark-theme .search-result-card__link {
 
   .reels-track,
   .reels-list {
-    gap: 8px;
+    gap: 12px;
   }
 
   .reels-list-item,
   .reels-list-item-more {
-    flex: 0 0 84px;
-    min-width: 84px;
-    max-width: 84px;
+    flex: 0 0 calc((100% - 24px) / 3);
+    min-width: calc((100% - 24px) / 3);
+    max-width: calc((100% - 24px) / 3);
   }
 
   .reels-card,
@@ -11690,9 +11690,9 @@ body.dark-theme .search-result-card__link {
   }
 
   .reels-card-play {
-    width: 44px;
-    height: 44px;
-    font-size: 18px;
+    width: 54px;
+    height: 54px;
+    font-size: 22px;
   }
 
   .reels-card-link {
@@ -11797,14 +11797,20 @@ body.dark-theme .search-result-card__link {
 
   .reels-track,
   .reels-list {
-    gap: 8px;
+    gap: 10px;
   }
 
   .reels-list-item,
   .reels-list-item-more {
-    flex: 0 0 78px;
-    min-width: 78px;
-    max-width: 78px;
+    flex: 0 0 calc((100% - 20px) / 3);
+    min-width: calc((100% - 20px) / 3);
+    max-width: calc((100% - 20px) / 3);
+  }
+
+  .reels-card-play {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
   }
 
   .upcoming-calendar-track {

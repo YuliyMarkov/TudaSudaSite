@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://digestnews.uz/sitemap.xml
+Disallow: /*?*
+Disallow: /admin
+Disallow: /api
+
+Sitemap: https://tudasuda.uz/sitemap.xml

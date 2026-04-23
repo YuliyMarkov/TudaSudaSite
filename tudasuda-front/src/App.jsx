@@ -25,16 +25,17 @@ import SearchPage from "./pages/SearchPage";
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);
-  const [videoUrl, setVideoUrl] = useState("");
+  const [selectedReel, setSelectedReel] = useState(null);
 
-  const open = (url) => {
-    setVideoUrl(url);
+  const open = (reel) => {
+    if (!reel) return;
+    setSelectedReel(reel);
     setIsOpen(true);
   };
 
   const close = () => {
     setIsOpen(false);
-    setVideoUrl("");
+    setSelectedReel(null);
   };
 
   return (
@@ -46,8 +47,6 @@ function App() {
         <Route path="/" element={<Navigate to="/ru" replace />} />
 
         <Route path="/:lang" element={<HomePage onOpenReel={open} />} />
-
-        <Route path="/:lang/search" element={<SearchPage />} />
 
         <Route path="/:lang/cinema" element={<AllCinemaPage />} />
         <Route path="/:lang/restaurants" element={<AllRestaurantsPage />} />
@@ -63,6 +62,8 @@ function App() {
         <Route path="/:lang/events" element={<AllEventsPage />} />
         <Route path="/:lang/events/:slug" element={<EventPage />} />
 
+        <Route path="/:lang/search" element={<SearchPage />} />
+
         <Route path="/:lang/about" element={<AboutPage />} />
         <Route path="/:lang/contacts" element={<ContactsPage />} />
         <Route path="/:lang/privacy" element={<PrivacyPage />} />
@@ -71,7 +72,7 @@ function App() {
 
       <Footer />
 
-      <ReelsModal isOpen={isOpen} videoUrl={videoUrl} onClose={close} />
+      <ReelsModal isOpen={isOpen} reel={selectedReel} onClose={close} />
     </>
   );
 }

@@ -168,7 +168,7 @@ function ReelsSection({ onOpenReel }) {
               key={reel.id}
               type="button"
               className="reels-list-item"
-              onClick={() => onOpenReel(reel)}
+              onClick={() => onOpenReel?.(reel)}
               aria-label={reel.title || t.title}
             >
               <img src={reel.image} alt={reel.title || t.title} />

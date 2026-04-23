@@ -1,74 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset
-  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://tudasuda.uz/ru</loc></url>
+  <url><loc>https://tudasuda.uz/uz</loc></url>
 
-  <!-- Главная -->
-  <url>
-    <loc>https://digestnews.uz/ru</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/uz</loc>
-  </url>
+  <url><loc>https://tudasuda.uz/ru/cinema</loc></url>
+  <url><loc>https://tudasuda.uz/uz/cinema</loc></url>
 
-  <!-- Категории -->
-  <url>
-    <loc>https://digestnews.uz/ru/category/uzbekistan</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/ru/category/world</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/ru/category/auto</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/ru/category/incidents</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/ru/category/science</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/ru/category/economy</loc>
-  </url>
+  <url><loc>https://tudasuda.uz/ru/events</loc></url>
+  <url><loc>https://tudasuda.uz/uz/events</loc></url>
 
-  <url>
-    <loc>https://digestnews.uz/uz/category/uzbekistan</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/uz/category/world</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/uz/category/auto</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/uz/category/incidents</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/uz/category/science</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/uz/category/economy</loc>
-  </url>
+  <url><loc>https://tudasuda.uz/ru/restaurants</loc></url>
+  <url><loc>https://tudasuda.uz/uz/restaurants</loc></url>
 
-  <!-- Статические страницы -->
-  <url>
-    <loc>https://digestnews.uz/ru/about</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/ru/contacts</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/ru/privacy</loc>
-  </url>
+  <url><loc>https://tudasuda.uz/ru/places</loc></url>
+  <url><loc>https://tudasuda.uz/uz/places</loc></url>
 
-  <url>
-    <loc>https://digestnews.uz/uz/about</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/uz/contacts</loc>
-  </url>
-  <url>
-    <loc>https://digestnews.uz/uz/privacy</loc>
-  </url>
+  <url><loc>https://tudasuda.uz/ru/stories</loc></url>
+  <url><loc>https://tudasuda.uz/uz/stories</loc></url>
 
+  <url><loc>https://tudasuda.uz/ru/about</loc></url>
+  <url><loc>https://tudasuda.uz/uz/about</loc></url>
+
+  <url><loc>https://tudasuda.uz/ru/contacts</loc></url>
+  <url><loc>https://tudasuda.uz/uz/contacts</loc></url>
+
+  <url><loc>https://tudasuda.uz/ru/privacy</loc></url>
+  <url><loc>https://tudasuda.uz/uz/privacy</loc></url>
 </urlset>

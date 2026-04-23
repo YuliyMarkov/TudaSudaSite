@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 
-const API_BASE_URL = "http://localhost:4000";
+const API_BASE_URL = "";
 
 function TheatreSection() {
   const { language } = useLanguage();

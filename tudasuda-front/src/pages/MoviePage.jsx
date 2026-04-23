@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
 
-const API_BASE_URL = "http://localhost:4000";
+const API_BASE_URL = "";
 
 function getBrowserToken() {
   const storageKey = "movie-browser-token";

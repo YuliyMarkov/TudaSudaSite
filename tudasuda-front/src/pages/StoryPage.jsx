@@ -4,7 +4,7 @@ import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
 import StoryContentRenderer from "../components/StoryContentRenderer";
 
-const API_BASE_URL = "http://localhost:4000";
+const API_BASE_URL = "";
 
 function StoryPage() {
   const { lang, slug } = useParams();

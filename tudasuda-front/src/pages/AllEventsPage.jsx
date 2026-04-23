@@ -6,7 +6,7 @@ import Seo from "../components/Seo";
 const INITIAL_VISIBLE_COUNT = 12;
 const LOAD_MORE_COUNT = 12;
 const ALLOWED_FILTERS = ["all", "concert", "theatre", "exhibition", "kids"];
-const API_BASE_URL = "http://localhost:4000";
+const API_BASE_URL = "";
 
 function formatEventDate(dateString, language) {
   if (!dateString) return "";

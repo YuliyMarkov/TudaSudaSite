@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 
-const API_BASE_URL = "http://localhost:4000";
+const API_BASE_URL = "";
 
 function toIsoDate(date) {
   const year = date.getFullYear();
@@ -67,37 +67,42 @@ function groupEventsByDate(events = []) {
   const grouped = new Map();
 
   events.forEach((event) => {
-    const firstSession = event.sessions?.[0];
-    if (!firstSession?.startAt) return;
+    const sessions = Array.isArray(event.sessions) ? event.sessions : [];
 
-    const dateKey = new Date(firstSession.startAt).toISOString().split("T")[0];
+    sessions.forEach((session) => {
+      if (!session?.startAt) return;
 
-    if (!grouped.has(dateKey)) {
-      grouped.set(dateKey, []);
-    }
+      const dateKey = new Date(session.startAt)
+        .toISOString()
+        .split("T")[0];
 
-    grouped.get(dateKey).push({
-      id: `event-${event.id}`,
-      sourceId: event.id,
-      slug: event.slug,
-      image: event.coverImage || event.posterImage || "",
-      title: event.translations?.[0]?.title || "",
-      location:
-        event.translations?.[0]?.venue ||
-        event.translations?.[0]?.address ||
-        "",
-      category: event.isForKids
-        ? "kids"
-        : event.type === "concert"
-          ? "concert"
-          : event.type === "theatre"
-            ? "theatre"
-            : event.type === "exhibition"
-              ? "exhibition"
-              : "",
-      href: `/events/${event.slug}`,
-      sortDate: firstSession.startAt,
-      isFeatured: Boolean(event.isFeatured),
+      if (!grouped.has(dateKey)) {
+        grouped.set(dateKey, []);
+      }
+
+      grouped.get(dateKey).push({
+        id: `event-${event.id}-${session.startAt}`,
+        sourceId: event.id,
+        slug: event.slug,
+        image: event.coverImage || event.posterImage || "",
+        title: event.translations?.[0]?.title || "",
+        location:
+          event.translations?.[0]?.venue ||
+          event.translations?.[0]?.address ||
+          "",
+        category: event.isForKids
+          ? "kids"
+          : event.type === "concert"
+            ? "concert"
+            : event.type === "theatre"
+              ? "theatre"
+              : event.type === "exhibition"
+                ? "exhibition"
+                : "",
+        href: `/events/${event.slug}`,
+        sortDate: session.startAt,
+        isFeatured: Boolean(event.isFeatured),
+      });
     });
   });
 

@@ -11647,29 +11647,135 @@ body.dark-theme .search-result-card__link {
     padding: 20px 16px 24px;
   }
 
-  .reels-track {
+  .reels-list {
     gap: 12px;
   }
 
   .reels-list-item,
   .reels-list-item-more {
-    flex: 0 0 42%;
-  }
-
-  .reels-card,
-  .reels-more-card {
-    border-radius: 14px;
+    flex: 0 0 36%;
   }
 }
 
 @media (max-width: 520px) {
-  .reels-track {
+  .reels-list {
     gap: 10px;
   }
 
   .reels-list-item,
   .reels-list-item-more {
-    flex: 0 0 39%;
+    flex: 0 0 34%;
   }
 }
 
+/* ===== UPCOMING CALENDAR MOBILE FIX ===== */
+
+@media (max-width: 700px) {
+  .upcoming-calendar-slider-wrap {
+    margin-top: 14px;
+  }
+
+  .upcoming-calendar-slider {
+    overflow: visible;
+  }
+
+  .upcoming-calendar-track {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    width: 100%;
+  }
+
+  .upcoming-event-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .upcoming-event-link {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+    text-decoration: none;
+  }
+
+  .upcoming-event-image-wrap {
+    position: relative;
+    width: 100%;
+    margin-bottom: 0;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .upcoming-event-image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 16px;
+  }
+
+  .upcoming-event-badge {
+    top: 8px;
+    left: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1;
+  }
+
+  .upcoming-event-body {
+    min-width: 0;
+    padding-top: 4px;
+  }
+
+  .upcoming-event-body h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    line-height: 1.25;
+    font-weight: 800;
+  }
+
+  .upcoming-event-meta {
+    margin: 0;
+  }
+
+  .upcoming-event-location {
+    display: block;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--article-muted);
+  }
+
+  .upcoming-calendar-nav {
+    display: none;
+  }
+
+  .upcoming-calendar-empty {
+    margin-top: 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  .upcoming-event-link {
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .upcoming-event-body h3 {
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  .upcoming-event-location {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .upcoming-event-badge {
+    font-size: 10px;
+    padding: 5px 8px;
+  }
+}

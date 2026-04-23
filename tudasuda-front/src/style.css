@@ -11828,3 +11828,159 @@ body.dark-theme .search-result-card__link {
     font-size: 12px;
   }
 }
+
+
+/* ===== FINAL MOBILE FIX: REELS ONLY ===== */
+@media (max-width: 700px) {
+  .reels-section {
+    margin: 0 0 28px;
+    padding: 18px 16px 20px;
+    border-radius: 18px;
+  }
+
+  .section-header--reels {
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-header--reels h2,
+  .reels-header h2 {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+
+  .section-nav,
+  .reels-controls {
+    gap: 10px;
+  }
+
+  .section-nav-btn,
+  .reels-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .reels-viewport {
+    overflow: hidden;
+  }
+
+  .reels-list,
+  .reels-track {
+    gap: 12px;
+  }
+
+  .reels-list {
+    grid-auto-columns: 108px;
+  }
+
+  .reels-list-item,
+  .reels-list-item-more {
+    width: 108px;
+    min-width: 108px;
+    max-width: 108px;
+    aspect-ratio: 9 / 16;
+    border-radius: 18px;
+  }
+
+  .reels-card,
+  .reels-more-card,
+  .reels-list-item img {
+    border-radius: 18px;
+  }
+
+  .reels-list-overlay {
+    padding: 10px;
+  }
+
+  .reels-list-play,
+  .reels-card-play {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+  }
+
+  .reels-list-badge,
+  .reels-card-link {
+    font-size: 11px;
+    line-height: 1;
+  }
+
+  .reels-list-badge {
+    padding: 7px 10px;
+  }
+
+  .reels-card-link {
+    right: 8px;
+    bottom: 8px;
+    padding: 6px 8px;
+  }
+
+  .reels-list-item-more,
+  .reels-more-card {
+    padding: 14px 10px;
+    font-size: 15px;
+    line-height: 1.25;
+  }
+
+  .reels-more-arrow {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 520px) {
+  .reels-section {
+    padding: 16px 14px 18px;
+  }
+
+  .section-header--reels h2,
+  .reels-header h2 {
+    font-size: 22px;
+  }
+
+  .section-nav-btn,
+  .reels-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .reels-list,
+  .reels-track {
+    gap: 10px;
+  }
+
+  .reels-list {
+    grid-auto-columns: 98px;
+  }
+
+  .reels-list-item,
+  .reels-list-item-more {
+    width: 98px;
+    min-width: 98px;
+    max-width: 98px;
+    border-radius: 17px;
+  }
+
+  .reels-card,
+  .reels-more-card,
+  .reels-list-item img {
+    border-radius: 17px;
+  }
+
+  .reels-list-play,
+  .reels-card-play {
+    width: 44px;
+    height: 44px;
+    font-size: 17px;
+  }
+
+  .reels-list-item-more,
+  .reels-more-card {
+    font-size: 14px;
+    padding: 12px 8px;
+  }
+}

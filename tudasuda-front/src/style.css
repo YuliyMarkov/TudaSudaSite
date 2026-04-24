@@ -12216,3 +12216,151 @@ body.dark-theme .search-result-card__link {
     gap: 10px !important;
   }
 }
+/* ===== FINAL OVERRIDE: MOBILE REELS BIG, 2 ITEMS PER SCREEN ===== */
+
+@media (max-width: 700px) {
+  .reels-section {
+    width: 100% !important;
+    margin-top: 34px !important;
+    margin-bottom: 34px !important;
+    padding: 24px 16px 26px !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
+  }
+
+  .section-header--reels,
+  .reels-header {
+    align-items: center !important;
+    margin-bottom: 18px !important;
+  }
+
+  .section-header--reels h2,
+  .reels-header h2 {
+    font-size: 26px !important;
+    line-height: 1.1 !important;
+  }
+
+  .section-nav,
+  .reels-controls {
+    gap: 10px !important;
+  }
+
+  .section-nav-btn,
+  .reels-btn {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    font-size: 22px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .reels-viewport {
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .reels-list {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: calc((100% - 12px) / 2) !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .reels-track {
+    display: flex !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .reels-list-item,
+  .reels-list-item-more {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    flex: 0 0 calc((100% - 12px) / 2) !important;
+    aspect-ratio: 9 / 16 !important;
+    border-radius: 22px !important;
+  }
+
+  .reels-card,
+  .reels-more-card {
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: 9 / 16 !important;
+    border-radius: 22px !important;
+  }
+
+  .reels-list-item img,
+  .reels-card-image,
+  .reels-card-image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 22px !important;
+  }
+
+  .reels-list-overlay {
+    padding: 14px !important;
+  }
+
+  .reels-list-play,
+  .reels-card-play {
+    width: 64px !important;
+    height: 64px !important;
+    font-size: 24px !important;
+  }
+
+  .reels-list-badge,
+  .reels-card-link {
+    right: 12px !important;
+    bottom: 12px !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    padding: 8px 11px !important;
+    border-radius: 999px !important;
+  }
+
+  .reels-list-item-more,
+  .reels-more-card {
+    padding: 18px 12px !important;
+    font-size: 17px !important;
+    line-height: 1.25 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .reels-section {
+    padding: 22px 14px 24px !important;
+  }
+
+  .reels-list {
+    grid-auto-columns: calc((100% - 10px) / 2) !important;
+    gap: 10px !important;
+  }
+
+  .reels-track {
+    gap: 10px !important;
+  }
+
+  .reels-list-item,
+  .reels-list-item-more {
+    flex-basis: calc((100% - 10px) / 2) !important;
+    border-radius: 20px !important;
+  }
+
+  .reels-card,
+  .reels-more-card,
+  .reels-list-item img,
+  .reels-card-image,
+  .reels-card-image img {
+    border-radius: 20px !important;
+  }
+
+  .reels-list-play,
+  .reels-card-play {
+    width: 58px !important;
+    height: 58px !important;
+    font-size: 22px !important;
+  }
+}

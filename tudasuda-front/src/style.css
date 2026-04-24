@@ -12549,3 +12549,23 @@ body.dark-theme .search-result-card__link {
     border-radius: 18px;
   }
 }
+
+.event-buy-btn {
+  position: relative;
+  z-index: 5;
+  pointer-events: auto;
+  cursor: pointer;
+  border: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.event-ticket-box {
+  position: relative;
+  z-index: 4;
+}
+
+.event-info {
+  position: relative;
+  z-index: 3;
+}

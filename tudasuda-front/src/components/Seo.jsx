@@ -1,57 +1,57 @@
 import { Helmet } from "react-helmet-async";
 
+const SITE_URL = "https://tudasuda.uz";
+const BRAND = "ТудаСюда";
+const DEFAULT_TITLE = "ТудаСюда — куда сходить в Ташкенте";
+const DEFAULT_DESCRIPTION =
+  "Места, события, развлечения и гастрономия Ташкента и Узбекистана.";
+const DEFAULT_IMAGE = "/preview.jpg";
+
+function getAbsoluteUrl(value) {
+  if (!value) return SITE_URL;
+  if (value.startsWith("http")) return value;
+  return `${SITE_URL}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
 function Seo({
-  title = "ТудаСюда — куда сходить в Ташкенте",
-  description = "Места, события, развлечения и гастрономия Ташкента и Узбекистана.",
+  title = DEFAULT_TITLE,
+  description = DEFAULT_DESCRIPTION,
   canonical = "",
-  image = "/preview.jpg",
+  image = DEFAULT_IMAGE,
   type = "website",
   schema = null,
 }) {
-  const siteUrl = "https://tudasuda.uz";
-  const brand = "ТудаСюда";
+  const safeDescription = description || DEFAULT_DESCRIPTION;
 
-  const fullTitle = title.includes(brand)
-    ? title
-    : `${title} — ${brand}`;
+  const fullTitle = title.includes(BRAND) ? title : `${title} — ${BRAND}`;
+  const fullUrl = canonical ? getAbsoluteUrl(canonical) : SITE_URL;
+  const fullImage = getAbsoluteUrl(image || DEFAULT_IMAGE);
 
-  const fullUrl = canonical
-    ? `${siteUrl}${canonical}`
-    : siteUrl;
-
-  const fullImage = image.startsWith("http")
-    ? image
-    : `${siteUrl}${image}`;
-
-  // 🔥 нормальная подстановка URL без костылей
-  const normalizedSchema = schema
-    ? replaceSchemaUrls(schema, fullUrl)
-    : null;
+  const normalizedSchema = schema ? replaceSchemaUrls(schema, fullUrl) : null;
 
   return (
     <Helmet>
       <title>{fullTitle}</title>
+      <meta name="description" content={safeDescription} />
 
-      <meta name="description" content={description} />
-
-      {/* Open Graph */}
+      <meta property="og:locale" content="ru_RU" />
       <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
+      <meta property="og:description" content={safeDescription} />
       <meta property="og:type" content={type} />
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={fullImage} />
-      <meta property="og:site_name" content={brand} />
+      <meta property="og:image:secure_url" content={fullImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:site_name" content={BRAND} />
 
-      {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
+      <meta name="twitter:description" content={safeDescription} />
       <meta name="twitter:image" content={fullImage} />
 
-      {/* Canonical */}
       <link rel="canonical" href={fullUrl} />
 
-      {/* Schema.org */}
       {normalizedSchema && (
         <script type="application/ld+json">
           {JSON.stringify(normalizedSchema)}
@@ -61,7 +61,6 @@ function Seo({
   );
 }
 
-// 🔥 рекурсивная замена __PAGE_URL__
 function replaceSchemaUrls(obj, url) {
   if (typeof obj === "string") {
     return obj === "__PAGE_URL__" ? url : obj;

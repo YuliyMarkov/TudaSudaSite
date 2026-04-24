@@ -12569,3 +12569,55 @@ body.dark-theme .search-result-card__link {
   position: relative;
   z-index: 3;
 }
+
+/* ===== TICKET IFRAME MODAL FIX ===== */
+
+.ticket-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  padding: 24px !important;
+  background: rgba(0, 0, 0, 0.68) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.ticket-iframe-modal {
+  position: relative !important;
+  width: min(96vw, 1180px) !important;
+  height: min(88vh, 820px) !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+  background: #fff !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38) !important;
+}
+
+.ticket-modal-iframe {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  background: #fff !important;
+}
+
+.ticket-iframe-modal .ticket-modal-close {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  z-index: 10 !important;
+}
+
+@media (max-width: 700px) {
+  .ticket-modal-backdrop {
+    padding: 10px !important;
+  }
+
+  .ticket-iframe-modal {
+    width: 100% !important;
+    height: 92vh !important;
+    border-radius: 18px !important;
+  }
+}

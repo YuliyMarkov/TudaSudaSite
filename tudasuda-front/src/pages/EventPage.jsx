@@ -85,6 +85,7 @@ function EventPage() {
   const [event, setEvent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
 
   const uiText = {
     ru: {
@@ -102,6 +103,11 @@ function EventPage() {
       ageLimit: "Возраст",
       tickets: "Билеты",
       buyTickets: "Купить билеты",
+      ticketModalTitle: "Покупка билетов",
+      ticketModalText:
+        "Сейчас вы перейдёте на страницу покупки билетов у партнёра.",
+      ticketModalContinue: "Перейти к покупке",
+      ticketModalClose: "Закрыть",
       program: "Что ждет гостей",
       importantInfo: "Важно знать",
       map: "Локация",
@@ -139,6 +145,11 @@ function EventPage() {
       ageLimit: "Yosh",
       tickets: "Chiptalar",
       buyTickets: "Chipta sotib olish",
+      ticketModalTitle: "Chipta xarid qilish",
+      ticketModalText:
+        "Siz hamkor sahifasida chipta xarid qilishga o‘tasiz.",
+      ticketModalContinue: "Xaridga o‘tish",
+      ticketModalClose: "Yopish",
       program: "Dastur",
       importantInfo: "Muhim ma’lumot",
       map: "Xaritadagi joylashuv",
@@ -201,6 +212,24 @@ function EventPage() {
 
     loadEvent();
   }, [slug, language, errorText]);
+
+  useEffect(() => {
+    if (!isTicketModalOpen) return;
+
+    const handleKeydown = (event) => {
+      if (event.key === "Escape") {
+        setIsTicketModalOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeydown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeydown);
+      document.body.style.overflow = "";
+    };
+  }, [isTicketModalOpen]);
 
   const normalizedEvent = useMemo(() => {
     if (!event) return null;
@@ -411,14 +440,13 @@ function EventPage() {
                   </div>
 
                   {ticketUrl ? (
-                    <a
-                      href={ticketUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
                       className="event-buy-btn"
+                      onClick={() => setIsTicketModalOpen(true)}
                     >
                       {t.buyTickets}
-                    </a>
+                    </button>
                   ) : null}
                 </div>
               </div>
@@ -499,6 +527,49 @@ function EventPage() {
           </div>
         </section>
       </main>
+
+      {isTicketModalOpen ? (
+        <div
+          className="ticket-modal-backdrop"
+          onClick={() => setIsTicketModalOpen(false)}
+        >
+          <div
+            className="ticket-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="ticket-modal-close"
+              onClick={() => setIsTicketModalOpen(false)}
+              aria-label={t.ticketModalClose}
+            >
+              ✕
+            </button>
+
+            <h2>{t.ticketModalTitle}</h2>
+            <p>{t.ticketModalText}</p>
+
+            <div className="ticket-modal-actions">
+              <button
+                type="button"
+                className="ticket-modal-secondary"
+                onClick={() => setIsTicketModalOpen(false)}
+              >
+                {t.ticketModalClose}
+              </button>
+
+              <a
+                href={ticketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ticket-modal-primary"
+              >
+                {t.ticketModalContinue}
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

@@ -44,11 +44,46 @@ function formatPremiere(dateString, language) {
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return "";
 
-  return new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(date);
+  const day = date.getDate();
+  const year = date.getFullYear();
+
+  const months = {
+    ru: [
+      "января",
+      "февраля",
+      "марта",
+      "апреля",
+      "мая",
+      "июня",
+      "июля",
+      "августа",
+      "сентября",
+      "октября",
+      "ноября",
+      "декабря",
+    ],
+    uz: [
+      "yanvar",
+      "fevral",
+      "mart",
+      "aprel",
+      "may",
+      "iyun",
+      "iyul",
+      "avgust",
+      "sentabr",
+      "oktabr",
+      "noyabr",
+      "dekabr",
+    ],
+  };
+
+  const month =
+    months[language]?.[date.getMonth()] || months.ru[date.getMonth()];
+
+  return language === "uz"
+    ? `${day} ${month}, ${year}`
+    : `${day} ${month} ${year}`;
 }
 
 function MoviePage() {
@@ -182,9 +217,11 @@ function MoviePage() {
     }
 
     document.addEventListener("keydown", handleKeydown);
+    document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener("keydown", handleKeydown);
+      document.body.style.overflow = "";
     };
   }, [isTicketsModalOpen]);
 
@@ -445,7 +482,7 @@ function MoviePage() {
                   )}
 
                   <div className="movie-detail-row">
-                    <span className="movie-detail-label">{t.rating}:</span>
+                    <span className="movie-detail-label">{t.averageRating}:</span>
                     <span className="movie-detail-value">
                       {ratingAverage > 0
                         ? `${ratingAverage.toFixed(1)} / 5 (${ratingCount} ${t.votes})`

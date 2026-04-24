@@ -44,7 +44,6 @@ function extractMapSrc(mapEmbed) {
   if (!mapEmbed || typeof mapEmbed !== "string") return "";
 
   const trimmed = mapEmbed.trim();
-
   if (!trimmed) return "";
 
   if (trimmed.startsWith("<iframe")) {
@@ -435,7 +434,11 @@ function EventPage() {
                     <button
                       type="button"
                       className="event-buy-btn"
-                      onClick={() => setIsTicketModalOpen(true)}
+                      onClick={(clickEvent) => {
+                        clickEvent.preventDefault();
+                        clickEvent.stopPropagation();
+                        setIsTicketModalOpen(true);
+                      }}
                     >
                       {t.buyTickets}
                     </button>
@@ -527,7 +530,7 @@ function EventPage() {
         >
           <div
             className="ticket-iframe-modal"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(modalEvent) => modalEvent.stopPropagation()}
           >
             <button
               type="button"

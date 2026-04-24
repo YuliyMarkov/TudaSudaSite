@@ -12752,9 +12752,14 @@ body.dark-theme .search-result-card__link {
 
   display: -webkit-box;
   -webkit-line-clamp: 2;
-  line-clamp: 2; /* ← добавь это */
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 
   overflow: hidden;
 }
+}
+
+.places-card-body h3 {
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
 }

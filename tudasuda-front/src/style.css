@@ -12672,7 +12672,7 @@ body.dark-theme .search-result-card__link {
   display: grid;
   grid-template-columns: 180px minmax(0, 1fr);
   gap: 18px;
-  align-items: stretch;
+  align-items: start;
   text-decoration: none;
 }
 
@@ -12713,23 +12713,48 @@ body.dark-theme .search-result-card__link {
   overflow: hidden;
 }
 
+/* MOBILE */
 @media (max-width: 700px) {
   .places-grid {
     grid-template-columns: 1fr;
     gap: 18px;
   }
 
+  .places-card {
+    max-width: 100%;
+  }
+
   .places-card-link {
-    grid-template-columns: 118px minmax(0, 1fr);
-    gap: 14px;
+    display: block;
   }
 
   .places-card-image-wrap {
-    height: 118px;
-    border-radius: 16px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    border-radius: 18px;
+    margin-bottom: 12px;
   }
 
   .places-card-body h3 {
-    font-size: 17px;
+    font-size: 19px;
+    line-height: 1.18;
+    margin-bottom: 8px;
   }
+
+  .places-card-meta {
+    gap: 3px;
+  }
+
+  .places-card-location {
+  font-size: 14px;
+  line-height: 1.4;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2; /* ← добавь это */
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+}
 }

@@ -12660,106 +12660,117 @@ body.dark-theme .search-result-card__link {
   transform: scale(0.95);
 }
 
-/* ===== PLACES SECTION CLEAN CARD ===== */
+/* ===== PLACES SECTION FINAL FIX ===== */
 
 .places-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 24px !important;
+  align-items: start !important;
+}
+
+.places-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
 }
 
 .places-card-link {
-  display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
-  text-decoration: none;
+  display: block !important;
+  width: 100% !important;
+  text-decoration: none !important;
+  color: inherit !important;
 }
 
 .places-card-image-wrap {
-  width: 100%;
-  height: 150px;
-  border-radius: 18px;
-  overflow: hidden;
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16 / 10 !important;
+  min-width: 0 !important;
+  flex: none !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  margin-bottom: 12px !important;
 }
 
 .places-card-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
 }
 
 .places-card-body {
-  min-width: 0;
+  min-width: 0 !important;
+  width: 100% !important;
+  padding: 0 2px 4px !important;
 }
 
 .places-card-body h3 {
-  margin: 0 0 8px;
-  font-size: 20px;
-  line-height: 1.15;
+  margin: 0 0 8px !important;
+  font-size: 20px !important;
+  line-height: 1.2 !important;
+  font-weight: 800 !important;
+  color: var(--text-color) !important;
+
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  white-space: normal !important;
 }
 
 .places-card-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.places-card-subtitle {
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+  color: var(--text-color) !important;
+  opacity: 0.85 !important;
 }
 
 .places-card-location {
-  display: -webkit-box;
-  line-clamp: 2;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  color: var(--article-muted) !important;
+
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+
+  word-break: normal !important;
+  overflow-wrap: normal !important;
 }
 
-/* MOBILE */
+@media (max-width: 900px) {
+  .places-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
 @media (max-width: 700px) {
   .places-grid {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-
-  .places-card {
-    max-width: 100%;
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
   }
 
   .places-card-link {
-    display: block;
+    display: block !important;
   }
 
   .places-card-image-wrap {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 10;
-    border-radius: 18px;
-    margin-bottom: 12px;
+    aspect-ratio: 16 / 9 !important;
+    margin-bottom: 12px !important;
   }
 
   .places-card-body h3 {
-    font-size: 19px;
-    line-height: 1.18;
-    margin-bottom: 8px;
+    font-size: 19px !important;
+    line-height: 1.18 !important;
   }
-
-  .places-card-meta {
-    gap: 3px;
-  }
-
-  .places-card-location {
-  font-size: 14px;
-  line-height: 1.4;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-
-  overflow: hidden;
-}
-}
-
-.places-card-body h3 {
-  word-break: keep-all !important;
-  overflow-wrap: break-word !important;
 }

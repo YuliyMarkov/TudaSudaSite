@@ -11984,3 +11984,158 @@ body.dark-theme .search-result-card__link {
     padding: 12px 8px;
   }
 }
+
+/* ===== MOBILE FIX: NEWS / STORIES PAGE ===== */
+
+@media (max-width: 700px) {
+  .all-news-grid {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 22px;
+  }
+
+  .all-news-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  .all-news-card-link {
+    display: block;
+    width: 100%;
+  }
+
+  .all-news-card img {
+    display: block;
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 16px;
+  }
+
+  .all-news-card-body {
+    width: 100%;
+    padding: 12px 4px 0;
+  }
+
+  .all-news-card h3 {
+    display: block;
+    width: 100%;
+    font-size: 28px;
+    line-height: 1.16;
+    font-weight: 800;
+    margin: 0 0 8px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .all-news-card p {
+    display: block;
+    width: 100%;
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--article-muted);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 520px) {
+  .all-news-grid {
+    gap: 18px;
+  }
+
+  .all-news-card img {
+    height: 200px;
+    border-radius: 14px;
+  }
+
+  .all-news-card-body {
+    padding-top: 10px;
+  }
+
+  .all-news-card h3 {
+    font-size: 23px;
+    line-height: 1.16;
+    margin-bottom: 6px;
+  }
+
+  .all-news-card p {
+    font-size: 15px;
+    line-height: 1.38;
+  }
+}
+
+/* ===== MOBILE FIX: UPCOMING CALENDAR ===== */
+
+@media (max-width: 700px) {
+  /* убираем лишние боковые отступы */
+  .upcoming-calendar-section .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .upcoming-calendar-slider-wrap {
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+
+  .upcoming-calendar-track {
+    gap: 12px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  /* делаем карточки шире (как на десктопе, но меньше) */
+  .upcoming-event-card {
+    flex: 0 0 260px;
+    width: 260px;
+    min-width: 260px;
+    max-width: 260px;
+  }
+
+  /* картинка */
+  .upcoming-event-image {
+    height: 260px;
+    border-radius: 18px;
+  }
+
+  /* убираем жесткое обрезание текста */
+  .upcoming-event-card {
+    overflow: visible;
+  }
+
+  .upcoming-event-body {
+    padding: 8px 4px 0;
+  }
+
+  .upcoming-event-body h3 {
+    font-size: 16px;
+    line-height: 1.25;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    word-break: break-word;
+  }
+
+  /* можно чуть компактнее */
+  .upcoming-event-location {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 520px) {
+  .upcoming-event-card {
+    flex: 0 0 240px;
+    width: 240px;
+    min-width: 240px;
+    max-width: 240px;
+  }
+
+  .upcoming-event-image {
+    height: 240px;
+  }
+}

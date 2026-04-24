@@ -12139,3 +12139,68 @@ body.dark-theme .search-result-card__link {
     height: 240px;
   }
 }
+
+/* ===== MOBILE FIX: BIG REELS ===== */
+
+@media (max-width: 700px) {
+  .reels-section {
+    padding: 22px 16px 24px;
+    border-radius: 20px;
+  }
+
+  .reels-header h2 {
+    font-size: 24px;
+  }
+
+  /* делаем контейнер чуть шире визуально */
+  .reels-viewport {
+    overflow: visible;
+  }
+
+  .reels-track,
+  .reels-list {
+    gap: 12px;
+  }
+
+  /* ГЛАВНОЕ — увеличиваем карточки */
+  .reels-list-item,
+  .reels-list-item-more {
+    flex: 0 0 46%;
+    max-width: 46%;
+  }
+
+  /* сами карточки */
+  .reels-card,
+  .reels-more-card {
+    border-radius: 20px;
+  }
+
+  /* делаем play-кнопку крупнее */
+  .reels-card-play {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+
+  /* подпись Instagram */
+  .reels-card-link {
+    font-size: 13px;
+    padding: 8px 10px;
+    bottom: 10px;
+    right: 10px;
+  }
+}
+
+@media (max-width: 520px) {
+  .reels-list-item,
+  .reels-list-item-more {
+    flex: 0 0 48%;
+    max-width: 48%;
+  }
+
+  .reels-card-play {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+  }
+}

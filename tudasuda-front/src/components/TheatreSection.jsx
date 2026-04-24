@@ -99,7 +99,8 @@ function TheatreSection() {
         const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
 
         return dateB - dateA;
-      });
+      })
+      .slice(0, 6);
   }, [events]);
 
   const scrollSlider = (direction) => {

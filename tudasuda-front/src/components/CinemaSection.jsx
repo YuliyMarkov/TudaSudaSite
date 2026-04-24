@@ -57,7 +57,7 @@ function CinemaSection() {
   }, [language]);
 
   const normalizedMovies = useMemo(() => {
-    return movies.map((movie) => {
+    return movies.slice(0, 6).map((movie) => {
       const translation = movie.translations?.[0] || null;
 
       return {
@@ -108,42 +108,40 @@ function CinemaSection() {
 
           <div ref={sliderRef} className="cinema-slider">
             <div className="cinema-track">
-              {normalizedMovies.map((movie) => {
-                return (
-                  <article key={movie.id} className="cinema-card">
-                    <Link
-                      to={`/${language}/movies/${movie.slug}`}
-                      className="cinema-card-link"
-                      aria-label={`${t.open}: ${movie.title}`}
-                    >
-                      <div className="cinema-poster-wrap">
-                        <img
-                          src={movie.image}
-                          alt={movie.title}
-                          className="cinema-poster"
-                        />
-                      </div>
+              {normalizedMovies.map((movie) => (
+                <article key={movie.id} className="cinema-card">
+                  <Link
+                    to={`/${language}/movies/${movie.slug}`}
+                    className="cinema-card-link"
+                    aria-label={`${t.open}: ${movie.title}`}
+                  >
+                    <div className="cinema-poster-wrap">
+                      <img
+                        src={movie.image}
+                        alt={movie.title}
+                        className="cinema-poster"
+                      />
+                    </div>
 
-                      <div className="cinema-card-body">
-                        <h3>{movie.title}</h3>
+                    <div className="cinema-card-body">
+                      <h3>{movie.title}</h3>
 
-                        <div className="cinema-card-meta">
-                          {movie.subtitle && (
-                            <span className="cinema-card-subtitle">
-                              {movie.subtitle}
-                            </span>
-                          )}
-                          {movie.location && (
-                            <span className="cinema-card-location">
-                              {movie.location}
-                            </span>
-                          )}
-                        </div>
+                      <div className="cinema-card-meta">
+                        {movie.subtitle && (
+                          <span className="cinema-card-subtitle">
+                            {movie.subtitle}
+                          </span>
+                        )}
+                        {movie.location && (
+                          <span className="cinema-card-location">
+                            {movie.location}
+                          </span>
+                        )}
                       </div>
-                    </Link>
-                  </article>
-                );
-              })}
+                    </div>
+                  </Link>
+                </article>
+              ))}
             </div>
           </div>
 

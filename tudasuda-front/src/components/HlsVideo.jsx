@@ -8,19 +8,40 @@ function HlsVideo({ src, title, autoPlay = false, poster = "" }) {
     const video = videoRef.current;
     if (!video || !src) return;
 
+    const tryPlay = () => {
+      if (!autoPlay) return;
+
+      const playPromise = video.play();
+
+      if (playPromise?.catch) {
+        playPromise.catch((error) => {
+          console.warn("Autoplay blocked:", error);
+        });
+      }
+    };
+
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = src;
-      return;
+      video.addEventListener("loadedmetadata", tryPlay, { once: true });
+
+      return () => {
+        video.removeEventListener("loadedmetadata", tryPlay);
+      };
     }
 
     if (Hls.isSupported()) {
       const hls = new Hls();
+
       hls.loadSource(src);
       hls.attachMedia(video);
 
-      return () => hls.destroy();
+      hls.on(Hls.Events.MANIFEST_PARSED, tryPlay);
+
+      return () => {
+        hls.destroy();
+      };
     }
-  }, [src]);
+  }, [src, autoPlay]);
 
   return (
     <video
@@ -31,7 +52,6 @@ function HlsVideo({ src, title, autoPlay = false, poster = "" }) {
       playsInline
       preload="metadata"
       poster={poster}
-      autoPlay={autoPlay}
     />
   );
 }

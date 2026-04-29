@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
+import HlsVideo from "../components/HlsVideo";
 
 const API_BASE_URL = "";
 
@@ -49,6 +50,10 @@ function formatPremiere(dateString, language) {
     month: "long",
     year: "numeric",
   }).format(date);
+}
+
+function isHlsUrl(url) {
+  return typeof url === "string" && url.includes(".m3u8");
 }
 
 function MoviePage() {
@@ -140,7 +145,9 @@ function MoviePage() {
         setLoadError("");
 
         const response = await fetch(
-          `${API_BASE_URL}/api/movies/${slug}?lang=${language}&browserToken=${encodeURIComponent(browserToken)}`
+          `${API_BASE_URL}/api/movies/${slug}?lang=${language}&browserToken=${encodeURIComponent(
+            browserToken
+          )}`
         );
 
         if (response.status === 404) {
@@ -364,9 +371,7 @@ function MoviePage() {
   } = normalizedMovie;
 
   const rating =
-    imdb || kp
-      ? `IMDb ${imdb || "-"} / ${t.kinopoisk} ${kp || "-"}`
-      : "";
+    imdb || kp ? `IMDb ${imdb || "-"} / ${t.kinopoisk} ${kp || "-"}` : "";
 
   const goPrev = () => {
     setActiveIndex((prev) => (prev === 0 ? mediaSlides.length - 1 : prev - 1));
@@ -531,12 +536,19 @@ function MoviePage() {
                   <div className="movie-media-stage">
                     {activeSlide?.type === "trailer" ? (
                       <div className="movie-media-frame movie-media-frame-video">
-                        <iframe
-                          src={activeSlide.src}
-                          title={`${title} trailer`}
-                          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                          allowFullScreen
-                        />
+                        {isHlsUrl(activeSlide.src) ? (
+                          <HlsVideo
+                            src={activeSlide.src}
+                            title={`${title} trailer`}
+                          />
+                        ) : (
+                          <iframe
+                            src={activeSlide.src}
+                            title={`${title} trailer`}
+                            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                            allowFullScreen
+                          />
+                        )}
                       </div>
                     ) : (
                       <div className="movie-media-frame movie-media-frame-image">

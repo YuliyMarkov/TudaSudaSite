@@ -12944,3 +12944,21 @@ body.dark-theme .search-result-card__link {
     font-size: 21px !important;
   }
 }
+
+.movie-media-frame-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  overflow: hidden;
+}
+
+.movie-media-frame-video iframe,
+.movie-media-frame-video video,
+.movie-hls-video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  object-fit: cover;
+  background: #000;
+}

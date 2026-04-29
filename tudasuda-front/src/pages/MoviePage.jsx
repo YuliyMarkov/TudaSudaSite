@@ -165,6 +165,7 @@ function MoviePage() {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [userRating, setUserRating] = useState(0);
+  const [isTrailerPlaying, setIsTrailerPlaying] = useState(false);
 
   useEffect(() => {
     const token = getBrowserToken();
@@ -211,6 +212,7 @@ function MoviePage() {
 
   useEffect(() => {
     setActiveIndex(0);
+    setIsTrailerPlaying(false);
     setIsTicketsModalOpen(false);
   }, [slug, language, movie?.id]);
 
@@ -411,10 +413,12 @@ function MoviePage() {
     imdb || kp ? `IMDb ${imdb || "-"} / ${t.kinopoisk} ${kp || "-"}` : "";
 
   const goPrev = () => {
+    setIsTrailerPlaying(false);
     setActiveIndex((prev) => (prev === 0 ? mediaSlides.length - 1 : prev - 1));
   };
 
   const goNext = () => {
+    setIsTrailerPlaying(false);
     setActiveIndex((prev) => (prev === mediaSlides.length - 1 ? 0 : prev + 1));
   };
 
@@ -574,10 +578,24 @@ function MoviePage() {
                     {activeSlide?.type === "trailer" ? (
                       <div className="movie-media-frame movie-media-frame-video">
                         {isHlsUrl(activeSlide.src) ? (
-                          <HlsVideo
-                            src={activeSlide.src}
-                            title={`${title} trailer`}
-                          />
+                          isTrailerPlaying ? (
+                            <HlsVideo
+                              src={activeSlide.src}
+                              title={`${title} trailer`}
+                              poster={activeSlide.thumb}
+                              autoPlay
+                            />
+                          ) : (
+                            <button
+                              type="button"
+                              className="movie-hls-preview"
+                              onClick={() => setIsTrailerPlaying(true)}
+                              aria-label={t.trailer}
+                            >
+                              <img src={activeSlide.thumb} alt={activeSlide.alt} />
+                              <span className="movie-hls-play-btn">▶</span>
+                            </button>
+                          )
                         ) : (
                           <iframe
                             src={activeSlide.src}
@@ -603,7 +621,10 @@ function MoviePage() {
                           className={`movie-media-thumb ${
                             safeActiveIndex === index ? "active" : ""
                           }`}
-                          onClick={() => setActiveIndex(index)}
+                          onClick={() => {
+                            setIsTrailerPlaying(false);
+                            setActiveIndex(index);
+                          }}
                           aria-label={
                             item.type === "trailer"
                               ? t.trailer

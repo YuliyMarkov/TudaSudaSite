@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import Hls from "hls.js";
 
-function HlsVideo({ src, title }) {
+function HlsVideo({ src, title, autoPlay = false, poster = "" }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -30,6 +30,8 @@ function HlsVideo({ src, title }) {
       controls
       playsInline
       preload="metadata"
+      poster={poster}
+      autoPlay={autoPlay}
     />
   );
 }

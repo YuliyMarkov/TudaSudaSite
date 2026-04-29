@@ -15,12 +15,48 @@ function formatEventDate(dateString, language) {
 
   if (Number.isNaN(date.getTime())) return "";
 
-  return new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
-    day: "numeric",
-    month: "long",
+  const day = date.getDate();
+
+  const time = new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+
+  const months = {
+    ru: [
+      "января",
+      "февраля",
+      "марта",
+      "апреля",
+      "мая",
+      "июня",
+      "июля",
+      "августа",
+      "сентября",
+      "октября",
+      "ноября",
+      "декабря",
+    ],
+    uz: [
+      "yanvar",
+      "fevral",
+      "mart",
+      "aprel",
+      "may",
+      "iyun",
+      "iyul",
+      "avgust",
+      "sentabr",
+      "oktabr",
+      "noyabr",
+      "dekabr",
+    ],
+  };
+
+  const month =
+    months[language]?.[date.getMonth()] || months.ru[date.getMonth()];
+
+  return `${day} ${month}, ${time}`;
 }
 
 function AllEventsPage() {
@@ -140,8 +176,7 @@ function AllEventsPage() {
         shortDescription: translation?.shortDescription || "",
         description: translation?.description || "",
         address: translation?.address || "",
-        ticketPrice:
-          translation?.ticketPrice || firstSession?.price || "",
+        ticketPrice: translation?.ticketPrice || firstSession?.price || "",
         date: firstSession?.startAt || null,
       };
     });
@@ -243,68 +278,64 @@ function AllEventsPage() {
             ) : visibleEvents.length > 0 ? (
               <>
                 <div className="all-events-grid">
-                  {visibleEvents.map((event) => {
-                    return (
-                      <article className="all-events-card" key={event.slug}>
-                        <Link
-                          to={`/${language}/events/${event.slug}`}
-                          className="all-events-card-link"
-                        >
-                          <div className="all-events-card-image-wrap">
-                            <img
-                              src={event.coverImage}
-                              alt={event.title}
-                              className="all-events-card-image"
-                            />
+                  {visibleEvents.map((event) => (
+                    <article className="all-events-card" key={event.slug}>
+                      <Link
+                        to={`/${language}/events/${event.slug}`}
+                        className="all-events-card-link"
+                      >
+                        <div className="all-events-card-image-wrap">
+                          <img
+                            src={event.coverImage}
+                            alt={event.title}
+                            className="all-events-card-image"
+                          />
 
-                            <span className="all-events-card-badge">
-                              {activeFilter === "kids"
-                                ? t.filters.kids
-                                : event.type === "concert"
+                          <span className="all-events-card-badge">
+                            {activeFilter === "kids"
+                              ? t.filters.kids
+                              : event.type === "concert"
                                 ? t.filters.concert
                                 : event.type === "theatre"
-                                ? t.filters.theatre
-                                : event.type === "exhibition"
-                                ? t.filters.exhibition
-                                : t.filters.all}
-                            </span>
-                          </div>
+                                  ? t.filters.theatre
+                                  : event.type === "exhibition"
+                                    ? t.filters.exhibition
+                                    : t.filters.all}
+                          </span>
+                        </div>
 
-                          <div className="all-events-card-body">
-                            <h2>{event.title}</h2>
+                        <div className="all-events-card-body">
+                          <h2>{event.title}</h2>
 
-                            <p className="all-events-card-description">
-                              {event.shortDescription}
-                            </p>
+                          <p className="all-events-card-description">
+                            {event.shortDescription}
+                          </p>
 
-                            <div className="all-events-card-meta">
-                              <div className="all-events-card-meta-row">
-                                <span className="all-events-card-meta-label">
-                                  {t.date}
-                                </span>
-                                <span className="all-events-card-meta-value">
-                                  {formatEventDate(event.date, language)}
-                                </span>
-                              </div>
-
-                              <div className="all-events-card-meta-row">
-                                <span className="all-events-card-meta-label">
-                                  {t.price}
-                                </span>
-                                <span className="all-events-card-meta-value">
-                                  {event.ticketPrice}
-                                </span>
-                              </div>
+                          <div className="all-events-card-meta">
+                            <div className="all-events-card-meta-row">
+                              <span className="all-events-card-meta-label">
+                                {t.date}
+                              </span>
+                              <span className="all-events-card-meta-value">
+                                {formatEventDate(event.date, language)}
+                              </span>
                             </div>
 
-                            <span className="all-events-card-more">
-                              {t.more}
-                            </span>
+                            <div className="all-events-card-meta-row">
+                              <span className="all-events-card-meta-label">
+                                {t.price}
+                              </span>
+                              <span className="all-events-card-meta-value">
+                                {event.ticketPrice}
+                              </span>
+                            </div>
                           </div>
-                        </Link>
-                      </article>
-                    );
-                  })}
+
+                          <span className="all-events-card-more">{t.more}</span>
+                        </div>
+                      </Link>
+                    </article>
+                  ))}
                 </div>
 
                 {hasMore && (

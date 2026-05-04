@@ -177,19 +177,12 @@ function CreateMoviePage() {
   const [isExtraOpen, setIsExtraOpen] = useState(false);
 
   const emptyUzCount = useMemo(() => {
-    const pairs = [
-      ["title", "title"],
-      ["excerpt", "excerpt"],
-      ["description", "description"],
-      ["genre", "genre"],
-      ["country", "country"],
-      ["director", "director"],
-    ];
+    const fields = ["title", "excerpt", "description", "genre", "country", "director"];
 
-    return pairs.reduce((count, [ruKey, uzKey]) => {
+    return fields.reduce((count, field) => {
       if (
-        form.translations.ru[ruKey]?.trim() &&
-        !form.translations.uz[uzKey]?.trim()
+        form.translations.ru[field]?.trim() &&
+        !form.translations.uz[field]?.trim()
       ) {
         return count + 1;
       }
@@ -342,17 +335,26 @@ function CreateMoviePage() {
   }
 
   function addCastItem() {
-    setForm((prev) => ({
-      ...prev,
-      castItems: [
-        ...prev.castItems,
-        {
-          locale: "ru",
-          name: "",
-          sortOrder: prev.castItems.length,
-        },
-      ],
-    }));
+    setForm((prev) => {
+      const nextSortOrder = Math.floor(prev.castItems.length / 2);
+
+      return {
+        ...prev,
+        castItems: [
+          ...prev.castItems,
+          {
+            locale: "ru",
+            name: "",
+            sortOrder: nextSortOrder,
+          },
+          {
+            locale: "uz",
+            name: "",
+            sortOrder: nextSortOrder,
+          },
+        ],
+      };
+    });
   }
 
   function removeCastItem(index) {

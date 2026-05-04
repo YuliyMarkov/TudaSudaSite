@@ -322,18 +322,18 @@ function EditMoviePage() {
         setIsSeoOpen(
           Boolean(
             nextForm.translations.ru.seoTitle ||
-              nextForm.translations.ru.seoDescription ||
-              nextForm.translations.uz.seoTitle ||
-              nextForm.translations.uz.seoDescription
-          )
+            nextForm.translations.ru.seoDescription ||
+            nextForm.translations.uz.seoTitle ||
+            nextForm.translations.uz.seoDescription,
+          ),
         );
 
         setIsExtraOpen(
           Boolean(
             nextForm.galleryItems.length ||
-              nextForm.castItems.length ||
-              nextForm.calendarDates.length
-          )
+            nextForm.castItems.length ||
+            nextForm.calendarDates.length,
+          ),
         );
       } catch (error) {
         if (!isMounted) return;
@@ -410,10 +410,12 @@ function EditMoviePage() {
           title: prev.translations.uz.title || prev.translations.ru.title,
           excerpt: prev.translations.uz.excerpt || prev.translations.ru.excerpt,
           description:
-            prev.translations.uz.description || prev.translations.ru.description,
+            prev.translations.uz.description ||
+            prev.translations.ru.description,
           genre: prev.translations.uz.genre || prev.translations.ru.genre,
           country: prev.translations.uz.country || prev.translations.ru.country,
-          director: prev.translations.uz.director || prev.translations.ru.director,
+          director:
+            prev.translations.uz.director || prev.translations.ru.director,
           seoTitle:
             prev.translations.uz.seoTitle || prev.translations.ru.seoTitle,
           seoDescription:
@@ -428,7 +430,7 @@ function EditMoviePage() {
     setForm((prev) => ({
       ...prev,
       calendarDates: prev.calendarDates.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [field]: value } : item
+        itemIndex === index ? { ...item, [field]: value } : item,
       ),
     }));
   }
@@ -450,7 +452,7 @@ function EditMoviePage() {
     setForm((prev) => ({
       ...prev,
       calendarDates: prev.calendarDates.filter(
-        (_, itemIndex) => itemIndex !== index
+        (_, itemIndex) => itemIndex !== index,
       ),
     }));
   }
@@ -459,7 +461,7 @@ function EditMoviePage() {
     setForm((prev) => ({
       ...prev,
       galleryItems: prev.galleryItems.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [field]: value } : item
+        itemIndex === index ? { ...item, [field]: value } : item,
       ),
     }));
   }
@@ -481,7 +483,7 @@ function EditMoviePage() {
     setForm((prev) => ({
       ...prev,
       galleryItems: prev.galleryItems.filter(
-        (_, itemIndex) => itemIndex !== index
+        (_, itemIndex) => itemIndex !== index,
       ),
     }));
   }
@@ -490,23 +492,32 @@ function EditMoviePage() {
     setForm((prev) => ({
       ...prev,
       castItems: prev.castItems.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [field]: value } : item
+        itemIndex === index ? { ...item, [field]: value } : item,
       ),
     }));
   }
 
   function addCastItem() {
-    setForm((prev) => ({
-      ...prev,
-      castItems: [
-        ...prev.castItems,
-        {
-          locale: "ru",
-          name: "",
-          sortOrder: prev.castItems.length,
-        },
-      ],
-    }));
+    setForm((prev) => {
+      const nextSortOrder = Math.floor(prev.castItems.length / 2);
+
+      return {
+        ...prev,
+        castItems: [
+          ...prev.castItems,
+          {
+            locale: "ru",
+            name: "",
+            sortOrder: nextSortOrder,
+          },
+          {
+            locale: "uz",
+            name: "",
+            sortOrder: nextSortOrder,
+          },
+        ],
+      };
+    });
   }
 
   function removeCastItem(index) {

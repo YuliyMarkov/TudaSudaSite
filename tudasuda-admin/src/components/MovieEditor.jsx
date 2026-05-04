@@ -24,6 +24,10 @@ function MovieEditor({
 }) {
   const previewImage = form.posterImage || form.coverImage;
 
+  const castGroups = Array.from(
+    new Set(form.castItems.map((item) => Number(item.sortOrder ?? 0)))
+  );
+
   return (
     <form className="admin-form" onSubmit={form.onSubmit}>
       <section className="admin-form-section">
@@ -392,7 +396,8 @@ function MovieEditor({
 
               <label
                 className={`admin-field admin-field-full ${
-                  form.translations.ru.director && !form.translations.uz.director
+                  form.translations.ru.director &&
+                  !form.translations.uz.director
                     ? "admin-field-missing"
                     : ""
                 }`}
@@ -446,7 +451,11 @@ function MovieEditor({
             <p>Даты, в которые фильм должен появляться в календаре сайта.</p>
           </div>
 
-          <button type="button" className="secondary-btn" onClick={addCalendarDate}>
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={addCalendarDate}
+          >
             Добавить дату
           </button>
         </div>
@@ -654,64 +663,130 @@ function MovieEditor({
             <div className="admin-section-header">
               <div>
                 <h2>Актёрский состав</h2>
-                <p>Имена актёров на русском или узбекском языке.</p>
+                <p>Добавляйте актёра сразу на русском и узбекском языках.</p>
               </div>
 
-              <button type="button" className="secondary-btn" onClick={addCastItem}>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={addCastItem}
+              >
                 Добавить актёра
               </button>
             </div>
 
             <div className="admin-stack">
-              {form.castItems.length ? (
-                form.castItems.map((item, index) => (
-                  <div className="admin-nested-card" key={index}>
-                    <div className="admin-form-grid">
-                      <label className="admin-field">
-                        <span>Язык</span>
-                        <select
-                          value={item.locale}
-                          onChange={(event) =>
-                            onCastChange(index, "locale", event.target.value)
-                          }
-                        >
-                          <option value="ru">Русский</option>
-                          <option value="uz">Узбекский</option>
-                        </select>
-                      </label>
+              {castGroups.length ? (
+                castGroups.map((sortOrder) => {
+                  const ruIndex = form.castItems.findIndex(
+                    (item) =>
+                      Number(item.sortOrder ?? 0) === sortOrder &&
+                      item.locale === "ru"
+                  );
 
-                      <label className="admin-field">
-                        <span>Имя</span>
-                        <input
-                          type="text"
-                          value={item.name}
-                          onChange={(event) =>
-                            onCastChange(index, "name", event.target.value)
-                          }
-                        />
-                      </label>
+                  const uzIndex = form.castItems.findIndex(
+                    (item) =>
+                      Number(item.sortOrder ?? 0) === sortOrder &&
+                      item.locale === "uz"
+                  );
 
-                      <label className="admin-field">
-                        <span>Порядок</span>
-                        <input
-                          type="number"
-                          value={item.sortOrder}
-                          onChange={(event) =>
-                            onCastChange(index, "sortOrder", event.target.value)
-                          }
-                        />
-                      </label>
+                  const ruItem = form.castItems[ruIndex];
+                  const uzItem = form.castItems[uzIndex];
+
+                  return (
+                    <div className="admin-nested-card" key={sortOrder}>
+                      <div className="localized-list-grid">
+                        <div className="localized-list-locale-block">
+                          <div className="admin-section-header">
+                            <h3>Русский</h3>
+                          </div>
+
+                          <label className="admin-field">
+                            <span>Имя актёра</span>
+                            <input
+                              type="text"
+                              value={ruItem?.name || ""}
+                              onChange={(event) => {
+                                if (ruIndex >= 0) {
+                                  onCastChange(
+                                    ruIndex,
+                                    "name",
+                                    event.target.value
+                                  );
+                                }
+                              }}
+                              placeholder="Имя актёра"
+                            />
+                          </label>
+                        </div>
+
+                        <div className="localized-list-locale-block">
+                          <div className="admin-section-header">
+                            <h3>Узбекский</h3>
+                          </div>
+
+                          <label className="admin-field">
+                            <span>Имя актёра</span>
+                            <input
+                              type="text"
+                              value={uzItem?.name || ""}
+                              onChange={(event) => {
+                                if (uzIndex >= 0) {
+                                  onCastChange(
+                                    uzIndex,
+                                    "name",
+                                    event.target.value
+                                  );
+                                }
+                              }}
+                              placeholder="Aktyor ismi"
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="admin-form-grid">
+                        <label className="admin-field">
+                          <span>Порядок</span>
+                          <input
+                            type="number"
+                            value={sortOrder}
+                            onChange={(event) => {
+                              if (ruIndex >= 0) {
+                                onCastChange(
+                                  ruIndex,
+                                  "sortOrder",
+                                  event.target.value
+                                );
+                              }
+
+                              if (uzIndex >= 0) {
+                                onCastChange(
+                                  uzIndex,
+                                  "sortOrder",
+                                  event.target.value
+                                );
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="danger-btn"
+                        onClick={() => {
+                          [ruIndex, uzIndex]
+                            .filter((index) => index >= 0)
+                            .sort((a, b) => b - a)
+                            .forEach((index) => removeCastItem(index));
+                        }}
+                      >
+                        Удалить актёра
+                      </button>
                     </div>
-
-                    <button
-                      type="button"
-                      className="danger-btn"
-                      onClick={() => removeCastItem(index)}
-                    >
-                      Удалить актёра
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p>Актёры пока не добавлены.</p>
               )}

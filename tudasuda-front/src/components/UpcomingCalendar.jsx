@@ -4,6 +4,17 @@ import { useLanguage } from "../context/useLanguage";
 
 const API_BASE_URL = "";
 
+function shuffleArray(array) {
+  const result = [...array];
+
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  return result;
+}
+
 function toIsoDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -25,21 +36,15 @@ function formatDateLabel(dateString, language) {
     { weekday: "short" }
   ).format(date);
 
-  const day = new Intl.DateTimeFormat(
-    language === "uz" ? "uz-UZ" : "ru-RU",
-    { day: "numeric" }
-  ).format(date);
+  const day = new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
+    day: "numeric",
+  }).format(date);
 
-  const month = new Intl.DateTimeFormat(
-    language === "uz" ? "uz-UZ" : "ru-RU",
-    { month: "short" }
-  ).format(date);
+  const month = new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
+    month: "short",
+  }).format(date);
 
-  return {
-    weekday,
-    day,
-    month,
-  };
+  return { weekday, day, month };
 }
 
 function getEventCategoryLabel(category, language) {
@@ -72,9 +77,7 @@ function groupEventsByDate(events = []) {
     sessions.forEach((session) => {
       if (!session?.startAt) return;
 
-      const dateKey = new Date(session.startAt)
-        .toISOString()
-        .split("T")[0];
+      const dateKey = new Date(session.startAt).toISOString().split("T")[0];
 
       if (!grouped.has(dateKey)) {
         grouped.set(dateKey, []);
@@ -154,36 +157,27 @@ function dedupeItems(items = []) {
   });
 }
 
-function mergeGroupedItems(eventsMap, moviesMap) {
+function mergeGroupedItems(eventsMap, moviesMap, onlyEvents = false) {
   const merged = new Map();
-  const allKeys = new Set([...eventsMap.keys(), ...moviesMap.keys()]);
+  const allKeys = onlyEvents
+    ? new Set([...eventsMap.keys()])
+    : new Set([...eventsMap.keys(), ...moviesMap.keys()]);
 
   allKeys.forEach((dateKey) => {
     const events = eventsMap.get(dateKey) || [];
-    const movies = moviesMap.get(dateKey) || [];
+    const movies = onlyEvents ? [] : moviesMap.get(dateKey) || [];
 
     const combined = dedupeItems(
       [...events, ...movies].filter((item) => item.title && item.image && item.href)
     );
 
-    combined.sort((a, b) => {
-      if (a.isFeatured !== b.isFeatured) {
-        return a.isFeatured ? -1 : 1;
-      }
-
-      const timeA = a.sortDate ? new Date(a.sortDate).getTime() : 0;
-      const timeB = b.sortDate ? new Date(b.sortDate).getTime() : 0;
-
-      return timeA - timeB;
-    });
-
-    merged.set(dateKey, combined);
+    merged.set(dateKey, shuffleArray(combined));
   });
 
   return merged;
 }
 
-function UpcomingCalendar() {
+function UpcomingCalendar({ onlyEvents = false }) {
   const { language } = useLanguage();
   const activeDateRef = useRef(null);
   const sliderRef = useRef(null);
@@ -226,19 +220,25 @@ function UpcomingCalendar() {
         setIsLoading(true);
         setLoadError("");
 
+        const eventsRequest = fetch(
+          `${API_BASE_URL}/api/events?status=published&lang=${language}`
+        );
+
+        const moviesRequest = onlyEvents
+          ? Promise.resolve(null)
+          : fetch(`${API_BASE_URL}/api/movies?status=published&lang=${language}`);
+
         const [eventsResponse, moviesResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/events?status=published&lang=${language}`),
-          fetch(`${API_BASE_URL}/api/movies?status=published&lang=${language}`),
+          eventsRequest,
+          moviesRequest,
         ]);
 
-        if (!eventsResponse.ok || !moviesResponse.ok) {
+        if (!eventsResponse.ok || (!onlyEvents && !moviesResponse?.ok)) {
           throw new Error("Failed to load calendar items");
         }
 
-        const [eventsData, moviesData] = await Promise.all([
-          eventsResponse.json(),
-          moviesResponse.json(),
-        ]);
+        const eventsData = await eventsResponse.json();
+        const moviesData = onlyEvents ? [] : await moviesResponse.json();
 
         if (!isMounted) return;
 
@@ -263,19 +263,21 @@ function UpcomingCalendar() {
     return () => {
       isMounted = false;
     };
-  }, [language, t.error]);
+  }, [language, t.error, onlyEvents]);
 
   const groupedEvents = useMemo(() => groupEventsByDate(events), [events]);
   const groupedMovies = useMemo(() => groupMoviesByDate(movies), [movies]);
+
   const groupedItems = useMemo(
-    () => mergeGroupedItems(groupedEvents, groupedMovies),
-    [groupedEvents, groupedMovies]
+    () => mergeGroupedItems(groupedEvents, groupedMovies, onlyEvents),
+    [groupedEvents, groupedMovies, onlyEvents]
   );
 
   const todayIso = useMemo(() => toIsoDate(new Date()), []);
 
   const calendarDates = useMemo(() => {
     const start = new Date(`${todayIso}T00:00:00`);
+
     return Array.from({ length: 60 }, (_, index) => {
       return toIsoDate(addDays(start, index));
     });
@@ -311,6 +313,7 @@ function UpcomingCalendar() {
     if (!slider) return;
 
     const scrollAmount = slider.clientWidth * 0.82;
+
     slider.scrollBy({
       left: direction === "next" ? scrollAmount : -scrollAmount,
       behavior: "smooth",
@@ -399,6 +402,7 @@ function UpcomingCalendar() {
                             alt={item.title}
                             className="upcoming-event-image"
                           />
+
                           {category && (
                             <span className="upcoming-event-badge">
                               {category}

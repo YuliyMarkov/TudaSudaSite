@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
-import FeaturedEvents from "../components/FeaturedEvents";
+import UpcomingCalendar from "../components/UpcomingCalendar";
 
 const INITIAL_VISIBLE_COUNT = 12;
 const LOAD_MORE_COUNT = 12;
@@ -13,7 +13,6 @@ function formatEventDate(dateString, language) {
   if (!dateString) return "";
 
   const date = new Date(dateString);
-
   if (Number.isNaN(date.getTime())) return "";
 
   const day = date.getDate();

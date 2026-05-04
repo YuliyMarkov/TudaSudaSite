@@ -5,10 +5,15 @@ import { useLanguage } from "../context/useLanguage";
 
 const API_BASE_URL = "";
 
-const EVENT_LINK_TYPES = ["event", "concerts", "theatre", "exhibitions", "kids"];
-
 function shuffleArray(array) {
-  return [...array].sort(() => Math.random() - 0.5);
+  const result = [...array];
+
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  return result;
 }
 
 function buildSlideLink(language, slide) {
@@ -26,9 +31,11 @@ function buildSlideLink(language, slide) {
 
   switch (linkType) {
     case "stories":
+    case "story":
       return linkUrl ? `/${language}/stories/${linkUrl}` : `/${language}/stories`;
 
     case "movies":
+    case "movie":
     case "cinema":
       return linkUrl ? `/${language}/movies/${linkUrl}` : `/${language}/cinema`;
 
@@ -56,15 +63,32 @@ function buildSlideLink(language, slide) {
         : `/${language}/events?filter=kids`;
 
     case "restaurants":
+    case "restaurant":
       return linkUrl
         ? `/${language}/restaurants/${linkUrl}`
         : `/${language}/restaurants`;
 
     case "places":
+    case "place":
       return linkUrl ? `/${language}/places/${linkUrl}` : `/${language}/places`;
 
     default:
       return `/${language}`;
+  }
+}
+
+function getEventLinkType(event) {
+  if (event.isForKids) return "kids";
+
+  switch (event.type) {
+    case "concert":
+      return "concerts";
+    case "theatre":
+      return "theatre";
+    case "exhibition":
+      return "exhibitions";
+    default:
+      return "event";
   }
 }
 
@@ -104,18 +128,20 @@ function FeaturedEvents({ onlyEvents = false }) {
       try {
         setIsLoading(true);
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/hero-slides?lang=${language}&activeOnly=true`
-        );
+        const endpoint = onlyEvents
+          ? `${API_BASE_URL}/api/events?status=published&lang=${language}`
+          : `${API_BASE_URL}/api/hero-slides?lang=${language}&activeOnly=true`;
+
+        const response = await fetch(endpoint);
 
         if (!response.ok) {
-          throw new Error("Failed to load hero slides");
+          throw new Error("Failed to load featured events");
         }
 
         const data = await response.json();
         setSlides(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error("LOAD HERO SLIDES ERROR:", error);
+        console.error("LOAD FEATURED EVENTS ERROR:", error);
         setSlides([]);
       } finally {
         setIsLoading(false);
@@ -123,17 +149,26 @@ function FeaturedEvents({ onlyEvents = false }) {
     }
 
     loadSlides();
-  }, [language]);
+  }, [language, onlyEvents]);
 
   const normalizedSlides = useMemo(() => {
     const preparedSlides = slides
       .filter((item) => item.isActive !== false)
-      .filter((item) => {
-        if (!onlyEvents) return true;
-        return EVENT_LINK_TYPES.includes(item.linkType);
-      })
       .map((item) => {
         const translation = item.translations?.[0] || null;
+
+        if (onlyEvents) {
+          return {
+            id: item.id,
+            title: translation?.title || "",
+            subtitle: translation?.subtitle || translation?.shortDescription || "",
+            poster: item.coverImage || item.posterImage || "",
+            hoverMediaType: "image",
+            hoverMediaUrl: "",
+            linkType: getEventLinkType(item),
+            linkUrl: item.slug || "",
+          };
+        }
 
         return {
           id: item.id,
@@ -197,6 +232,7 @@ function FeaturedEvents({ onlyEvents = false }) {
   };
 
   const getSlidePosition = (index) => {
+    if (!totalSlides) return "hidden-right";
     if (index === currentSlide) return "active";
     if (index === (currentSlide - 1 + totalSlides) % totalSlides) return "prev";
     if (index === (currentSlide + 1) % totalSlides) return "next";
@@ -336,7 +372,7 @@ function FeaturedEvents({ onlyEvents = false }) {
 
             return (
               <article
-                key={slide.id}
+                key={`${slide.id}-${slide.linkUrl}`}
                 className={`event-slide ${positionClass}`}
                 onMouseEnter={() => {
                   if (index === currentSlide) setIsHovered(true);

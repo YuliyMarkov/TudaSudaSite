@@ -1,7 +1,47 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { createPlace } from "../api/places";
 import PlaceEditor from "../components/PlaceEditor";
+
+function generateSlug(text = "") {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/а/g, "a")
+    .replace(/б/g, "b")
+    .replace(/в/g, "v")
+    .replace(/г/g, "g")
+    .replace(/д/g, "d")
+    .replace(/е/g, "e")
+    .replace(/ё/g, "e")
+    .replace(/ж/g, "zh")
+    .replace(/з/g, "z")
+    .replace(/и/g, "i")
+    .replace(/й/g, "y")
+    .replace(/к/g, "k")
+    .replace(/л/g, "l")
+    .replace(/м/g, "m")
+    .replace(/н/g, "n")
+    .replace(/о/g, "o")
+    .replace(/п/g, "p")
+    .replace(/р/g, "r")
+    .replace(/с/g, "s")
+    .replace(/т/g, "t")
+    .replace(/у/g, "u")
+    .replace(/ф/g, "f")
+    .replace(/х/g, "h")
+    .replace(/ц/g, "ts")
+    .replace(/ч/g, "ch")
+    .replace(/ш/g, "sh")
+    .replace(/щ/g, "sch")
+    .replace(/ы/g, "y")
+    .replace(/э/g, "e")
+    .replace(/ю/g, "yu")
+    .replace(/я/g, "ya")
+    .replace(/ъ|ь/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
 
 function buildInitialForm() {
   return {
@@ -143,11 +183,30 @@ function buildPayload(form) {
 function CreatePlacePage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(buildInitialForm());
+  const [isSlugEdited, setIsSlugEdited] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
+  const formProgress = useMemo(() => {
+    const checks = [
+      Boolean(form.slug.trim()),
+      Boolean(form.coverImage.trim()),
+      Boolean(form.translations.ru.title.trim()),
+      Boolean(form.translations.ru.subtitle.trim()),
+      Boolean(form.translations.ru.address.trim()),
+      Boolean(form.translations.ru.description.trim()),
+    ];
+
+    const completed = checks.filter(Boolean).length;
+    return Math.round((completed / checks.length) * 100);
+  }, [form]);
+
   function handleChange(event) {
     const { name, type, value, checked } = event.target;
+
+    if (name === "slug") {
+      setIsSlugEdited(true);
+    }
 
     setForm((prev) => ({
       ...prev,
@@ -156,16 +215,24 @@ function CreatePlacePage() {
   }
 
   function handleTranslationChange(locale, field, value) {
-    setForm((prev) => ({
-      ...prev,
-      translations: {
-        ...prev.translations,
-        [locale]: {
-          ...prev.translations[locale],
-          [field]: value,
+    setForm((prev) => {
+      const nextForm = {
+        ...prev,
+        translations: {
+          ...prev.translations,
+          [locale]: {
+            ...prev.translations[locale],
+            [field]: value,
+          },
         },
-      },
-    }));
+      };
+
+      if (locale === "ru" && field === "title" && !isSlugEdited) {
+        nextForm.slug = generateSlug(value);
+      }
+
+      return nextForm;
+    });
   }
 
   function handlePriceChange(index, field, value) {
@@ -256,7 +323,9 @@ function CreatePlacePage() {
   function removeSuitableForItem(index) {
     setForm((prev) => ({
       ...prev,
-      suitableFor: prev.suitableFor.filter((_, itemIndex) => itemIndex !== index),
+      suitableFor: prev.suitableFor.filter(
+        (_, itemIndex) => itemIndex !== index
+      ),
     }));
   }
 
@@ -268,6 +337,15 @@ function CreatePlacePage() {
       setSubmitError("");
 
       const payload = buildPayload(form);
+
+      if (!payload.slug) {
+        throw new Error("Укажите slug или заполните русский заголовок");
+      }
+
+      if (!payload.translations.some((item) => item.locale === "ru")) {
+        throw new Error("Заполните русский заголовок места");
+      }
+
       await createPlace(payload);
 
       navigate("/places");
@@ -281,10 +359,32 @@ function CreatePlacePage() {
 
   return (
     <section className="admin-section">
-      <div className="admin-section-header">
+      <div className="admin-section-header admin-section-header--with-actions">
         <div>
+          <div className="admin-kicker">Места</div>
           <h1>Создать место</h1>
-          <p>Новая карточка места для каталога и отдельной страницы.</p>
+          <p>
+            Заполните карточку места для каталога и отдельной страницы. Сначала
+            добавьте базовую информацию, затем — детали, цены и подборки.
+          </p>
+        </div>
+
+        <Link to="/places" className="secondary-btn">
+          Назад к местам
+        </Link>
+      </div>
+
+      <div className="admin-form-progress">
+        <div className="admin-form-progress__top">
+          <span>Заполненность карточки</span>
+          <strong>{formProgress}%</strong>
+        </div>
+
+        <div className="admin-form-progress__track">
+          <div
+            className="admin-form-progress__bar"
+            style={{ width: `${formProgress}%` }}
+          />
         </div>
       </div>
 

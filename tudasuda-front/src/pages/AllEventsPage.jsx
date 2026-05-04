@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
+import FeaturedEvents from "../components/FeaturedEvents";
 
 const INITIAL_VISIBLE_COUNT = 12;
 const LOAD_MORE_COUNT = 12;
@@ -218,6 +219,8 @@ function AllEventsPage() {
               <h1>{t.title}</h1>
               <p>{t.subtitle}</p>
             </div>
+
+            <FeaturedEvents onlyEvents />
 
             <div className="all-events-filters">
               <button

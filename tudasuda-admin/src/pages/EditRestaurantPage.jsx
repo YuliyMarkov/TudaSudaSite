@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   fetchAdminRestaurants,
@@ -57,6 +57,58 @@ function buildEmptyForm() {
     dishes: [],
     formats: [],
   };
+}
+
+function makeSlug(value = "") {
+  const map = {
+    а: "a",
+    б: "b",
+    в: "v",
+    г: "g",
+    д: "d",
+    е: "e",
+    ё: "e",
+    ж: "zh",
+    з: "z",
+    и: "i",
+    й: "y",
+    к: "k",
+    л: "l",
+    м: "m",
+    н: "n",
+    о: "o",
+    п: "p",
+    р: "r",
+    с: "s",
+    т: "t",
+    у: "u",
+    ф: "f",
+    х: "h",
+    ц: "ts",
+    ч: "ch",
+    ш: "sh",
+    щ: "sch",
+    ъ: "",
+    ы: "y",
+    ь: "",
+    э: "e",
+    ю: "yu",
+    я: "ya",
+    қ: "q",
+    ғ: "g",
+    ҳ: "h",
+    ў: "o",
+  };
+
+  return value
+    .toLowerCase()
+    .trim()
+    .split("")
+    .map((char) => map[char] ?? char)
+    .join("")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 90);
 }
 
 function mapRestaurantToForm(restaurant) {
@@ -236,6 +288,34 @@ function EditRestaurantPage() {
   const [loadError, setLoadError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [isSlugTouched, setIsSlugTouched] = useState(true);
+  const [isSeoOpen, setIsSeoOpen] = useState(false);
+  const [isExtraOpen, setIsExtraOpen] = useState(false);
+
+  const emptyUzCount = useMemo(() => {
+    const fields = [
+      "title",
+      "type",
+      "cuisine",
+      "address",
+      "workingHours",
+      "averageCheck",
+      "description",
+      "atmosphere",
+      "mustVisit",
+    ];
+
+    return fields.reduce((count, field) => {
+      if (
+        form.translations.ru[field]?.trim() &&
+        !form.translations.uz[field]?.trim()
+      ) {
+        return count + 1;
+      }
+
+      return count;
+    }, 0);
+  }, [form.translations]);
 
   useEffect(() => {
     let isMounted = true;
@@ -254,7 +334,27 @@ function EditRestaurantPage() {
 
         if (!isMounted) return;
 
-        setForm(mapRestaurantToForm(target));
+        const nextForm = mapRestaurantToForm(target);
+
+        setForm(nextForm);
+        setIsSlugTouched(Boolean(nextForm.slug));
+
+        setIsSeoOpen(
+          Boolean(
+            nextForm.translations.ru.seoTitle ||
+              nextForm.translations.ru.seoDescription ||
+              nextForm.translations.uz.seoTitle ||
+              nextForm.translations.uz.seoDescription
+          )
+        );
+
+        setIsExtraOpen(
+          Boolean(
+            nextForm.prices.length ||
+              nextForm.dishes.length ||
+              nextForm.formats.length
+          )
+        );
       } catch (error) {
         if (!isMounted) return;
         setLoadError(error.message || "Не удалось загрузить ресторан");
@@ -275,20 +375,78 @@ function EditRestaurantPage() {
   function handleChange(event) {
     const { name, type, value, checked } = event.target;
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      };
+
+      if (name === "slug") {
+        setIsSlugTouched(true);
+        next.slug = makeSlug(value);
+      }
+
+      return next;
+    });
   }
 
   function handleTranslationChange(locale, field, value) {
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        translations: {
+          ...prev.translations,
+          [locale]: {
+            ...prev.translations[locale],
+            [field]: value,
+          },
+        },
+      };
+
+      if (locale === "ru" && field === "title" && !isSlugTouched) {
+        next.slug = makeSlug(value);
+      }
+
+      return next;
+    });
+  }
+
+  function regenerateSlug() {
+    setForm((prev) => ({
+      ...prev,
+      slug: makeSlug(prev.translations.ru.title || prev.translations.uz.title),
+    }));
+
+    setIsSlugTouched(false);
+  }
+
+  function copyRuToUz() {
     setForm((prev) => ({
       ...prev,
       translations: {
         ...prev.translations,
-        [locale]: {
-          ...prev.translations[locale],
-          [field]: value,
+        uz: {
+          ...prev.translations.uz,
+          title: prev.translations.uz.title || prev.translations.ru.title,
+          type: prev.translations.uz.type || prev.translations.ru.type,
+          cuisine: prev.translations.uz.cuisine || prev.translations.ru.cuisine,
+          address: prev.translations.uz.address || prev.translations.ru.address,
+          workingHours:
+            prev.translations.uz.workingHours ||
+            prev.translations.ru.workingHours,
+          averageCheck:
+            prev.translations.uz.averageCheck ||
+            prev.translations.ru.averageCheck,
+          description:
+            prev.translations.uz.description || prev.translations.ru.description,
+          atmosphere:
+            prev.translations.uz.atmosphere || prev.translations.ru.atmosphere,
+          mustVisit:
+            prev.translations.uz.mustVisit || prev.translations.ru.mustVisit,
+          seoTitle: prev.translations.uz.seoTitle || prev.translations.ru.seoTitle,
+          seoDescription:
+            prev.translations.uz.seoDescription ||
+            prev.translations.ru.seoDescription,
         },
       },
     }));
@@ -304,17 +462,18 @@ function EditRestaurantPage() {
   }
 
   function addPriceItem() {
-    setForm((prev) => ({
-      ...prev,
-      prices: [
-        ...prev.prices,
-        {
-          locale: "ru",
-          value: "",
-          sortOrder: prev.prices.length,
-        },
-      ],
-    }));
+    setForm((prev) => {
+      const nextSortOrder = Math.floor(prev.prices.length / 2);
+
+      return {
+        ...prev,
+        prices: [
+          ...prev.prices,
+          { locale: "ru", value: "", sortOrder: nextSortOrder },
+          { locale: "uz", value: "", sortOrder: nextSortOrder },
+        ],
+      };
+    });
   }
 
   function removePriceItem(index) {
@@ -334,18 +493,18 @@ function EditRestaurantPage() {
   }
 
   function addDishItem() {
-    setForm((prev) => ({
-      ...prev,
-      dishes: [
-        ...prev.dishes,
-        {
-          locale: "ru",
-          title: "",
-          image: "",
-          sortOrder: prev.dishes.length,
-        },
-      ],
-    }));
+    setForm((prev) => {
+      const nextSortOrder = Math.floor(prev.dishes.length / 2);
+
+      return {
+        ...prev,
+        dishes: [
+          ...prev.dishes,
+          { locale: "ru", title: "", image: "", sortOrder: nextSortOrder },
+          { locale: "uz", title: "", image: "", sortOrder: nextSortOrder },
+        ],
+      };
+    });
   }
 
   function removeDishItem(index) {
@@ -365,17 +524,18 @@ function EditRestaurantPage() {
   }
 
   function addFormatItem() {
-    setForm((prev) => ({
-      ...prev,
-      formats: [
-        ...prev.formats,
-        {
-          locale: "ru",
-          value: "",
-          sortOrder: prev.formats.length,
-        },
-      ],
-    }));
+    setForm((prev) => {
+      const nextSortOrder = Math.floor(prev.formats.length / 2);
+
+      return {
+        ...prev,
+        formats: [
+          ...prev.formats,
+          { locale: "ru", value: "", sortOrder: nextSortOrder },
+          { locale: "uz", value: "", sortOrder: nextSortOrder },
+        ],
+      };
+    });
   }
 
   function removeFormatItem(index) {
@@ -450,6 +610,14 @@ function EditRestaurantPage() {
         removeFormatItem={removeFormatItem}
         isSubmitting={isSubmitting}
         submitLabel="Сохранить изменения"
+        onRegenerateSlug={regenerateSlug}
+        onCopyRuToUz={copyRuToUz}
+        emptyUzCount={emptyUzCount}
+        isSeoOpen={isSeoOpen}
+        setIsSeoOpen={setIsSeoOpen}
+        isExtraOpen={isExtraOpen}
+        setIsExtraOpen={setIsExtraOpen}
+        onCancel={() => navigate("/restaurants")}
       />
     </section>
   );

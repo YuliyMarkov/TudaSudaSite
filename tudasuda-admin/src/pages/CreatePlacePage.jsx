@@ -4,43 +4,55 @@ import { createPlace } from "../api/places";
 import PlaceEditor from "../components/PlaceEditor";
 
 function generateSlug(text = "") {
+  const map = {
+    а: "a",
+    б: "b",
+    в: "v",
+    г: "g",
+    д: "d",
+    е: "e",
+    ё: "e",
+    ж: "zh",
+    з: "z",
+    и: "i",
+    й: "y",
+    к: "k",
+    л: "l",
+    м: "m",
+    н: "n",
+    о: "o",
+    п: "p",
+    р: "r",
+    с: "s",
+    т: "t",
+    у: "u",
+    ф: "f",
+    х: "h",
+    ц: "ts",
+    ч: "ch",
+    ш: "sh",
+    щ: "sch",
+    ъ: "",
+    ы: "y",
+    ь: "",
+    э: "e",
+    ю: "yu",
+    я: "ya",
+    қ: "q",
+    ғ: "g",
+    ҳ: "h",
+    ў: "o",
+  };
+
   return text
     .toLowerCase()
     .trim()
-    .replace(/а/g, "a")
-    .replace(/б/g, "b")
-    .replace(/в/g, "v")
-    .replace(/г/g, "g")
-    .replace(/д/g, "d")
-    .replace(/е/g, "e")
-    .replace(/ё/g, "e")
-    .replace(/ж/g, "zh")
-    .replace(/з/g, "z")
-    .replace(/и/g, "i")
-    .replace(/й/g, "y")
-    .replace(/к/g, "k")
-    .replace(/л/g, "l")
-    .replace(/м/g, "m")
-    .replace(/н/g, "n")
-    .replace(/о/g, "o")
-    .replace(/п/g, "p")
-    .replace(/р/g, "r")
-    .replace(/с/g, "s")
-    .replace(/т/g, "t")
-    .replace(/у/g, "u")
-    .replace(/ф/g, "f")
-    .replace(/х/g, "h")
-    .replace(/ц/g, "ts")
-    .replace(/ч/g, "ch")
-    .replace(/ш/g, "sh")
-    .replace(/щ/g, "sch")
-    .replace(/ы/g, "y")
-    .replace(/э/g, "e")
-    .replace(/ю/g, "yu")
-    .replace(/я/g, "ya")
-    .replace(/ъ|ь/g, "")
+    .split("")
+    .map((char) => map[char] ?? char)
+    .join("")
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 90);
 }
 
 function buildInitialForm() {
@@ -182,10 +194,39 @@ function buildPayload(form) {
 
 function CreatePlacePage() {
   const navigate = useNavigate();
+
   const [form, setForm] = useState(buildInitialForm());
   const [isSlugEdited, setIsSlugEdited] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [isSeoOpen, setIsSeoOpen] = useState(false);
+  const [isExtraOpen, setIsExtraOpen] = useState(false);
+
+  const emptyUzCount = useMemo(() => {
+    const fields = [
+      "title",
+      "subtitle",
+      "type",
+      "category",
+      "address",
+      "workingHours",
+      "priceLabel",
+      "description",
+      "features",
+      "mustVisit",
+    ];
+
+    return fields.reduce((count, field) => {
+      if (
+        form.translations.ru[field]?.trim() &&
+        !form.translations.uz[field]?.trim()
+      ) {
+        return count + 1;
+      }
+
+      return count;
+    }, 0);
+  }, [form.translations]);
 
   const formProgress = useMemo(() => {
     const checks = [
@@ -204,14 +245,19 @@ function CreatePlacePage() {
   function handleChange(event) {
     const { name, type, value, checked } = event.target;
 
-    if (name === "slug") {
-      setIsSlugEdited(true);
-    }
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      };
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+      if (name === "slug") {
+        setIsSlugEdited(true);
+        next.slug = generateSlug(value);
+      }
+
+      return next;
+    });
   }
 
   function handleTranslationChange(locale, field, value) {
@@ -233,6 +279,46 @@ function CreatePlacePage() {
 
       return nextForm;
     });
+  }
+
+  function regenerateSlug() {
+    setForm((prev) => ({
+      ...prev,
+      slug: generateSlug(prev.translations.ru.title || prev.translations.uz.title),
+    }));
+
+    setIsSlugEdited(false);
+  }
+
+  function copyRuToUz() {
+    setForm((prev) => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        uz: {
+          ...prev.translations.uz,
+          title: prev.translations.uz.title || prev.translations.ru.title,
+          subtitle: prev.translations.uz.subtitle || prev.translations.ru.subtitle,
+          type: prev.translations.uz.type || prev.translations.ru.type,
+          category: prev.translations.uz.category || prev.translations.ru.category,
+          address: prev.translations.uz.address || prev.translations.ru.address,
+          workingHours:
+            prev.translations.uz.workingHours ||
+            prev.translations.ru.workingHours,
+          priceLabel:
+            prev.translations.uz.priceLabel || prev.translations.ru.priceLabel,
+          description:
+            prev.translations.uz.description || prev.translations.ru.description,
+          features: prev.translations.uz.features || prev.translations.ru.features,
+          mustVisit:
+            prev.translations.uz.mustVisit || prev.translations.ru.mustVisit,
+          seoTitle: prev.translations.uz.seoTitle || prev.translations.ru.seoTitle,
+          seoDescription:
+            prev.translations.uz.seoDescription ||
+            prev.translations.ru.seoDescription,
+        },
+      },
+    }));
   }
 
   function handlePriceChange(index, field, value) {
@@ -275,19 +361,30 @@ function CreatePlacePage() {
   }
 
   function addHighlightItem() {
-    setForm((prev) => ({
-      ...prev,
-      highlights: [
-        ...prev.highlights,
-        {
-          locale: "ru",
-          title: "",
-          description: "",
-          image: "",
-          sortOrder: prev.highlights.length,
-        },
-      ],
-    }));
+    setForm((prev) => {
+      const nextSortOrder = Math.floor(prev.highlights.length / 2);
+
+      return {
+        ...prev,
+        highlights: [
+          ...prev.highlights,
+          {
+            locale: "ru",
+            title: "",
+            description: "",
+            image: "",
+            sortOrder: nextSortOrder,
+          },
+          {
+            locale: "uz",
+            title: "",
+            description: "",
+            image: "",
+            sortOrder: nextSortOrder,
+          },
+        ],
+      };
+    });
   }
 
   function removeHighlightItem(index) {
@@ -347,7 +444,6 @@ function CreatePlacePage() {
       }
 
       await createPlace(payload);
-
       navigate("/places");
     } catch (error) {
       console.error("CREATE PLACE PAGE ERROR:", error);
@@ -407,6 +503,14 @@ function CreatePlacePage() {
         removeSuitableForItem={removeSuitableForItem}
         isSubmitting={isSubmitting}
         submitLabel="Создать место"
+        onRegenerateSlug={regenerateSlug}
+        onCopyRuToUz={copyRuToUz}
+        emptyUzCount={emptyUzCount}
+        isSeoOpen={isSeoOpen}
+        setIsSeoOpen={setIsSeoOpen}
+        isExtraOpen={isExtraOpen}
+        setIsExtraOpen={setIsExtraOpen}
+        onCancel={() => navigate("/places")}
       />
     </section>
   );

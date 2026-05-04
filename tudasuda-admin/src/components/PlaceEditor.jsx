@@ -42,122 +42,151 @@ function PlaceEditor({
   removeSuitableForItem,
   isSubmitting = false,
   submitLabel = "Сохранить",
+  onRegenerateSlug,
+  onCopyRuToUz,
+  emptyUzCount = 0,
+  isSeoOpen = false,
+  setIsSeoOpen,
+  isExtraOpen = false,
+  setIsExtraOpen,
+  onCancel,
 }) {
   const ru = useMemo(
     () => getTranslationValue(form.translations, "ru"),
     [form.translations]
   );
+
   const uz = useMemo(
     () => getTranslationValue(form.translations, "uz"),
     [form.translations]
   );
 
+  const previewImage = form.coverImage;
+
+  const highlightGroups = useMemo(() => {
+    return Array.from(
+      new Set(form.highlights.map((item) => Number(item.sortOrder ?? 0)))
+    );
+  }, [form.highlights]);
+
   return (
     <form className="admin-form" onSubmit={form.onSubmit}>
-      <section className="admin-card">
+      <section className="admin-form-section">
         <h2>Основные настройки</h2>
 
-        <div className="admin-form-grid">
-          <label className="admin-field">
-            <span>Slug</span>
-            <input
-              type="text"
-              name="slug"
-              value={form.slug}
-              onChange={onChange}
-              placeholder="например: broadway-tashkent"
-              required
-            />
-          </label>
+        <div className="admin-event-layout">
+          <div className="admin-event-main">
+            <div className="admin-form-grid admin-form-grid-compact">
+              <label className="admin-field admin-field-full">
+                <span>Slug</span>
 
-          <label className="admin-field">
-            <span>Статус</span>
-            <select name="status" value={form.status} onChange={onChange}>
-              <option value="draft">Черновик</option>
-              <option value="published">Опубликован</option>
-              <option value="archived">Архив</option>
-            </select>
-          </label>
+                <div className="admin-inline-field">
+                  <input
+                    type="text"
+                    name="slug"
+                    value={form.slug}
+                    onChange={onChange}
+                    placeholder="например: broadway-tashkent"
+                    required
+                  />
 
-          <label className="admin-field admin-field--checkbox">
-            <input
-              type="checkbox"
-              name="isFeatured"
-              checked={Boolean(form.isFeatured)}
-              onChange={onChange}
-            />
-            <span>Показывать в избранном</span>
-          </label>
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={onRegenerateSlug}
+                  >
+                    Сгенерировать
+                  </button>
+                </div>
+              </label>
 
-          <label className="admin-field admin-field--full">
-            <span>Обложка</span>
-            <input
-              type="url"
-              name="coverImage"
-              value={toInputValue(form.coverImage)}
-              onChange={onChange}
-              placeholder="https://..."
-            />
-          </label>
+              <label className="admin-field">
+                <span>Статус</span>
+                <select name="status" value={form.status} onChange={onChange}>
+                  <option value="draft">Черновик</option>
+                  <option value="published">Опубликован</option>
+                  <option value="archived">Архив</option>
+                </select>
+              </label>
 
-          <label className="admin-field admin-field--full">
-            <span>Карта / iframe embed</span>
-            <textarea
-              rows="4"
-              name="mapEmbed"
-              value={toInputValue(form.mapEmbed)}
-              onChange={onChange}
-              placeholder="<iframe ...></iframe>"
-            />
-          </label>
+              <label className="admin-field">
+                <span>Телефон</span>
+                <input
+                  type="text"
+                  name="phone"
+                  value={toInputValue(form.phone)}
+                  onChange={onChange}
+                  placeholder="+998 ..."
+                />
+              </label>
 
-          <label className="admin-field">
-            <span>Телефон</span>
-            <input
-              type="text"
-              name="phone"
-              value={toInputValue(form.phone)}
-              onChange={onChange}
-              placeholder="+998 ..."
-            />
-          </label>
+              <label className="admin-field">
+                <span>Instagram</span>
+                <input
+                  type="url"
+                  name="instagram"
+                  value={toInputValue(form.instagram)}
+                  onChange={onChange}
+                  placeholder="https://instagram.com/..."
+                />
+              </label>
 
-          <label className="admin-field">
-            <span>Instagram</span>
-            <input
-              type="url"
-              name="instagram"
-              value={toInputValue(form.instagram)}
-              onChange={onChange}
-              placeholder="https://instagram.com/..."
-            />
-          </label>
+              <label className="admin-field">
+                <span>Telegram</span>
+                <input
+                  type="url"
+                  name="telegram"
+                  value={toInputValue(form.telegram)}
+                  onChange={onChange}
+                  placeholder="https://t.me/..."
+                />
+              </label>
 
-          <label className="admin-field">
-            <span>Telegram</span>
-            <input
-              type="url"
-              name="telegram"
-              value={toInputValue(form.telegram)}
-              onChange={onChange}
-              placeholder="https://t.me/..."
-            />
-          </label>
+              <label className="admin-field">
+                <span>Сайт</span>
+                <input
+                  type="url"
+                  name="website"
+                  value={toInputValue(form.website)}
+                  onChange={onChange}
+                  placeholder="https://..."
+                />
+              </label>
 
-          <label className="admin-field">
-            <span>Сайт</span>
-            <input
-              type="url"
-              name="website"
-              value={toInputValue(form.website)}
-              onChange={onChange}
-              placeholder="https://..."
-            />
-          </label>
+              <label className="admin-field admin-field--checkbox">
+                <input
+                  type="checkbox"
+                  name="isFeatured"
+                  checked={Boolean(form.isFeatured)}
+                  onChange={onChange}
+                />
+                <span>Показывать в избранном</span>
+              </label>
+            </div>
+          </div>
+
+          <aside className="admin-event-preview">
+            <div className="admin-event-preview-card">
+              <div className="admin-event-preview-image">
+                {previewImage ? (
+                  <img src={previewImage} alt={ru.title || "Preview"} />
+                ) : (
+                  <span>Превью</span>
+                )}
+
+                <b>{ru.category || "Место"}</b>
+              </div>
+
+              <div className="admin-event-preview-body">
+                <h3>{ru.title || "Название места"}</h3>
+                <p>{ru.subtitle || ru.address || "Краткое описание появится здесь"}</p>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
 
-      <section className="admin-card">
+      <section className="admin-form-section">
         <h2>Удобства</h2>
 
         <div className="admin-form-grid">
@@ -223,545 +252,830 @@ function PlaceEditor({
         </div>
       </section>
 
-      <section className="admin-card">
-        <h2>Перевод — Русский</h2>
+      <section className="admin-form-section">
+        <div className="admin-section-header">
+          <div>
+            <h2>Основной контент</h2>
+            <p>Название, подзаголовок и описание на двух языках.</p>
+          </div>
+
+          <button type="button" className="secondary-btn" onClick={onCopyRuToUz}>
+            Скопировать RU → UZ
+          </button>
+        </div>
+
+        {emptyUzCount > 0 ? (
+          <div className="admin-warning">
+            В узбекской версии не заполнено полей: {emptyUzCount}
+          </div>
+        ) : null}
+
+        <div className="localized-list-grid">
+          <div className="localized-list-locale-block">
+            <div className="admin-section-header">
+              <h3>Русский</h3>
+            </div>
+
+            <label className="admin-field">
+              <span>Название</span>
+              <input
+                type="text"
+                value={ru.title}
+                onChange={(event) =>
+                  onTranslationChange("ru", "title", event.target.value)
+                }
+                required
+              />
+            </label>
+
+            <label className="admin-field">
+              <span>Подзаголовок</span>
+              <input
+                type="text"
+                value={ru.subtitle}
+                onChange={(event) =>
+                  onTranslationChange("ru", "subtitle", event.target.value)
+                }
+              />
+            </label>
+
+            <label className="admin-field">
+              <span>Описание</span>
+              <textarea
+                rows="8"
+                value={ru.description}
+                onChange={(event) =>
+                  onTranslationChange("ru", "description", event.target.value)
+                }
+              />
+            </label>
+
+            <label className="admin-field">
+              <span>Что здесь особенно</span>
+              <textarea
+                rows="4"
+                value={ru.features}
+                onChange={(event) =>
+                  onTranslationChange("ru", "features", event.target.value)
+                }
+              />
+            </label>
+
+            <label className="admin-field">
+              <span>Зачем сюда идти</span>
+              <textarea
+                rows="4"
+                value={ru.mustVisit}
+                onChange={(event) =>
+                  onTranslationChange("ru", "mustVisit", event.target.value)
+                }
+              />
+            </label>
+          </div>
+
+          <div className="localized-list-locale-block">
+            <div className="admin-section-header">
+              <h3>Узбекский</h3>
+            </div>
+
+            <label
+              className={`admin-field ${
+                ru.title && !uz.title ? "admin-field-missing" : ""
+              }`}
+            >
+              <span>Название</span>
+              <input
+                type="text"
+                value={uz.title}
+                onChange={(event) =>
+                  onTranslationChange("uz", "title", event.target.value)
+                }
+              />
+            </label>
+
+            <label
+              className={`admin-field ${
+                ru.subtitle && !uz.subtitle ? "admin-field-missing" : ""
+              }`}
+            >
+              <span>Подзаголовок</span>
+              <input
+                type="text"
+                value={uz.subtitle}
+                onChange={(event) =>
+                  onTranslationChange("uz", "subtitle", event.target.value)
+                }
+              />
+            </label>
+
+            <label
+              className={`admin-field ${
+                ru.description && !uz.description ? "admin-field-missing" : ""
+              }`}
+            >
+              <span>Описание</span>
+              <textarea
+                rows="8"
+                value={uz.description}
+                onChange={(event) =>
+                  onTranslationChange("uz", "description", event.target.value)
+                }
+              />
+            </label>
+
+            <label
+              className={`admin-field ${
+                ru.features && !uz.features ? "admin-field-missing" : ""
+              }`}
+            >
+              <span>Что здесь особенно</span>
+              <textarea
+                rows="4"
+                value={uz.features}
+                onChange={(event) =>
+                  onTranslationChange("uz", "features", event.target.value)
+                }
+              />
+            </label>
+
+            <label
+              className={`admin-field ${
+                ru.mustVisit && !uz.mustVisit ? "admin-field-missing" : ""
+              }`}
+            >
+              <span>Зачем сюда идти</span>
+              <textarea
+                rows="4"
+                value={uz.mustVisit}
+                onChange={(event) =>
+                  onTranslationChange("uz", "mustVisit", event.target.value)
+                }
+              />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section className="admin-form-section">
+        <h2>Детали места</h2>
+
+        <div className="localized-list-grid">
+          <div className="localized-list-locale-block">
+            <div className="admin-section-header">
+              <h3>Русский</h3>
+            </div>
+
+            <div className="admin-mini-grid">
+              <label className="admin-field">
+                <span>Формат</span>
+                <input
+                  type="text"
+                  value={ru.type}
+                  onChange={(event) =>
+                    onTranslationChange("ru", "type", event.target.value)
+                  }
+                />
+              </label>
+
+              <label className="admin-field">
+                <span>Категория</span>
+                <input
+                  type="text"
+                  value={ru.category}
+                  onChange={(event) =>
+                    onTranslationChange("ru", "category", event.target.value)
+                  }
+                />
+              </label>
+
+              <label className="admin-field">
+                <span>Режим работы</span>
+                <input
+                  type="text"
+                  value={ru.workingHours}
+                  onChange={(event) =>
+                    onTranslationChange("ru", "workingHours", event.target.value)
+                  }
+                />
+              </label>
+
+              <label className="admin-field">
+                <span>Короткая цена</span>
+                <input
+                  type="text"
+                  value={ru.priceLabel}
+                  onChange={(event) =>
+                    onTranslationChange("ru", "priceLabel", event.target.value)
+                  }
+                  placeholder="Бесплатно / от 50 000 сумов"
+                />
+              </label>
+            </div>
+
+            <label className="admin-field">
+              <span>Адрес</span>
+              <input
+                type="text"
+                value={ru.address}
+                onChange={(event) =>
+                  onTranslationChange("ru", "address", event.target.value)
+                }
+              />
+            </label>
+          </div>
+
+          <div className="localized-list-locale-block">
+            <div className="admin-section-header">
+              <h3>Узбекский</h3>
+            </div>
+
+            <div className="admin-mini-grid">
+              <label
+                className={`admin-field ${
+                  ru.type && !uz.type ? "admin-field-missing" : ""
+                }`}
+              >
+                <span>Формат</span>
+                <input
+                  type="text"
+                  value={uz.type}
+                  onChange={(event) =>
+                    onTranslationChange("uz", "type", event.target.value)
+                  }
+                />
+              </label>
+
+              <label
+                className={`admin-field ${
+                  ru.category && !uz.category ? "admin-field-missing" : ""
+                }`}
+              >
+                <span>Категория</span>
+                <input
+                  type="text"
+                  value={uz.category}
+                  onChange={(event) =>
+                    onTranslationChange("uz", "category", event.target.value)
+                  }
+                />
+              </label>
+
+              <label
+                className={`admin-field ${
+                  ru.workingHours && !uz.workingHours
+                    ? "admin-field-missing"
+                    : ""
+                }`}
+              >
+                <span>Режим работы</span>
+                <input
+                  type="text"
+                  value={uz.workingHours}
+                  onChange={(event) =>
+                    onTranslationChange("uz", "workingHours", event.target.value)
+                  }
+                />
+              </label>
+
+              <label
+                className={`admin-field ${
+                  ru.priceLabel && !uz.priceLabel
+                    ? "admin-field-missing"
+                    : ""
+                }`}
+              >
+                <span>Короткая цена</span>
+                <input
+                  type="text"
+                  value={uz.priceLabel}
+                  onChange={(event) =>
+                    onTranslationChange("uz", "priceLabel", event.target.value)
+                  }
+                />
+              </label>
+            </div>
+
+            <label
+              className={`admin-field ${
+                ru.address && !uz.address ? "admin-field-missing" : ""
+              }`}
+            >
+              <span>Адрес</span>
+              <input
+                type="text"
+                value={uz.address}
+                onChange={(event) =>
+                  onTranslationChange("uz", "address", event.target.value)
+                }
+              />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section className="admin-form-section">
+        <h2>Медиа и карта</h2>
 
         <div className="admin-form-grid">
           <label className="admin-field admin-field--full">
-            <span>Название</span>
+            <span>Обложка</span>
             <input
-              type="text"
-              value={ru.title}
-              onChange={(event) =>
-                onTranslationChange("ru", "title", event.target.value)
-              }
-              required
+              type="url"
+              name="coverImage"
+              value={toInputValue(form.coverImage)}
+              onChange={onChange}
+              placeholder="https://..."
             />
           </label>
 
           <label className="admin-field admin-field--full">
-            <span>Подзаголовок</span>
-            <input
-              type="text"
-              value={ru.subtitle}
-              onChange={(event) =>
-                onTranslationChange("ru", "subtitle", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field">
-            <span>Формат</span>
-            <input
-              type="text"
-              value={ru.type}
-              onChange={(event) =>
-                onTranslationChange("ru", "type", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field">
-            <span>Категория</span>
-            <input
-              type="text"
-              value={ru.category}
-              onChange={(event) =>
-                onTranslationChange("ru", "category", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>Адрес</span>
-            <input
-              type="text"
-              value={ru.address}
-              onChange={(event) =>
-                onTranslationChange("ru", "address", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field">
-            <span>Режим работы</span>
-            <input
-              type="text"
-              value={ru.workingHours}
-              onChange={(event) =>
-                onTranslationChange("ru", "workingHours", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field">
-            <span>Короткая цена / label</span>
-            <input
-              type="text"
-              value={ru.priceLabel}
-              onChange={(event) =>
-                onTranslationChange("ru", "priceLabel", event.target.value)
-              }
-              placeholder="Бесплатно / от 50 000 сумов"
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>Описание</span>
+            <span>Карта / iframe embed</span>
             <textarea
-              rows="8"
-              value={ru.description}
-              onChange={(event) =>
-                onTranslationChange("ru", "description", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>Что здесь особенно</span>
-            <textarea
-              rows="5"
-              value={ru.features}
-              onChange={(event) =>
-                onTranslationChange("ru", "features", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>Зачем сюда идти</span>
-            <textarea
-              rows="5"
-              value={ru.mustVisit}
-              onChange={(event) =>
-                onTranslationChange("ru", "mustVisit", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>SEO title</span>
-            <input
-              type="text"
-              value={ru.seoTitle}
-              onChange={(event) =>
-                onTranslationChange("ru", "seoTitle", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>SEO description</span>
-            <textarea
-              rows="3"
-              value={ru.seoDescription}
-              onChange={(event) =>
-                onTranslationChange("ru", "seoDescription", event.target.value)
-              }
+              rows="4"
+              name="mapEmbed"
+              value={toInputValue(form.mapEmbed)}
+              onChange={onChange}
+              placeholder="<iframe ...></iframe>"
             />
           </label>
         </div>
       </section>
 
-      <section className="admin-card">
-        <h2>Перевод — Узбекский</h2>
+      <button
+        type="button"
+        className="admin-collapse-btn"
+        onClick={() => setIsSeoOpen((prev) => !prev)}
+      >
+        {isSeoOpen ? "Скрыть SEO" : "Показать SEO"}
+      </button>
 
-        <div className="admin-form-grid">
-          <label className="admin-field admin-field--full">
-            <span>Название</span>
-            <input
-              type="text"
-              value={uz.title}
-              onChange={(event) =>
-                onTranslationChange("uz", "title", event.target.value)
-              }
-            />
-          </label>
+      {isSeoOpen && (
+        <section className="admin-form-section">
+          <h2>SEO</h2>
 
-          <label className="admin-field admin-field--full">
-            <span>Подзаголовок</span>
-            <input
-              type="text"
-              value={uz.subtitle}
-              onChange={(event) =>
-                onTranslationChange("uz", "subtitle", event.target.value)
-              }
-            />
-          </label>
+          <div className="admin-locale-grid">
+            <div className="admin-locale-column">
+              <div className="admin-locale-title">🇷🇺 Русский SEO</div>
 
-          <label className="admin-field">
-            <span>Формат</span>
-            <input
-              type="text"
-              value={uz.type}
-              onChange={(event) =>
-                onTranslationChange("uz", "type", event.target.value)
-              }
-            />
-          </label>
+              <label className="admin-field">
+                <span>SEO title</span>
+                <input
+                  type="text"
+                  value={ru.seoTitle}
+                  onChange={(event) =>
+                    onTranslationChange("ru", "seoTitle", event.target.value)
+                  }
+                />
+              </label>
 
-          <label className="admin-field">
-            <span>Категория</span>
-            <input
-              type="text"
-              value={uz.category}
-              onChange={(event) =>
-                onTranslationChange("uz", "category", event.target.value)
-              }
-            />
-          </label>
+              <label className="admin-field">
+                <span>SEO description</span>
+                <textarea
+                  rows="3"
+                  value={ru.seoDescription}
+                  onChange={(event) =>
+                    onTranslationChange("ru", "seoDescription", event.target.value)
+                  }
+                />
+              </label>
+            </div>
 
-          <label className="admin-field admin-field--full">
-            <span>Адрес</span>
-            <input
-              type="text"
-              value={uz.address}
-              onChange={(event) =>
-                onTranslationChange("uz", "address", event.target.value)
-              }
-            />
-          </label>
+            <div className="admin-locale-column">
+              <div className="admin-locale-title">🇺🇿 O‘zbekcha SEO</div>
 
-          <label className="admin-field">
-            <span>Режим работы</span>
-            <input
-              type="text"
-              value={uz.workingHours}
-              onChange={(event) =>
-                onTranslationChange("uz", "workingHours", event.target.value)
-              }
-            />
-          </label>
+              <label className="admin-field">
+                <span>SEO title</span>
+                <input
+                  type="text"
+                  value={uz.seoTitle}
+                  onChange={(event) =>
+                    onTranslationChange("uz", "seoTitle", event.target.value)
+                  }
+                />
+              </label>
 
-          <label className="admin-field">
-            <span>Короткая цена / label</span>
-            <input
-              type="text"
-              value={uz.priceLabel}
-              onChange={(event) =>
-                onTranslationChange("uz", "priceLabel", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>Описание</span>
-            <textarea
-              rows="8"
-              value={uz.description}
-              onChange={(event) =>
-                onTranslationChange("uz", "description", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>Что здесь особенно</span>
-            <textarea
-              rows="5"
-              value={uz.features}
-              onChange={(event) =>
-                onTranslationChange("uz", "features", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>Зачем сюда идти</span>
-            <textarea
-              rows="5"
-              value={uz.mustVisit}
-              onChange={(event) =>
-                onTranslationChange("uz", "mustVisit", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>SEO title</span>
-            <input
-              type="text"
-              value={uz.seoTitle}
-              onChange={(event) =>
-                onTranslationChange("uz", "seoTitle", event.target.value)
-              }
-            />
-          </label>
-
-          <label className="admin-field admin-field--full">
-            <span>SEO description</span>
-            <textarea
-              rows="3"
-              value={uz.seoDescription}
-              onChange={(event) =>
-                onTranslationChange("uz", "seoDescription", event.target.value)
-              }
-            />
-          </label>
-        </div>
-      </section>
-
-      <section className="admin-card">
-        <div className="admin-section-header">
-          <div>
-            <h2>Цены</h2>
-            <p>Это список под блоком “Цены” на странице места.</p>
+              <label className="admin-field">
+                <span>SEO description</span>
+                <textarea
+                  rows="3"
+                  value={uz.seoDescription}
+                  onChange={(event) =>
+                    onTranslationChange("uz", "seoDescription", event.target.value)
+                  }
+                />
+              </label>
+            </div>
           </div>
+        </section>
+      )}
 
-          <button
-            type="button"
-            className="admin-secondary-btn"
-            onClick={addPriceItem}
-          >
-            Добавить цену
-          </button>
-        </div>
+      <button
+        type="button"
+        className="admin-collapse-btn"
+        onClick={() => setIsExtraOpen((prev) => !prev)}
+      >
+        {isExtraOpen
+          ? "Скрыть дополнительные блоки"
+          : "Показать цены, highlights и теги"}
+      </button>
 
-        <div className="admin-stack">
-          {form.prices.length ? (
-            form.prices.map((item, index) => (
-              <div className="admin-nested-card" key={`price-${index}`}>
-                <div className="admin-section-header">
-                  <h3>Позиция #{index + 1}</h3>
-
-                  <button
-                    type="button"
-                    className="admin-danger-btn"
-                    onClick={() => removePriceItem(index)}
-                  >
-                    Удалить
-                  </button>
-                </div>
-
-                <div className="admin-form-grid">
-                  <label className="admin-field">
-                    <span>Язык</span>
-                    <select
-                      value={item.locale}
-                      onChange={(event) =>
-                        onPriceChange(index, "locale", event.target.value)
-                      }
-                    >
-                      <option value="ru">Русский</option>
-                      <option value="uz">Узбекский</option>
-                    </select>
-                  </label>
-
-                  <label className="admin-field admin-field--full">
-                    <span>Текст</span>
-                    <input
-                      type="text"
-                      value={item.value}
-                      onChange={(event) =>
-                        onPriceChange(index, "value", event.target.value)
-                      }
-                      placeholder="Вход бесплатный / Билет от 20 000 сумов"
-                      required
-                    />
-                  </label>
-
-                  <label className="admin-field">
-                    <span>Порядок</span>
-                    <input
-                      type="number"
-                      value={normalizeNumberString(item.sortOrder)}
-                      onChange={(event) =>
-                        onPriceChange(index, "sortOrder", event.target.value)
-                      }
-                      min="0"
-                    />
-                  </label>
-                </div>
+      {isExtraOpen && (
+        <>
+          <section className="admin-form-section">
+            <div className="admin-section-header">
+              <div>
+                <h2>Цены</h2>
+                <p>Это список под блоком “Цены” на странице места.</p>
               </div>
-            ))
-          ) : (
-            <p>Цены пока не добавлены.</p>
-          )}
-        </div>
-      </section>
 
-      <section className="admin-card">
-        <div className="admin-section-header">
-          <div>
-            <h2>Самое интересное здесь</h2>
-            <p>Карточки с картинкой и заголовком на странице места.</p>
-          </div>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={addPriceItem}
+              >
+                Добавить цену
+              </button>
+            </div>
 
-          <button
-            type="button"
-            className="admin-secondary-btn"
-            onClick={addHighlightItem}
-          >
-            Добавить highlight
-          </button>
-        </div>
+            <div className="admin-stack">
+              {form.prices.length ? (
+                form.prices.map((item, index) => (
+                  <div className="admin-nested-card" key={`price-${index}`}>
+                    <div className="admin-section-header">
+                      <h3>Позиция #{index + 1}</h3>
 
-        <div className="admin-stack">
-          {form.highlights.length ? (
-            form.highlights.map((item, index) => (
-              <div className="admin-nested-card" key={`highlight-${index}`}>
-                <div className="admin-section-header">
-                  <h3>Highlight #{index + 1}</h3>
+                      <button
+                        type="button"
+                        className="danger-btn"
+                        onClick={() => removePriceItem(index)}
+                      >
+                        Удалить
+                      </button>
+                    </div>
 
-                  <button
-                    type="button"
-                    className="admin-danger-btn"
-                    onClick={() => removeHighlightItem(index)}
-                  >
-                    Удалить
-                  </button>
-                </div>
+                    <div className="admin-form-grid">
+                      <label className="admin-field">
+                        <span>Язык</span>
+                        <select
+                          value={item.locale}
+                          onChange={(event) =>
+                            onPriceChange(index, "locale", event.target.value)
+                          }
+                        >
+                          <option value="ru">Русский</option>
+                          <option value="uz">Узбекский</option>
+                        </select>
+                      </label>
 
-                <div className="admin-form-grid">
-                  <label className="admin-field">
-                    <span>Язык</span>
-                    <select
-                      value={item.locale}
-                      onChange={(event) =>
-                        onHighlightChange(index, "locale", event.target.value)
-                      }
-                    >
-                      <option value="ru">Русский</option>
-                      <option value="uz">Узбекский</option>
-                    </select>
-                  </label>
+                      <label className="admin-field admin-field--full">
+                        <span>Текст</span>
+                        <input
+                          type="text"
+                          value={item.value}
+                          onChange={(event) =>
+                            onPriceChange(index, "value", event.target.value)
+                          }
+                          placeholder="Вход бесплатный / Билет от 20 000 сумов"
+                          required
+                        />
+                      </label>
 
-                  <label className="admin-field">
-                    <span>Порядок</span>
-                    <input
-                      type="number"
-                      value={normalizeNumberString(item.sortOrder)}
-                      onChange={(event) =>
-                        onHighlightChange(index, "sortOrder", event.target.value)
-                      }
-                      min="0"
-                    />
-                  </label>
+                      <label className="admin-field">
+                        <span>Порядок</span>
+                        <input
+                          type="number"
+                          value={normalizeNumberString(item.sortOrder)}
+                          onChange={(event) =>
+                            onPriceChange(index, "sortOrder", event.target.value)
+                          }
+                          min="0"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>Цены пока не добавлены.</p>
+              )}
+            </div>
+          </section>
 
-                  <label className="admin-field admin-field--full">
-                    <span>Заголовок</span>
-                    <input
-                      type="text"
-                      value={item.title}
-                      onChange={(event) =>
-                        onHighlightChange(index, "title", event.target.value)
-                      }
-                      required
-                    />
-                  </label>
-
-                  <label className="admin-field admin-field--full">
-                    <span>Описание</span>
-                    <textarea
-                      rows="3"
-                      value={toInputValue(item.description)}
-                      onChange={(event) =>
-                        onHighlightChange(index, "description", event.target.value)
-                      }
-                    />
-                  </label>
-
-                  <label className="admin-field admin-field--full">
-                    <span>Изображение</span>
-                    <input
-                      type="url"
-                      value={toInputValue(item.image)}
-                      onChange={(event) =>
-                        onHighlightChange(index, "image", event.target.value)
-                      }
-                      placeholder="https://..."
-                    />
-                  </label>
-                </div>
+          <section className="admin-form-section">
+            <div className="admin-section-header">
+              <div>
+                <h2>Самое интересное здесь</h2>
+                <p>Один highlight — одна картинка и тексты RU/UZ.</p>
               </div>
-            ))
-          ) : (
-            <p>Highlights пока не добавлены.</p>
-          )}
-        </div>
-      </section>
 
-      <section className="admin-card">
-        <div className="admin-section-header">
-          <div>
-            <h2>Подойдёт для</h2>
-            <p>Теги под блоком suitableFor на странице места.</p>
-          </div>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={addHighlightItem}
+              >
+                Добавить highlight
+              </button>
+            </div>
 
-          <button
-            type="button"
-            className="admin-secondary-btn"
-            onClick={addSuitableForItem}
-          >
-            Добавить тег
-          </button>
-        </div>
+            <div className="admin-stack">
+              {highlightGroups.length ? (
+                highlightGroups.map((sortOrder) => {
+                  const ruIndex = form.highlights.findIndex(
+                    (item) =>
+                      Number(item.sortOrder ?? 0) === sortOrder &&
+                      item.locale === "ru"
+                  );
 
-        <div className="admin-stack">
-          {form.suitableFor.length ? (
-            form.suitableFor.map((item, index) => (
-              <div className="admin-nested-card" key={`suitable-${index}`}>
-                <div className="admin-section-header">
-                  <h3>Тег #{index + 1}</h3>
+                  const uzIndex = form.highlights.findIndex(
+                    (item) =>
+                      Number(item.sortOrder ?? 0) === sortOrder &&
+                      item.locale === "uz"
+                  );
 
-                  <button
-                    type="button"
-                    className="admin-danger-btn"
-                    onClick={() => removeSuitableForItem(index)}
-                  >
-                    Удалить
-                  </button>
-                </div>
+                  const ruItem = form.highlights[ruIndex];
+                  const uzItem = form.highlights[uzIndex];
+                  const image = ruItem?.image || uzItem?.image || "";
 
-                <div className="admin-form-grid">
-                  <label className="admin-field">
-                    <span>Язык</span>
-                    <select
-                      value={item.locale}
-                      onChange={(event) =>
-                        onSuitableForChange(index, "locale", event.target.value)
-                      }
-                    >
-                      <option value="ru">Русский</option>
-                      <option value="uz">Узбекский</option>
-                    </select>
-                  </label>
+                  return (
+                    <div className="admin-nested-card" key={`highlight-${sortOrder}`}>
+                      <div className="admin-section-header">
+                        <h3>Highlight #{sortOrder + 1}</h3>
 
-                  <label className="admin-field admin-field--full">
-                    <span>Текст</span>
-                    <input
-                      type="text"
-                      value={item.value}
-                      onChange={(event) =>
-                        onSuitableForChange(index, "value", event.target.value)
-                      }
-                      placeholder="С друзьями / Для прогулки / Для свидания"
-                      required
-                    />
-                  </label>
+                        <button
+                          type="button"
+                          className="danger-btn"
+                          onClick={() => {
+                            [ruIndex, uzIndex]
+                              .filter((index) => index >= 0)
+                              .sort((a, b) => b - a)
+                              .forEach((index) => removeHighlightItem(index));
+                          }}
+                        >
+                          Удалить
+                        </button>
+                      </div>
 
-                  <label className="admin-field">
-                    <span>Порядок</span>
-                    <input
-                      type="number"
-                      value={normalizeNumberString(item.sortOrder)}
-                      onChange={(event) =>
-                        onSuitableForChange(index, "sortOrder", event.target.value)
-                      }
-                      min="0"
-                    />
-                  </label>
-                </div>
+                      <div className="admin-form-grid">
+                        <label className="admin-field admin-field--full">
+                          <span>Изображение</span>
+                          <input
+                            type="url"
+                            value={image}
+                            onChange={(event) => {
+                              if (ruIndex >= 0) {
+                                onHighlightChange(
+                                  ruIndex,
+                                  "image",
+                                  event.target.value
+                                );
+                              }
+
+                              if (uzIndex >= 0) {
+                                onHighlightChange(
+                                  uzIndex,
+                                  "image",
+                                  event.target.value
+                                );
+                              }
+                            }}
+                            placeholder="https://..."
+                          />
+                        </label>
+
+                        <label className="admin-field">
+                          <span>Порядок</span>
+                          <input
+                            type="number"
+                            value={sortOrder}
+                            onChange={(event) => {
+                              if (ruIndex >= 0) {
+                                onHighlightChange(
+                                  ruIndex,
+                                  "sortOrder",
+                                  event.target.value
+                                );
+                              }
+
+                              if (uzIndex >= 0) {
+                                onHighlightChange(
+                                  uzIndex,
+                                  "sortOrder",
+                                  event.target.value
+                                );
+                              }
+                            }}
+                            min="0"
+                          />
+                        </label>
+                      </div>
+
+                      <div className="localized-list-grid">
+                        <div className="localized-list-locale-block">
+                          <div className="admin-section-header">
+                            <h3>Русский</h3>
+                          </div>
+
+                          <label className="admin-field">
+                            <span>Заголовок</span>
+                            <input
+                              type="text"
+                              value={ruItem?.title || ""}
+                              onChange={(event) => {
+                                if (ruIndex >= 0) {
+                                  onHighlightChange(
+                                    ruIndex,
+                                    "title",
+                                    event.target.value
+                                  );
+                                }
+                              }}
+                            />
+                          </label>
+
+                          <label className="admin-field">
+                            <span>Описание</span>
+                            <textarea
+                              rows="3"
+                              value={toInputValue(ruItem?.description)}
+                              onChange={(event) => {
+                                if (ruIndex >= 0) {
+                                  onHighlightChange(
+                                    ruIndex,
+                                    "description",
+                                    event.target.value
+                                  );
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+
+                        <div className="localized-list-locale-block">
+                          <div className="admin-section-header">
+                            <h3>Узбекский</h3>
+                          </div>
+
+                          <label
+                            className={`admin-field ${
+                              ruItem?.title && !uzItem?.title
+                                ? "admin-field-missing"
+                                : ""
+                            }`}
+                          >
+                            <span>Заголовок</span>
+                            <input
+                              type="text"
+                              value={uzItem?.title || ""}
+                              onChange={(event) => {
+                                if (uzIndex >= 0) {
+                                  onHighlightChange(
+                                    uzIndex,
+                                    "title",
+                                    event.target.value
+                                  );
+                                }
+                              }}
+                            />
+                          </label>
+
+                          <label
+                            className={`admin-field ${
+                              ruItem?.description && !uzItem?.description
+                                ? "admin-field-missing"
+                                : ""
+                            }`}
+                          >
+                            <span>Описание</span>
+                            <textarea
+                              rows="3"
+                              value={toInputValue(uzItem?.description)}
+                              onChange={(event) => {
+                                if (uzIndex >= 0) {
+                                  onHighlightChange(
+                                    uzIndex,
+                                    "description",
+                                    event.target.value
+                                  );
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p>Highlights пока не добавлены.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="admin-form-section">
+            <div className="admin-section-header">
+              <div>
+                <h2>Подойдёт для</h2>
+                <p>Теги под блоком suitableFor на странице места.</p>
               </div>
-            ))
-          ) : (
-            <p>Теги пока не добавлены.</p>
-          )}
-        </div>
-      </section>
+
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={addSuitableForItem}
+              >
+                Добавить тег
+              </button>
+            </div>
+
+            <div className="admin-stack">
+              {form.suitableFor.length ? (
+                form.suitableFor.map((item, index) => (
+                  <div className="admin-nested-card" key={`suitable-${index}`}>
+                    <div className="admin-section-header">
+                      <h3>Тег #{index + 1}</h3>
+
+                      <button
+                        type="button"
+                        className="danger-btn"
+                        onClick={() => removeSuitableForItem(index)}
+                      >
+                        Удалить
+                      </button>
+                    </div>
+
+                    <div className="admin-form-grid">
+                      <label className="admin-field">
+                        <span>Язык</span>
+                        <select
+                          value={item.locale}
+                          onChange={(event) =>
+                            onSuitableForChange(
+                              index,
+                              "locale",
+                              event.target.value
+                            )
+                          }
+                        >
+                          <option value="ru">Русский</option>
+                          <option value="uz">Узбекский</option>
+                        </select>
+                      </label>
+
+                      <label className="admin-field admin-field--full">
+                        <span>Текст</span>
+                        <input
+                          type="text"
+                          value={item.value}
+                          onChange={(event) =>
+                            onSuitableForChange(
+                              index,
+                              "value",
+                              event.target.value
+                            )
+                          }
+                          placeholder="С друзьями / Для прогулки / Для свидания"
+                          required
+                        />
+                      </label>
+
+                      <label className="admin-field">
+                        <span>Порядок</span>
+                        <input
+                          type="number"
+                          value={normalizeNumberString(item.sortOrder)}
+                          onChange={(event) =>
+                            onSuitableForChange(
+                              index,
+                              "sortOrder",
+                              event.target.value
+                            )
+                          }
+                          min="0"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>Теги пока не добавлены.</p>
+              )}
+            </div>
+          </section>
+        </>
+      )}
 
       <div className="admin-form-actions">
-        <button type="submit" className="admin-primary-btn" disabled={isSubmitting}>
+        {onCancel ? (
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            Отмена
+          </button>
+        ) : null}
+
+        <button type="submit" className="primary-btn" disabled={isSubmitting}>
           {isSubmitting ? "Сохранение..." : submitLabel}
         </button>
       </div>

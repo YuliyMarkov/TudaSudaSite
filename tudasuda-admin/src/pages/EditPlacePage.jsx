@@ -343,18 +343,18 @@ function EditPlacePage() {
         setIsSeoOpen(
           Boolean(
             nextForm.translations.ru.seoTitle ||
-              nextForm.translations.ru.seoDescription ||
-              nextForm.translations.uz.seoTitle ||
-              nextForm.translations.uz.seoDescription
-          )
+            nextForm.translations.ru.seoDescription ||
+            nextForm.translations.uz.seoTitle ||
+            nextForm.translations.uz.seoDescription,
+          ),
         );
 
         setIsExtraOpen(
           Boolean(
             nextForm.prices.length ||
-              nextForm.highlights.length ||
-              nextForm.suitableFor.length
-          )
+            nextForm.highlights.length ||
+            nextForm.suitableFor.length,
+          ),
         );
       } catch (error) {
         if (!isMounted) return;
@@ -415,7 +415,9 @@ function EditPlacePage() {
   function regenerateSlug() {
     setForm((prev) => ({
       ...prev,
-      slug: generateSlug(prev.translations.ru.title || prev.translations.uz.title),
+      slug: generateSlug(
+        prev.translations.ru.title || prev.translations.uz.title,
+      ),
     }));
 
     setIsSlugEdited(false);
@@ -429,9 +431,11 @@ function EditPlacePage() {
         uz: {
           ...prev.translations.uz,
           title: prev.translations.uz.title || prev.translations.ru.title,
-          subtitle: prev.translations.uz.subtitle || prev.translations.ru.subtitle,
+          subtitle:
+            prev.translations.uz.subtitle || prev.translations.ru.subtitle,
           type: prev.translations.uz.type || prev.translations.ru.type,
-          category: prev.translations.uz.category || prev.translations.ru.category,
+          category:
+            prev.translations.uz.category || prev.translations.ru.category,
           address: prev.translations.uz.address || prev.translations.ru.address,
           workingHours:
             prev.translations.uz.workingHours ||
@@ -439,11 +443,14 @@ function EditPlacePage() {
           priceLabel:
             prev.translations.uz.priceLabel || prev.translations.ru.priceLabel,
           description:
-            prev.translations.uz.description || prev.translations.ru.description,
-          features: prev.translations.uz.features || prev.translations.ru.features,
+            prev.translations.uz.description ||
+            prev.translations.ru.description,
+          features:
+            prev.translations.uz.features || prev.translations.ru.features,
           mustVisit:
             prev.translations.uz.mustVisit || prev.translations.ru.mustVisit,
-          seoTitle: prev.translations.uz.seoTitle || prev.translations.ru.seoTitle,
+          seoTitle:
+            prev.translations.uz.seoTitle || prev.translations.ru.seoTitle,
           seoDescription:
             prev.translations.uz.seoDescription ||
             prev.translations.ru.seoDescription,
@@ -456,23 +463,32 @@ function EditPlacePage() {
     setForm((prev) => ({
       ...prev,
       prices: prev.prices.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [field]: value } : item
+        itemIndex === index ? { ...item, [field]: value } : item,
       ),
     }));
   }
 
   function addPriceItem() {
-    setForm((prev) => ({
-      ...prev,
-      prices: [
-        ...prev.prices,
-        {
-          locale: "ru",
-          value: "",
-          sortOrder: prev.prices.length,
-        },
-      ],
-    }));
+    setForm((prev) => {
+      const nextSortOrder = Math.floor(prev.prices.length / 2);
+
+      return {
+        ...prev,
+        prices: [
+          ...prev.prices,
+          {
+            locale: "ru",
+            value: "",
+            sortOrder: nextSortOrder,
+          },
+          {
+            locale: "uz",
+            value: "",
+            sortOrder: nextSortOrder,
+          },
+        ],
+      };
+    });
   }
 
   function removePriceItem(index) {
@@ -486,7 +502,7 @@ function EditPlacePage() {
     setForm((prev) => ({
       ...prev,
       highlights: prev.highlights.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [field]: value } : item
+        itemIndex === index ? { ...item, [field]: value } : item,
       ),
     }));
   }
@@ -529,30 +545,39 @@ function EditPlacePage() {
     setForm((prev) => ({
       ...prev,
       suitableFor: prev.suitableFor.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [field]: value } : item
+        itemIndex === index ? { ...item, [field]: value } : item,
       ),
     }));
   }
 
   function addSuitableForItem() {
-    setForm((prev) => ({
-      ...prev,
-      suitableFor: [
-        ...prev.suitableFor,
-        {
-          locale: "ru",
-          value: "",
-          sortOrder: prev.suitableFor.length,
-        },
-      ],
-    }));
+    setForm((prev) => {
+      const nextSortOrder = Math.floor(prev.suitableFor.length / 2);
+
+      return {
+        ...prev,
+        suitableFor: [
+          ...prev.suitableFor,
+          {
+            locale: "ru",
+            value: "",
+            sortOrder: nextSortOrder,
+          },
+          {
+            locale: "uz",
+            value: "",
+            sortOrder: nextSortOrder,
+          },
+        ],
+      };
+    });
   }
 
   function removeSuitableForItem(index) {
     setForm((prev) => ({
       ...prev,
       suitableFor: prev.suitableFor.filter(
-        (_, itemIndex) => itemIndex !== index
+        (_, itemIndex) => itemIndex !== index,
       ),
     }));
   }

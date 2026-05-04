@@ -23,10 +23,6 @@ function toInputValue(value) {
   return value ?? "";
 }
 
-function normalizeNumberString(value) {
-  return value === null || value === undefined ? "" : String(value);
-}
-
 function PlaceEditor({
   form,
   onChange,
@@ -53,21 +49,33 @@ function PlaceEditor({
 }) {
   const ru = useMemo(
     () => getTranslationValue(form.translations, "ru"),
-    [form.translations]
+    [form.translations],
   );
 
   const uz = useMemo(
     () => getTranslationValue(form.translations, "uz"),
-    [form.translations]
+    [form.translations],
   );
 
   const previewImage = form.coverImage;
 
   const highlightGroups = useMemo(() => {
     return Array.from(
-      new Set(form.highlights.map((item) => Number(item.sortOrder ?? 0)))
+      new Set(form.highlights.map((item) => Number(item.sortOrder ?? 0))),
     );
   }, [form.highlights]);
+
+  const priceGroups = useMemo(() => {
+    return Array.from(
+      new Set(form.prices.map((item) => Number(item.sortOrder ?? 0))),
+    );
+  }, [form.prices]);
+
+  const suitableForGroups = useMemo(() => {
+    return Array.from(
+      new Set(form.suitableFor.map((item) => Number(item.sortOrder ?? 0))),
+    );
+  }, [form.suitableFor]);
 
   return (
     <form className="admin-form" onSubmit={form.onSubmit}>
@@ -179,7 +187,11 @@ function PlaceEditor({
 
               <div className="admin-event-preview-body">
                 <h3>{ru.title || "Название места"}</h3>
-                <p>{ru.subtitle || ru.address || "Краткое описание появится здесь"}</p>
+                <p>
+                  {ru.subtitle ||
+                    ru.address ||
+                    "Краткое описание появится здесь"}
+                </p>
               </div>
             </div>
           </aside>
@@ -259,7 +271,11 @@ function PlaceEditor({
             <p>Название, подзаголовок и описание на двух языках.</p>
           </div>
 
-          <button type="button" className="secondary-btn" onClick={onCopyRuToUz}>
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={onCopyRuToUz}
+          >
             Скопировать RU → UZ
           </button>
         </div>
@@ -454,7 +470,11 @@ function PlaceEditor({
                   type="text"
                   value={ru.workingHours}
                   onChange={(event) =>
-                    onTranslationChange("ru", "workingHours", event.target.value)
+                    onTranslationChange(
+                      "ru",
+                      "workingHours",
+                      event.target.value,
+                    )
                   }
                 />
               </label>
@@ -532,16 +552,18 @@ function PlaceEditor({
                   type="text"
                   value={uz.workingHours}
                   onChange={(event) =>
-                    onTranslationChange("uz", "workingHours", event.target.value)
+                    onTranslationChange(
+                      "uz",
+                      "workingHours",
+                      event.target.value,
+                    )
                   }
                 />
               </label>
 
               <label
                 className={`admin-field ${
-                  ru.priceLabel && !uz.priceLabel
-                    ? "admin-field-missing"
-                    : ""
+                  ru.priceLabel && !uz.priceLabel ? "admin-field-missing" : ""
                 }`}
               >
                 <span>Короткая цена</span>
@@ -634,7 +656,11 @@ function PlaceEditor({
                   rows="3"
                   value={ru.seoDescription}
                   onChange={(event) =>
-                    onTranslationChange("ru", "seoDescription", event.target.value)
+                    onTranslationChange(
+                      "ru",
+                      "seoDescription",
+                      event.target.value,
+                    )
                   }
                 />
               </label>
@@ -660,7 +686,11 @@ function PlaceEditor({
                   rows="3"
                   value={uz.seoDescription}
                   onChange={(event) =>
-                    onTranslationChange("uz", "seoDescription", event.target.value)
+                    onTranslationChange(
+                      "uz",
+                      "seoDescription",
+                      event.target.value,
+                    )
                   }
                 />
               </label>
@@ -685,7 +715,7 @@ function PlaceEditor({
             <div className="admin-section-header">
               <div>
                 <h2>Цены</h2>
-                <p>Это список под блоком “Цены” на странице места.</p>
+                <p>Одна цена — тексты RU/UZ в одной карточке.</p>
               </div>
 
               <button
@@ -698,62 +728,131 @@ function PlaceEditor({
             </div>
 
             <div className="admin-stack">
-              {form.prices.length ? (
-                form.prices.map((item, index) => (
-                  <div className="admin-nested-card" key={`price-${index}`}>
-                    <div className="admin-section-header">
-                      <h3>Позиция #{index + 1}</h3>
+              {priceGroups.length ? (
+                priceGroups.map((sortOrder) => {
+                  const ruIndex = form.prices.findIndex(
+                    (item) =>
+                      Number(item.sortOrder ?? 0) === sortOrder &&
+                      item.locale === "ru",
+                  );
 
-                      <button
-                        type="button"
-                        className="danger-btn"
-                        onClick={() => removePriceItem(index)}
-                      >
-                        Удалить
-                      </button>
-                    </div>
+                  const uzIndex = form.prices.findIndex(
+                    (item) =>
+                      Number(item.sortOrder ?? 0) === sortOrder &&
+                      item.locale === "uz",
+                  );
 
-                    <div className="admin-form-grid">
-                      <label className="admin-field">
-                        <span>Язык</span>
-                        <select
-                          value={item.locale}
-                          onChange={(event) =>
-                            onPriceChange(index, "locale", event.target.value)
-                          }
+                  const ruItem = form.prices[ruIndex];
+                  const uzItem = form.prices[uzIndex];
+
+                  return (
+                    <div
+                      className="admin-nested-card"
+                      key={`price-${sortOrder}`}
+                    >
+                      <div className="admin-section-header">
+                        <h3>Цена #{sortOrder + 1}</h3>
+
+                        <button
+                          type="button"
+                          className="danger-btn"
+                          onClick={() => {
+                            [ruIndex, uzIndex]
+                              .filter((index) => index >= 0)
+                              .sort((a, b) => b - a)
+                              .forEach((index) => removePriceItem(index));
+                          }}
                         >
-                          <option value="ru">Русский</option>
-                          <option value="uz">Узбекский</option>
-                        </select>
-                      </label>
+                          Удалить
+                        </button>
+                      </div>
 
-                      <label className="admin-field admin-field--full">
-                        <span>Текст</span>
-                        <input
-                          type="text"
-                          value={item.value}
-                          onChange={(event) =>
-                            onPriceChange(index, "value", event.target.value)
-                          }
-                          placeholder="Вход бесплатный / Билет от 20 000 сумов"
-                          required
-                        />
-                      </label>
+                      <div className="admin-form-grid">
+                        <label className="admin-field">
+                          <span>Порядок</span>
+                          <input
+                            type="number"
+                            value={sortOrder}
+                            onChange={(event) => {
+                              if (ruIndex >= 0) {
+                                onPriceChange(
+                                  ruIndex,
+                                  "sortOrder",
+                                  event.target.value,
+                                );
+                              }
 
-                      <label className="admin-field">
-                        <span>Порядок</span>
-                        <input
-                          type="number"
-                          value={normalizeNumberString(item.sortOrder)}
-                          onChange={(event) =>
-                            onPriceChange(index, "sortOrder", event.target.value)
-                          }
-                          min="0"
-                        />
-                      </label>
+                              if (uzIndex >= 0) {
+                                onPriceChange(
+                                  uzIndex,
+                                  "sortOrder",
+                                  event.target.value,
+                                );
+                              }
+                            }}
+                            min="0"
+                          />
+                        </label>
+                      </div>
+
+                      <div className="localized-list-grid">
+                        <div className="localized-list-locale-block">
+                          <div className="admin-section-header">
+                            <h3>Русский</h3>
+                          </div>
+
+                          <label className="admin-field">
+                            <span>Текст</span>
+                            <input
+                              type="text"
+                              value={ruItem?.value || ""}
+                              onChange={(event) => {
+                                if (ruIndex >= 0) {
+                                  onPriceChange(
+                                    ruIndex,
+                                    "value",
+                                    event.target.value,
+                                  );
+                                }
+                              }}
+                              placeholder="Вход бесплатный / Билет от 20 000 сумов"
+                            />
+                          </label>
+                        </div>
+
+                        <div className="localized-list-locale-block">
+                          <div className="admin-section-header">
+                            <h3>Узбекский</h3>
+                          </div>
+
+                          <label
+                            className={`admin-field ${
+                              ruItem?.value && !uzItem?.value
+                                ? "admin-field-missing"
+                                : ""
+                            }`}
+                          >
+                            <span>Текст</span>
+                            <input
+                              type="text"
+                              value={uzItem?.value || ""}
+                              onChange={(event) => {
+                                if (uzIndex >= 0) {
+                                  onPriceChange(
+                                    uzIndex,
+                                    "value",
+                                    event.target.value,
+                                  );
+                                }
+                              }}
+                              placeholder="Kirish bepul / Chipta 20 000 so‘mdan"
+                            />
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p>Цены пока не добавлены.</p>
               )}
@@ -782,13 +881,13 @@ function PlaceEditor({
                   const ruIndex = form.highlights.findIndex(
                     (item) =>
                       Number(item.sortOrder ?? 0) === sortOrder &&
-                      item.locale === "ru"
+                      item.locale === "ru",
                   );
 
                   const uzIndex = form.highlights.findIndex(
                     (item) =>
                       Number(item.sortOrder ?? 0) === sortOrder &&
-                      item.locale === "uz"
+                      item.locale === "uz",
                   );
 
                   const ruItem = form.highlights[ruIndex];
@@ -796,7 +895,10 @@ function PlaceEditor({
                   const image = ruItem?.image || uzItem?.image || "";
 
                   return (
-                    <div className="admin-nested-card" key={`highlight-${sortOrder}`}>
+                    <div
+                      className="admin-nested-card"
+                      key={`highlight-${sortOrder}`}
+                    >
                       <div className="admin-section-header">
                         <h3>Highlight #{sortOrder + 1}</h3>
 
@@ -825,7 +927,7 @@ function PlaceEditor({
                                 onHighlightChange(
                                   ruIndex,
                                   "image",
-                                  event.target.value
+                                  event.target.value,
                                 );
                               }
 
@@ -833,7 +935,7 @@ function PlaceEditor({
                                 onHighlightChange(
                                   uzIndex,
                                   "image",
-                                  event.target.value
+                                  event.target.value,
                                 );
                               }
                             }}
@@ -851,7 +953,7 @@ function PlaceEditor({
                                 onHighlightChange(
                                   ruIndex,
                                   "sortOrder",
-                                  event.target.value
+                                  event.target.value,
                                 );
                               }
 
@@ -859,7 +961,7 @@ function PlaceEditor({
                                 onHighlightChange(
                                   uzIndex,
                                   "sortOrder",
-                                  event.target.value
+                                  event.target.value,
                                 );
                               }
                             }}
@@ -884,7 +986,7 @@ function PlaceEditor({
                                   onHighlightChange(
                                     ruIndex,
                                     "title",
-                                    event.target.value
+                                    event.target.value,
                                   );
                                 }
                               }}
@@ -901,7 +1003,7 @@ function PlaceEditor({
                                   onHighlightChange(
                                     ruIndex,
                                     "description",
-                                    event.target.value
+                                    event.target.value,
                                   );
                                 }
                               }}
@@ -930,7 +1032,7 @@ function PlaceEditor({
                                   onHighlightChange(
                                     uzIndex,
                                     "title",
-                                    event.target.value
+                                    event.target.value,
                                   );
                                 }
                               }}
@@ -953,7 +1055,7 @@ function PlaceEditor({
                                   onHighlightChange(
                                     uzIndex,
                                     "description",
-                                    event.target.value
+                                    event.target.value,
                                   );
                                 }
                               }}
@@ -974,7 +1076,7 @@ function PlaceEditor({
             <div className="admin-section-header">
               <div>
                 <h2>Подойдёт для</h2>
-                <p>Теги под блоком suitableFor на странице места.</p>
+                <p>Один тег — тексты RU/UZ в одной карточке.</p>
               </div>
 
               <button
@@ -987,74 +1089,131 @@ function PlaceEditor({
             </div>
 
             <div className="admin-stack">
-              {form.suitableFor.length ? (
-                form.suitableFor.map((item, index) => (
-                  <div className="admin-nested-card" key={`suitable-${index}`}>
-                    <div className="admin-section-header">
-                      <h3>Тег #{index + 1}</h3>
+              {suitableForGroups.length ? (
+                suitableForGroups.map((sortOrder) => {
+                  const ruIndex = form.suitableFor.findIndex(
+                    (item) =>
+                      Number(item.sortOrder ?? 0) === sortOrder &&
+                      item.locale === "ru",
+                  );
 
-                      <button
-                        type="button"
-                        className="danger-btn"
-                        onClick={() => removeSuitableForItem(index)}
-                      >
-                        Удалить
-                      </button>
-                    </div>
+                  const uzIndex = form.suitableFor.findIndex(
+                    (item) =>
+                      Number(item.sortOrder ?? 0) === sortOrder &&
+                      item.locale === "uz",
+                  );
 
-                    <div className="admin-form-grid">
-                      <label className="admin-field">
-                        <span>Язык</span>
-                        <select
-                          value={item.locale}
-                          onChange={(event) =>
-                            onSuitableForChange(
-                              index,
-                              "locale",
-                              event.target.value
-                            )
-                          }
+                  const ruItem = form.suitableFor[ruIndex];
+                  const uzItem = form.suitableFor[uzIndex];
+
+                  return (
+                    <div
+                      className="admin-nested-card"
+                      key={`suitable-${sortOrder}`}
+                    >
+                      <div className="admin-section-header">
+                        <h3>Тег #{sortOrder + 1}</h3>
+
+                        <button
+                          type="button"
+                          className="danger-btn"
+                          onClick={() => {
+                            [ruIndex, uzIndex]
+                              .filter((index) => index >= 0)
+                              .sort((a, b) => b - a)
+                              .forEach((index) => removeSuitableForItem(index));
+                          }}
                         >
-                          <option value="ru">Русский</option>
-                          <option value="uz">Узбекский</option>
-                        </select>
-                      </label>
+                          Удалить
+                        </button>
+                      </div>
 
-                      <label className="admin-field admin-field--full">
-                        <span>Текст</span>
-                        <input
-                          type="text"
-                          value={item.value}
-                          onChange={(event) =>
-                            onSuitableForChange(
-                              index,
-                              "value",
-                              event.target.value
-                            )
-                          }
-                          placeholder="С друзьями / Для прогулки / Для свидания"
-                          required
-                        />
-                      </label>
+                      <div className="admin-form-grid">
+                        <label className="admin-field">
+                          <span>Порядок</span>
+                          <input
+                            type="number"
+                            value={sortOrder}
+                            onChange={(event) => {
+                              if (ruIndex >= 0) {
+                                onSuitableForChange(
+                                  ruIndex,
+                                  "sortOrder",
+                                  event.target.value,
+                                );
+                              }
 
-                      <label className="admin-field">
-                        <span>Порядок</span>
-                        <input
-                          type="number"
-                          value={normalizeNumberString(item.sortOrder)}
-                          onChange={(event) =>
-                            onSuitableForChange(
-                              index,
-                              "sortOrder",
-                              event.target.value
-                            )
-                          }
-                          min="0"
-                        />
-                      </label>
+                              if (uzIndex >= 0) {
+                                onSuitableForChange(
+                                  uzIndex,
+                                  "sortOrder",
+                                  event.target.value,
+                                );
+                              }
+                            }}
+                            min="0"
+                          />
+                        </label>
+                      </div>
+
+                      <div className="localized-list-grid">
+                        <div className="localized-list-locale-block">
+                          <div className="admin-section-header">
+                            <h3>Русский</h3>
+                          </div>
+
+                          <label className="admin-field">
+                            <span>Текст</span>
+                            <input
+                              type="text"
+                              value={ruItem?.value || ""}
+                              onChange={(event) => {
+                                if (ruIndex >= 0) {
+                                  onSuitableForChange(
+                                    ruIndex,
+                                    "value",
+                                    event.target.value,
+                                  );
+                                }
+                              }}
+                              placeholder="С друзьями / Для прогулки / Для свидания"
+                            />
+                          </label>
+                        </div>
+
+                        <div className="localized-list-locale-block">
+                          <div className="admin-section-header">
+                            <h3>Узбекский</h3>
+                          </div>
+
+                          <label
+                            className={`admin-field ${
+                              ruItem?.value && !uzItem?.value
+                                ? "admin-field-missing"
+                                : ""
+                            }`}
+                          >
+                            <span>Текст</span>
+                            <input
+                              type="text"
+                              value={uzItem?.value || ""}
+                              onChange={(event) => {
+                                if (uzIndex >= 0) {
+                                  onSuitableForChange(
+                                    uzIndex,
+                                    "value",
+                                    event.target.value,
+                                  );
+                                }
+                              }}
+                              placeholder="Do‘stlar bilan / Sayr uchun / Uchrashuv uchun"
+                            />
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p>Теги пока не добавлены.</p>
               )}

@@ -219,7 +219,7 @@ function AllEventsPage() {
               <p>{t.subtitle}</p>
             </div>
 
-            <UpcomingCalendar onlyEvents />
+            <UpcomingCalendar onlyEvents hideMoreLink />
 
             <div className="all-events-filters">
               <button

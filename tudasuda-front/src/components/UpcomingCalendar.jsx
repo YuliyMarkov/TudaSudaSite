@@ -168,7 +168,9 @@ function mergeGroupedItems(eventsMap, moviesMap, onlyEvents = false) {
     const movies = onlyEvents ? [] : moviesMap.get(dateKey) || [];
 
     const combined = dedupeItems(
-      [...events, ...movies].filter((item) => item.title && item.image && item.href)
+      [...events, ...movies].filter(
+        (item) => item.title && item.image && item.href
+      )
     );
 
     merged.set(dateKey, shuffleArray(combined));
@@ -177,7 +179,7 @@ function mergeGroupedItems(eventsMap, moviesMap, onlyEvents = false) {
   return merged;
 }
 
-function UpcomingCalendar({ onlyEvents = false }) {
+function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
   const { language } = useLanguage();
   const activeDateRef = useRef(null);
   const sliderRef = useRef(null);
@@ -328,10 +330,12 @@ function UpcomingCalendar({ onlyEvents = false }) {
         <div className="upcoming-calendar-header">
           <h2>{t.title}</h2>
 
-          <Link to={`/${language}/events`} className="upcoming-calendar-more">
-            {t.more}
-            <span className="arrow">→</span>
-          </Link>
+          {!hideMoreLink && (
+            <Link to={`/${language}/events`} className="upcoming-calendar-more">
+              {t.more}
+              <span className="arrow">→</span>
+            </Link>
+          )}
         </div>
 
         <div

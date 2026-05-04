@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchAdminMovies, updateMovieById } from "../api/movies";
 import MovieEditor from "../components/MovieEditor";
@@ -46,6 +46,58 @@ function buildEmptyForm() {
   };
 }
 
+function makeSlug(value = "") {
+  const map = {
+    а: "a",
+    б: "b",
+    в: "v",
+    г: "g",
+    д: "d",
+    е: "e",
+    ё: "e",
+    ж: "zh",
+    з: "z",
+    и: "i",
+    й: "y",
+    к: "k",
+    л: "l",
+    м: "m",
+    н: "n",
+    о: "o",
+    п: "p",
+    р: "r",
+    с: "s",
+    т: "t",
+    у: "u",
+    ф: "f",
+    х: "h",
+    ц: "ts",
+    ч: "ch",
+    ш: "sh",
+    щ: "sch",
+    ъ: "",
+    ы: "y",
+    ь: "",
+    э: "e",
+    ю: "yu",
+    я: "ya",
+    қ: "q",
+    ғ: "g",
+    ҳ: "h",
+    ў: "o",
+  };
+
+  return value
+    .toLowerCase()
+    .trim()
+    .split("")
+    .map((char) => map[char] ?? char)
+    .join("")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 90);
+}
+
 function toDateInputValue(value) {
   if (!value) return "";
 
@@ -63,10 +115,8 @@ function toDateInputValue(value) {
 }
 
 function mapMovieToForm(movie) {
-  const ru =
-    movie?.translations?.find((item) => item.locale === "ru") || null;
-  const uz =
-    movie?.translations?.find((item) => item.locale === "uz") || null;
+  const ru = movie?.translations?.find((item) => item.locale === "ru") || null;
+  const uz = movie?.translations?.find((item) => item.locale === "uz") || null;
 
   return {
     id: movie.id,
@@ -221,6 +271,31 @@ function EditMoviePage() {
   const [loadError, setLoadError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [isSlugTouched, setIsSlugTouched] = useState(true);
+  const [isSeoOpen, setIsSeoOpen] = useState(false);
+  const [isExtraOpen, setIsExtraOpen] = useState(false);
+
+  const emptyUzCount = useMemo(() => {
+    const pairs = [
+      ["title", "title"],
+      ["excerpt", "excerpt"],
+      ["description", "description"],
+      ["genre", "genre"],
+      ["country", "country"],
+      ["director", "director"],
+    ];
+
+    return pairs.reduce((count, [ruKey, uzKey]) => {
+      if (
+        form.translations.ru[ruKey]?.trim() &&
+        !form.translations.uz[uzKey]?.trim()
+      ) {
+        return count + 1;
+      }
+
+      return count;
+    }, 0);
+  }, [form.translations]);
 
   useEffect(() => {
     let isMounted = true;
@@ -239,7 +314,27 @@ function EditMoviePage() {
 
         if (!isMounted) return;
 
-        setForm(mapMovieToForm(target));
+        const nextForm = mapMovieToForm(target);
+
+        setForm(nextForm);
+        setIsSlugTouched(Boolean(nextForm.slug));
+
+        setIsSeoOpen(
+          Boolean(
+            nextForm.translations.ru.seoTitle ||
+              nextForm.translations.ru.seoDescription ||
+              nextForm.translations.uz.seoTitle ||
+              nextForm.translations.uz.seoDescription
+          )
+        );
+
+        setIsExtraOpen(
+          Boolean(
+            nextForm.galleryItems.length ||
+              nextForm.castItems.length ||
+              nextForm.calendarDates.length
+          )
+        );
       } catch (error) {
         if (!isMounted) return;
         setLoadError(error.message || "Не удалось загрузить фильм");
@@ -260,20 +355,70 @@ function EditMoviePage() {
   function handleChange(event) {
     const { name, type, value, checked } = event.target;
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      };
+
+      if (name === "slug") {
+        setIsSlugTouched(true);
+        next.slug = makeSlug(value);
+      }
+
+      return next;
+    });
   }
 
   function handleTranslationChange(locale, field, value) {
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        translations: {
+          ...prev.translations,
+          [locale]: {
+            ...prev.translations[locale],
+            [field]: value,
+          },
+        },
+      };
+
+      if (locale === "ru" && field === "title" && !isSlugTouched) {
+        next.slug = makeSlug(value);
+      }
+
+      return next;
+    });
+  }
+
+  function regenerateSlug() {
+    setForm((prev) => ({
+      ...prev,
+      slug: makeSlug(prev.translations.ru.title || prev.translations.uz.title),
+    }));
+
+    setIsSlugTouched(false);
+  }
+
+  function copyRuToUz() {
     setForm((prev) => ({
       ...prev,
       translations: {
         ...prev.translations,
-        [locale]: {
-          ...prev.translations[locale],
-          [field]: value,
+        uz: {
+          ...prev.translations.uz,
+          title: prev.translations.uz.title || prev.translations.ru.title,
+          excerpt: prev.translations.uz.excerpt || prev.translations.ru.excerpt,
+          description:
+            prev.translations.uz.description || prev.translations.ru.description,
+          genre: prev.translations.uz.genre || prev.translations.ru.genre,
+          country: prev.translations.uz.country || prev.translations.ru.country,
+          director: prev.translations.uz.director || prev.translations.ru.director,
+          seoTitle:
+            prev.translations.uz.seoTitle || prev.translations.ru.seoTitle,
+          seoDescription:
+            prev.translations.uz.seoDescription ||
+            prev.translations.ru.seoDescription,
         },
       },
     }));
@@ -439,6 +584,14 @@ function EditMoviePage() {
         removeCastItem={removeCastItem}
         isSubmitting={isSubmitting}
         submitLabel="Сохранить изменения"
+        onRegenerateSlug={regenerateSlug}
+        onCopyRuToUz={copyRuToUz}
+        emptyUzCount={emptyUzCount}
+        isSeoOpen={isSeoOpen}
+        setIsSeoOpen={setIsSeoOpen}
+        isExtraOpen={isExtraOpen}
+        setIsExtraOpen={setIsExtraOpen}
+        onCancel={() => navigate("/movies")}
       />
     </section>
   );

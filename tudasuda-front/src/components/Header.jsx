@@ -103,26 +103,48 @@ const TASHKENT = {
   longitude: 69.2797,
 };
 
-const SOCIALS = [
-  {
-    name: "Telegram",
-    href: "https://t.me/+zBdfoNGygiw3MzYy",
-    lightIcon: "/Icons/TG_Logo_Light.svg",
-    darkIcon: "/Icons/TG_Logo_Dark.svg",
-  },
-  {
-    name: "Instagram",
-    href: "https://www.instagram.com/tudasudauz/",
-    lightIcon: "/Icons/IG_Logo_Light.svg",
-    darkIcon: "/Icons/IG_Logo_Dark.svg",
-  },
-  {
-    name: "YouTube",
-    href: "https://www.youtube.com/@tudasudauz",
-    lightIcon: "/Icons/YT_Logo_Light.webp",
-    darkIcon: "/Icons/YT_Logo_Dark.webp",
-  },
-];
+const SOCIALS = {
+  ru: [
+    {
+      name: "Telegram",
+      href: "https://t.me/+zBdfoNGygiw3MzYy",
+      lightIcon: "/Icons/TG_Logo_Light.svg",
+      darkIcon: "/Icons/TG_Logo_Dark.svg",
+    },
+    {
+      name: "Instagram",
+      href: "https://www.instagram.com/tudasudauz/",
+      lightIcon: "/Icons/IG_Logo_Light.svg",
+      darkIcon: "/Icons/IG_Logo_Dark.svg",
+    },
+    {
+      name: "YouTube",
+      href: "https://www.youtube.com/@tudasudauz",
+      lightIcon: "/Icons/YT_Logo_Light.webp",
+      darkIcon: "/Icons/YT_Logo_Dark.webp",
+    },
+  ],
+  uz: [
+    {
+      name: "Telegram",
+      href: "https://t.me/+CwppTomwJEQwYWIy",
+      lightIcon: "/Icons/TG_Logo_Light.svg",
+      darkIcon: "/Icons/TG_Logo_Dark.svg",
+    },
+    {
+      name: "Instagram",
+      href: "https://www.instagram.com/tudasudauzb/",
+      lightIcon: "/Icons/IG_Logo_Light.svg",
+      darkIcon: "/Icons/IG_Logo_Dark.svg",
+    },
+    {
+      name: "YouTube",
+      href: "https://www.youtube.com/@tudasudauzb",
+      lightIcon: "/Icons/YT_Logo_Light.webp",
+      darkIcon: "/Icons/YT_Logo_Dark.webp",
+    },
+  ],
+};
 
 function getWeatherEmoji(code) {
   if (code === 0 || code === 1) return "☀️";
@@ -154,6 +176,17 @@ function Header() {
   const navRef = useRef(null);
 
   const t = UI_TEXT[language] || UI_TEXT.ru;
+  const activeSocials = SOCIALS[language] || SOCIALS.ru;
+
+  const logoSrc = useMemo(() => {
+    if (language === "uz") {
+      return isDarkTheme ? "/Logo-Dark_Uz.webp" : "/Logo-Light_Uz.webp";
+    }
+
+    return isDarkTheme ? "/Logo-Dark.webp" : "/Logo-Light.webp";
+  }, [language, isDarkTheme]);
+
+  const logoAlt = language === "uz" ? "TudaSuda logotipi" : "TudaSuda Logo";
 
   const categoryItems = useMemo(
     () => [
@@ -312,10 +345,7 @@ function Header() {
               aria-label={t.homeLabel}
               onClick={closeMenu}
             >
-              <img
-                src={isDarkTheme ? "/Logo-Dark.webp" : "/Logo-Light.webp"}
-                alt="TudaSuda Logo"
-              />
+              <img src={logoSrc} alt={logoAlt} />
             </Link>
           </div>
 
@@ -377,7 +407,7 @@ function Header() {
             </button>
 
             <div className="socials" aria-label={t.socialsLabel}>
-              {SOCIALS.map((item) => (
+              {activeSocials.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
@@ -494,7 +524,7 @@ function Header() {
             <div className="mobile-socials-title">{t.socialsTitle}</div>
 
             <div className="mobile-socials-grid">
-              {SOCIALS.map((item) => (
+              {activeSocials.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}

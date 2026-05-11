@@ -2,6 +2,7 @@ import FeaturedEvents from "../components/FeaturedEvents";
 import ReelsSection from "../components/ReelsSection";
 import TudaStories from "../components/TudaStories";
 import AdBlock from "../components/AdBlock";
+import YandexAdBlock from "../components/YandexAdBlock";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
 import UpcomingCalendar from "../components/UpcomingCalendar";
@@ -35,20 +36,22 @@ function HomePage({ onOpenReel }) {
 
       <div className="container">
         <FeaturedEvents />
+
         <UpcomingCalendar />
 
-        <AdBlock />
+        <YandexAdBlock />
 
         <CinemaSection />
+
         <TheatreSection />
 
-        <AdBlock />
+        <YandexAdBlock />
 
         <ReelsSection onOpenReel={onOpenReel} />
 
         <PlacesSection />
 
-        <AdBlock />
+        <YandexAdBlock />
 
         <TudaStories />
       </div>

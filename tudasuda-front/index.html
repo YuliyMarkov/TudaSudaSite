@@ -49,16 +49,18 @@
             (m[i].a = m[i].a || []).push(arguments);
           };
         m[i].l = 1 * new Date();
+
         for (var j = 0; j < document.scripts.length; j++) {
           if (document.scripts[j].src === r) {
             return;
           }
         }
-        ((k = e.createElement(t)),
-          (a = e.getElementsByTagName(t)[0]),
-          (k.async = 1),
-          (k.src = r),
-          a.parentNode.insertBefore(k, a));
+
+        k = e.createElement(t);
+        a = e.getElementsByTagName(t)[0];
+        k.async = 1;
+        k.src = r;
+        a.parentNode.insertBefore(k, a);
       })(
         window,
         document,
@@ -75,21 +77,35 @@
       });
     </script>
 
+    <!-- Yandex.RTB -->
+    <script>
+      window.yaContextCb = window.yaContextCb || [];
+    </script>
+
+    <script
+      src="https://yandex.ru/ads/system/context.js"
+      async
+    ></script>
+
     <!-- Google Analytics -->
     <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-PVGWST47GG"
     ></script>
+
     <script>
       window.dataLayer = window.dataLayer || [];
+
       function gtag() {
         dataLayer.push(arguments);
       }
-      gtag("js", new Date());
 
+      gtag("js", new Date());
       gtag("config", "G-PVGWST47GG");
     </script>
+  </head>
 
+  <body>
     <noscript>
       <div>
         <img
@@ -99,10 +115,9 @@
         />
       </div>
     </noscript>
-  </head>
 
-  <body>
     <div id="root"></div>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

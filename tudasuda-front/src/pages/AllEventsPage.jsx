@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
 import UpcomingCalendar from "../components/UpcomingCalendar";
+import YandexAdBlock from "../components/YandexAdBlock";
 
 const INITIAL_VISIBLE_COUNT = 12;
 const LOAD_MORE_COUNT = 12;
@@ -220,6 +221,8 @@ function AllEventsPage() {
             </div>
 
             <UpcomingCalendar onlyEvents hideMoreLink />
+
+            <YandexAdBlock />
 
             <div className="all-events-filters">
               <button

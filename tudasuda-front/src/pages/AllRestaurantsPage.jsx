@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
-import AdBlock from "../components/AdBlock";
+import YandexAdBlock from "../components/YandexAdBlock";
 
 const API_BASE_URL = "";
 
@@ -108,7 +108,7 @@ function AllRestaurantsPage() {
               <p>{t.description}</p>
             </div>
 
-            <AdBlock />
+            <YandexAdBlock />
 
             {isLoading ? (
               <div className="restaurants-empty-state">

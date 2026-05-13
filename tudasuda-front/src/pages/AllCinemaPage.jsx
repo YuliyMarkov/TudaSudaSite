@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
+import YandexAdBlock from "../components/YandexAdBlock";
 
 const API_BASE_URL = "";
 
@@ -268,6 +269,8 @@ function AllCinemaPage() {
               </div>
             </div>
           )}
+
+          <YandexAdBlock />
 
           <div className="all-cinema-today-section">
             <div className="all-cinema-section-head">

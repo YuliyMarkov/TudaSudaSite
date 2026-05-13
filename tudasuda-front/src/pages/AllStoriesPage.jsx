@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
+import YandexAdBlock from "../components/YandexAdBlock";
 
 const API_BASE_URL = "";
 
@@ -50,9 +51,10 @@ function AllStoriesPage() {
   };
 
   const t = uiText[language] || uiText.ru;
-  const errorText = language === "uz"
-    ? "Materiallarni yuklab bo‘lmadi."
-    : "Не удалось загрузить материалы.";
+  const errorText =
+    language === "uz"
+      ? "Materiallarni yuklab bo‘lmadi."
+      : "Не удалось загрузить материалы.";
 
   useEffect(() => {
     async function loadStories() {
@@ -139,6 +141,8 @@ function AllStoriesPage() {
               </button>
             </div>
           </div>
+
+          <YandexAdBlock />
 
           {isLoading ? (
             <div className="all-news-empty">{t.loading}</div>

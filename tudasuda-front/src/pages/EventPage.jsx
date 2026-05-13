@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
-import AdBlock from "../components/AdBlock";
+import YandexAdBlock from "../components/YandexAdBlock";
 import Seo from "../components/Seo";
 
 const API_BASE_URL = "";
@@ -503,7 +503,7 @@ function EventPage() {
                 </div>
               )}
 
-              <AdBlock />
+              <YandexAdBlock />
 
               {mapSrc ? (
                 <div className="event-content-card event-map-card">

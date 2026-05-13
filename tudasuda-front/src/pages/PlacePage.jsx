@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
-import AdBlock from "../components/AdBlock";
+import YandexAdBlock from "../components/YandexAdBlock";
 
 const API_BASE_URL = "";
 
@@ -514,7 +514,7 @@ function PlacePage() {
                 </div>
               </div>
 
-              <AdBlock />
+              <YandexAdBlock />
 
               {mapEmbed && (
                 <div className="place-content-card place-map-card">

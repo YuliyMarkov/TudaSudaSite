@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
 import HlsVideo from "../components/HlsVideo";
+import YandexAdBlock from "../components/YandexAdBlock";
 
 const API_BASE_URL = "";
 
@@ -545,6 +546,8 @@ function MoviePage() {
                 </button>
               </div>
             </div>
+
+            <YandexAdBlock />
 
             {mediaSlides.length > 0 && (
               <div className="movie-media-section">

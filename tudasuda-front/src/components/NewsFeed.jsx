@@ -83,7 +83,7 @@ function NewsFeed() {
 
         return bDate - aDate;
       })
-      .slice(0, 6);
+      .slice(0, 8);
   }, [stories]);
 
   return (

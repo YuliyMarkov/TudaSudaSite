@@ -64,20 +64,36 @@ function TudaStories() {
         };
       })
       .sort((a, b) => {
-        const aDate = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-        const bDate = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+        const aDate = a.publishedAt
+          ? new Date(a.publishedAt).getTime()
+          : 0;
+
+        const bDate = b.publishedAt
+          ? new Date(b.publishedAt).getTime()
+          : 0;
+
         return bDate - aDate;
       });
   }, [stories]);
 
   const visibleStories = useMemo(() => {
-    const featured = normalizedStories.filter((item) => item.isFeatured);
-    if (featured.length >= 6) return featured.slice(0, 6);
-    if (featured.length > 0) {
-      const rest = normalizedStories.filter((item) => !item.isFeatured);
-      return [...featured, ...rest].slice(0, 6);
+    const featured = normalizedStories.filter(
+      (item) => item.isFeatured
+    );
+
+    if (featured.length >= 8) {
+      return featured.slice(0, 8);
     }
-    return normalizedStories.slice(0, 6);
+
+    if (featured.length > 0) {
+      const rest = normalizedStories.filter(
+        (item) => !item.isFeatured
+      );
+
+      return [...featured, ...rest].slice(0, 8);
+    }
+
+    return normalizedStories.slice(0, 8);
   }, [normalizedStories]);
 
   if (isLoading || !visibleStories.length) return null;
@@ -96,7 +112,9 @@ function TudaStories() {
                 to={`/${language}/stories/${item.slug}`}
                 className="more-news-card-link"
               >
-                {item.image ? <img src={item.image} alt={item.title} /> : null}
+                {item.image ? (
+                  <img src={item.image} alt={item.title} />
+                ) : null}
 
                 <div className="more-news-card-body">
                   <h3>{item.title}</h3>
@@ -109,7 +127,10 @@ function TudaStories() {
       </div>
 
       <div className="more-news-action">
-        <Link to={`/${language}/stories`} className="more-news-button">
+        <Link
+          to={`/${language}/stories`}
+          className="more-news-button"
+        >
           {t.loadMore}
         </Link>
       </div>

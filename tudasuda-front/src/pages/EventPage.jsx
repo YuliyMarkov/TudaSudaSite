@@ -6,17 +6,52 @@ import Seo from "../components/Seo";
 
 const API_BASE_URL = "";
 
+const MONTHS = {
+  ru: [
+    "января",
+    "февраля",
+    "марта",
+    "апреля",
+    "мая",
+    "июня",
+    "июля",
+    "августа",
+    "сентября",
+    "октября",
+    "ноября",
+    "декабря",
+  ],
+  uz: [
+    "yanvar",
+    "fevral",
+    "mart",
+    "aprel",
+    "may",
+    "iyun",
+    "iyul",
+    "avgust",
+    "sentabr",
+    "oktabr",
+    "noyabr",
+    "dekabr",
+  ],
+};
+
 function formatDate(dateString, language) {
   if (!dateString) return "";
 
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return "";
 
-  return new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(date);
+  const day = date.getDate();
+  const monthIndex = date.getMonth();
+  const year = date.getFullYear();
+
+  if (language === "uz") {
+    return `${day} ${MONTHS.uz[monthIndex]} ${year}`;
+  }
+
+  return `${day} ${MONTHS.ru[monthIndex]} ${year}`;
 }
 
 function formatTime(dateString, language) {

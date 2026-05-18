@@ -31,12 +31,15 @@ function CinemaSection() {
   const t = uiText[language] || uiText.ru;
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function loadMovies() {
       try {
         setIsLoading(true);
 
         const response = await fetch(
-          `${API_BASE_URL}/api/movies?status=published&featured=true&lang=${language}`
+          `${API_BASE_URL}/api/movies?status=published&featured=true&lang=${language}`,
+          { signal: controller.signal }
         );
 
         if (!response.ok) {
@@ -46,29 +49,40 @@ function CinemaSection() {
         const data = await response.json();
         setMovies(Array.isArray(data) ? data : []);
       } catch (error) {
+        if (error.name === "AbortError") return;
+
         console.error("LOAD FEATURED MOVIES ERROR:", error);
         setMovies([]);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     }
 
     loadMovies();
+
+    return () => {
+      controller.abort();
+    };
   }, [language]);
 
   const normalizedMovies = useMemo(() => {
-    return movies.slice(0, 6).map((movie) => {
-      const translation = movie.translations?.[0] || null;
+    return movies
+      .slice(0, 6)
+      .map((movie) => {
+        const translation = movie.translations?.[0] || null;
 
-      return {
-        id: movie.id,
-        slug: movie.slug,
-        image: movie.posterImage || movie.coverImage,
-        title: translation?.title || "",
-        subtitle: translation?.genre || "",
-        location: translation?.country || "",
-      };
-    });
+        return {
+          id: movie.id,
+          slug: movie.slug,
+          image: movie.posterImage || movie.coverImage || "",
+          title: translation?.title || "",
+          subtitle: translation?.genre || "",
+          location: translation?.country || "",
+        };
+      })
+      .filter((movie) => movie.image && movie.title && movie.slug);
   }, [movies]);
 
   const scrollSlider = (direction) => {
@@ -108,7 +122,7 @@ function CinemaSection() {
 
           <div ref={sliderRef} className="cinema-slider">
             <div className="cinema-track">
-              {normalizedMovies.map((movie) => (
+              {normalizedMovies.map((movie, index) => (
                 <article key={movie.id} className="cinema-card">
                   <Link
                     to={`/${language}/movies/${movie.slug}`}
@@ -120,6 +134,11 @@ function CinemaSection() {
                         src={movie.image}
                         alt={movie.title}
                         className="cinema-poster"
+                        loading={index < 2 ? "eager" : "lazy"}
+                        decoding="async"
+                        fetchPriority={index < 2 ? "high" : "auto"}
+                        width="320"
+                        height="480"
                       />
                     </div>
 
@@ -127,16 +146,17 @@ function CinemaSection() {
                       <h3>{movie.title}</h3>
 
                       <div className="cinema-card-meta">
-                        {movie.subtitle && (
+                        {movie.subtitle ? (
                           <span className="cinema-card-subtitle">
                             {movie.subtitle}
                           </span>
-                        )}
-                        {movie.location && (
+                        ) : null}
+
+                        {movie.location ? (
                           <span className="cinema-card-location">
                             {movie.location}
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </Link>

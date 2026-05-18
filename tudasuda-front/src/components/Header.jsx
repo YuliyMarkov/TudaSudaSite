@@ -159,6 +159,23 @@ function getWeatherEmoji(code) {
   return "🌤️";
 }
 
+function requestAfterFirstPaint(callback) {
+  if (typeof window === "undefined") return;
+
+  const run = () => {
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(callback, { timeout: 2500 });
+      return;
+    }
+
+    window.setTimeout(callback, 1200);
+  };
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(run);
+  });
+}
+
 function Header() {
   const { language, setLanguage } = useLanguage();
   const location = useLocation();
@@ -238,17 +255,31 @@ function Header() {
   }, [isDarkTheme]);
 
   useEffect(() => {
-    fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${TASHKENT.latitude}&longitude=${TASHKENT.longitude}&current=temperature_2m,weather_code&timezone=Asia%2FTashkent`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setWeather({
-          temp: data.current?.temperature_2m,
-          code: data.current?.weather_code,
+    const controller = new AbortController();
+
+    requestAfterFirstPaint(() => {
+      fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${TASHKENT.latitude}&longitude=${TASHKENT.longitude}&current=temperature_2m,weather_code&timezone=Asia%2FTashkent`,
+        { signal: controller.signal }
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (controller.signal.aborted) return;
+
+          setWeather({
+            temp: data.current?.temperature_2m,
+            code: data.current?.weather_code,
+          });
+        })
+        .catch((error) => {
+          if (error.name === "AbortError") return;
+          setWeather(null);
         });
-      })
-      .catch(() => setWeather(null));
+    });
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -258,13 +289,15 @@ function Header() {
       }
     };
 
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", handleResize, { passive: true });
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
+    if (!isMenuOpen) return;
+
     const handleClickOutside = (event) => {
-      if (!isMenuOpen || window.innerWidth > 900) return;
+      if (window.innerWidth > 900) return;
 
       const clickedInsideNav = navRef.current?.contains(event.target);
       const clickedBurger = burgerBtnRef.current?.contains(event.target);
@@ -275,7 +308,9 @@ function Header() {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, {
+      passive: true,
+    });
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -345,7 +380,14 @@ function Header() {
               aria-label={t.homeLabel}
               onClick={closeMenu}
             >
-              <img src={logoSrc} alt={logoAlt} />
+              <img
+                src={logoSrc}
+                alt={logoAlt}
+                width="220"
+                height="58"
+                decoding="async"
+                fetchPriority="high"
+              />
             </Link>
           </div>
 
@@ -385,9 +427,12 @@ function Header() {
                 <span className="header-weather-city">{t.cityLabel}</span>
               </>
             ) : (
-              <span className="header-weather-loading">
-                {t.weatherFallback}
-              </span>
+              <>
+                <span className="header-weather-emoji" aria-hidden="true">
+                  🌤️
+                </span>
+                <span className="header-weather-city">{t.cityLabel}</span>
+              </>
             )}
           </div>
 
@@ -416,7 +461,14 @@ function Header() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <img src={getSocialIcon(item)} alt={item.name} />
+                  <img
+                    src={getSocialIcon(item)}
+                    alt={item.name}
+                    width="18"
+                    height="18"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </a>
               ))}
             </div>
@@ -534,7 +586,14 @@ function Header() {
                   aria-label={item.name}
                 >
                   <span className="mobile-social-card-icon">
-                    <img src={getSocialIcon(item)} alt={item.name} />
+                    <img
+                      src={getSocialIcon(item)}
+                      alt={item.name}
+                      width="18"
+                      height="18"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </span>
                   <span className="mobile-social-card-text">{item.name}</span>
                 </a>

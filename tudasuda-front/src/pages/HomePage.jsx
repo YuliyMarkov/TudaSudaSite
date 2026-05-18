@@ -1,14 +1,19 @@
+import { lazy, Suspense } from "react";
 import FeaturedEvents from "../components/FeaturedEvents";
-import ReelsSection from "../components/ReelsSection";
-import TudaStories from "../components/TudaStories";
-import AdBlock from "../components/AdBlock";
 import YandexAdBlock from "../components/YandexAdBlock";
 import { useLanguage } from "../context/useLanguage";
 import Seo from "../components/Seo";
 import UpcomingCalendar from "../components/UpcomingCalendar";
 import CinemaSection from "../components/CinemaSection";
-import TheatreSection from "../components/TheatreSection";
-import PlacesSection from "../components/PlacesSection";
+
+const TheatreSection = lazy(() => import("../components/TheatreSection"));
+const ReelsSection = lazy(() => import("../components/ReelsSection"));
+const PlacesSection = lazy(() => import("../components/PlacesSection"));
+const TudaStories = lazy(() => import("../components/TudaStories"));
+
+function HomeSectionLoader() {
+  return <div className="home-section-loader" aria-hidden="true" />;
+}
 
 function HomePage({ onOpenReel }) {
   const { language } = useLanguage();
@@ -43,17 +48,25 @@ function HomePage({ onOpenReel }) {
 
         <CinemaSection />
 
-        <TheatreSection />
+        <Suspense fallback={<HomeSectionLoader />}>
+          <TheatreSection />
+        </Suspense>
 
         <YandexAdBlock />
 
-        <ReelsSection onOpenReel={onOpenReel} />
+        <Suspense fallback={<HomeSectionLoader />}>
+          <ReelsSection onOpenReel={onOpenReel} />
+        </Suspense>
 
-        <PlacesSection />
+        <Suspense fallback={<HomeSectionLoader />}>
+          <PlacesSection />
+        </Suspense>
 
         <YandexAdBlock />
 
-        <TudaStories />
+        <Suspense fallback={<HomeSectionLoader />}>
+          <TudaStories />
+        </Suspense>
       </div>
     </main>
   );

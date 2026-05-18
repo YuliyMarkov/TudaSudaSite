@@ -86,99 +86,101 @@ function EventPage() {
   const [loadError, setLoadError] = useState("");
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
 
-  const uiText = {
-    ru: {
-      home: "Главная",
-      back: "Афиша",
-      notFoundTitle: "Событие не найдено",
-      notFoundText: "Похоже, такого события пока нет в каталоге.",
-      about: "О событии",
-      gallery: "Фотогалерея",
-      date: "Дата",
-      time: "Время",
-      venue: "Площадка",
-      address: "Адрес",
-      duration: "Длительность",
-      ageLimit: "Возраст",
-      tickets: "Билеты",
-      buyTickets: "Купить билеты",
-      ticketModalClose: "Закрыть",
-      program: "Что ждет гостей",
-      importantInfo: "Важно знать",
-      map: "Локация",
-      loading: "Загрузка события...",
-      error: "Не удалось загрузить событие.",
-      concert: "Концерты",
-      theatre: "Спектакли",
-      exhibition: "Выставки",
-      festival: "Фестивали",
-      standup: "Стендап",
-      masterclass: "Мастер-классы",
-      kids: "Для детей",
-      all: "Событие",
-      noDate: "Уточняется",
-      noTime: "Уточняется",
-      noVenue: "Уточняется",
-      noAddress: "Уточняется",
-      noDuration: "Уточняется",
-      noAge: "Уточняется",
-      noPrice: "Уточняется",
-      noDescription: "Описание скоро появится.",
-    },
-    uz: {
-      home: "Bosh sahifa",
-      back: "Afisha",
-      notFoundTitle: "Tadbir topilmadi",
-      notFoundText: "Aftidan, bunday tadbir hozircha katalogda yo‘q.",
-      about: "Tadbir haqida",
-      gallery: "Fotogalereya",
-      date: "Sana",
-      time: "Vaqt",
-      venue: "Maydon",
-      address: "Manzil",
-      duration: "Davomiyligi",
-      ageLimit: "Yosh",
-      tickets: "Chiptalar",
-      buyTickets: "Chipta sotib olish",
-      ticketModalClose: "Yopish",
-      program: "Dastur",
-      importantInfo: "Muhim ma’lumot",
-      map: "Xaritadagi joylashuv",
-      loading: "Tadbir yuklanmoqda...",
-      error: "Tadbirni yuklab bo‘lmadi.",
-      concert: "Konsertlar",
-      theatre: "Spektakllar",
-      exhibition: "Ko‘rgazmalar",
-      festival: "Festivallar",
-      standup: "Stendap",
-      masterclass: "Master-klasslar",
-      kids: "Bolalar uchun",
-      all: "Tadbir",
-      noDate: "Aniqlanmoqda",
-      noTime: "Aniqlanmoqda",
-      noVenue: "Aniqlanmoqda",
-      noAddress: "Aniqlanmoqda",
-      noDuration: "Aniqlanmoqda",
-      noAge: "Aniqlanmoqda",
-      noPrice: "Aniqlanmoqda",
-      noDescription: "Tavsif tez orada qo‘shiladi.",
-    },
-  };
+  const uiText = useMemo(
+    () => ({
+      ru: {
+        home: "Главная",
+        back: "Афиша",
+        notFoundTitle: "Событие не найдено",
+        notFoundText: "Похоже, такого события пока нет в каталоге.",
+        about: "О событии",
+        gallery: "Фотогалерея",
+        date: "Дата",
+        time: "Время",
+        venue: "Площадка",
+        address: "Адрес",
+        duration: "Длительность",
+        ageLimit: "Возраст",
+        tickets: "Билеты",
+        buyTickets: "Купить билеты",
+        ticketModalClose: "Закрыть",
+        program: "Что ждет гостей",
+        importantInfo: "Важно знать",
+        map: "Локация",
+        loading: "Загрузка события...",
+        error: "Не удалось загрузить событие.",
+        concert: "Концерты",
+        theatre: "Спектакли",
+        exhibition: "Выставки",
+        festival: "Фестивали",
+        standup: "Стендап",
+        masterclass: "Мастер-классы",
+        kids: "Для детей",
+        all: "Событие",
+        noDate: "Уточняется",
+        noTime: "Уточняется",
+        noVenue: "Уточняется",
+        noAddress: "Уточняется",
+        noDuration: "Уточняется",
+        noAge: "Уточняется",
+        noPrice: "Уточняется",
+        noDescription: "Описание скоро появится.",
+      },
+      uz: {
+        home: "Bosh sahifa",
+        back: "Afisha",
+        notFoundTitle: "Tadbir topilmadi",
+        notFoundText: "Aftidan, bunday tadbir hozircha katalogda yo‘q.",
+        about: "Tadbir haqida",
+        gallery: "Fotogalereya",
+        date: "Sana",
+        time: "Vaqt",
+        venue: "Maydon",
+        address: "Manzil",
+        duration: "Davomiyligi",
+        ageLimit: "Yosh",
+        tickets: "Chiptalar",
+        buyTickets: "Chipta sotib olish",
+        ticketModalClose: "Yopish",
+        program: "Dastur",
+        importantInfo: "Muhim ma’lumot",
+        map: "Xaritadagi joylashuv",
+        loading: "Tadbir yuklanmoqda...",
+        error: "Tadbirni yuklab bo‘lmadi.",
+        concert: "Konsertlar",
+        theatre: "Spektakllar",
+        exhibition: "Ko‘rgazmalar",
+        festival: "Festivallar",
+        standup: "Stendap",
+        masterclass: "Master-klasslar",
+        kids: "Bolalar uchun",
+        all: "Tadbir",
+        noDate: "Aniqlanmoqda",
+        noTime: "Aniqlanmoqda",
+        noVenue: "Aniqlanmoqda",
+        noAddress: "Aniqlanmoqda",
+        noDuration: "Aniqlanmoqda",
+        noAge: "Aniqlanmoqda",
+        noPrice: "Aniqlanmoqda",
+        noDescription: "Tavsif tez orada qo‘shiladi.",
+      },
+    }),
+    []
+  );
 
   const t = uiText[language] || uiText.ru;
-  const errorText =
-    language === "uz"
-      ? "Tadbirni yuklab bo‘lmadi."
-      : "Не удалось загрузить событие.";
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function loadEvent() {
       try {
         setIsLoading(true);
         setLoadError("");
 
         const response = await fetch(
-          `${API_BASE_URL}/api/events/${slug}?lang=${language}`
+          `${API_BASE_URL}/api/events/${slug}?lang=${language}`,
+          { signal: controller.signal }
         );
 
         if (response.status === 404) {
@@ -193,16 +195,24 @@ function EventPage() {
         const data = await response.json();
         setEvent(data);
       } catch (error) {
+        if (error.name === "AbortError") return;
+
         console.error("LOAD EVENT ERROR:", error);
-        setLoadError(errorText);
+        setLoadError(t.error);
         setEvent(null);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     }
 
     loadEvent();
-  }, [slug, language, errorText]);
+
+    return () => {
+      controller.abort();
+    };
+  }, [slug, language, t.error]);
 
   useEffect(() => {
     if (!isTicketModalOpen) return;
@@ -357,7 +367,14 @@ function EventPage() {
             <div className="event-hero">
               <div className="event-cover-wrap">
                 {cover ? (
-                  <img src={cover} alt={title} className="event-cover" />
+                  <img
+                    src={cover}
+                    alt={title}
+                    className="event-cover"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                  />
                 ) : null}
               </div>
 
@@ -452,8 +469,13 @@ function EventPage() {
                 <h2>{t.gallery}</h2>
                 <div className="event-gallery-grid">
                   {gallery.map((image, index) => (
-                    <div className="event-gallery-item" key={index}>
-                      <img src={image} alt={`${title} ${index + 1}`} />
+                    <div className="event-gallery-item" key={image || index}>
+                      <img
+                        src={image}
+                        alt={`${title} ${index + 1}`}
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
                   ))}
                 </div>

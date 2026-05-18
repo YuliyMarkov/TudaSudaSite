@@ -70,6 +70,12 @@ function buildSlideLink(language, slide) {
   }
 }
 
+function isCoarsePointer() {
+  if (typeof window === "undefined") return false;
+
+  return window.matchMedia?.("(hover: none), (pointer: coarse)")?.matches;
+}
+
 function FeaturedEvents() {
   const { language } = useLanguage();
 
@@ -77,12 +83,14 @@ function FeaturedEvents() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [canUseHoverVideo, setCanUseHoverVideo] = useState(false);
 
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
-  const videoRefs = useRef([]);
-  const hlsRefs = useRef([]);
+  const activeVideoRef = useRef(null);
+  const activeHlsRef = useRef(null);
+  const loadedVideoSrcRef = useRef("");
 
   const uiText = {
     ru: {
@@ -102,12 +110,19 @@ function FeaturedEvents() {
   const t = uiText[language] || uiText.ru;
 
   useEffect(() => {
+    setCanUseHoverVideo(!isCoarsePointer());
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
     async function loadSlides() {
       try {
         setIsLoading(true);
 
         const response = await fetch(
-          `${API_BASE_URL}/api/hero-slides?lang=${language}&activeOnly=true`
+          `${API_BASE_URL}/api/hero-slides?lang=${language}&activeOnly=true`,
+          { signal: controller.signal }
         );
 
         if (!response.ok) {
@@ -117,14 +132,22 @@ function FeaturedEvents() {
         const data = await response.json();
         setSlides(Array.isArray(data) ? data : []);
       } catch (error) {
+        if (error.name === "AbortError") return;
+
         console.error("LOAD HERO SLIDES ERROR:", error);
         setSlides([]);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     }
 
     loadSlides();
+
+    return () => {
+      controller.abort();
+    };
   }, [language]);
 
   const normalizedSlides = useMemo(() => {
@@ -148,11 +171,92 @@ function FeaturedEvents() {
   }, [slides]);
 
   const totalSlides = normalizedSlides.length;
+  const activeSlide = normalizedSlides[currentSlide] || null;
 
   useEffect(() => {
     setCurrentSlide(0);
     setIsHovered(false);
   }, [language, totalSlides]);
+
+  useEffect(() => {
+    return () => {
+      if (activeHlsRef.current) {
+        activeHlsRef.current.destroy();
+        activeHlsRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!activeVideoRef.current) return;
+
+    const videoEl = activeVideoRef.current;
+    const videoSrc =
+      canUseHoverVideo &&
+      isHovered &&
+      activeSlide?.hoverMediaType === "video"
+        ? activeSlide.hoverMediaUrl
+        : "";
+
+    if (!videoSrc) {
+      videoEl.pause();
+
+      try {
+        videoEl.currentTime = 0;
+      } catch {
+        // ignore
+      }
+
+      return;
+    }
+
+    if (loadedVideoSrcRef.current === videoSrc) {
+      videoEl.play().catch(() => {});
+      return;
+    }
+
+    if (activeHlsRef.current) {
+      activeHlsRef.current.destroy();
+      activeHlsRef.current = null;
+    }
+
+    loadedVideoSrcRef.current = videoSrc;
+    videoEl.removeAttribute("src");
+    videoEl.load();
+
+    if (videoSrc.endsWith(".m3u8")) {
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+          maxBufferLength: 8,
+          maxMaxBufferLength: 12,
+          startFragPrefetch: false,
+        });
+
+        hls.loadSource(videoSrc);
+        hls.attachMedia(videoEl);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoEl.play().catch(() => {});
+        });
+
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          console.error("HLS error:", data);
+        });
+
+        activeHlsRef.current = hls;
+      } else if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
+        videoEl.src = videoSrc;
+        videoEl.load();
+        videoEl.play().catch(() => {});
+      }
+    } else {
+      videoEl.src = videoSrc;
+      videoEl.load();
+      videoEl.play().catch(() => {});
+    }
+  }, [activeSlide, canUseHoverVideo, isHovered]);
 
   const goToPrev = () => {
     setCurrentSlide((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
@@ -169,12 +273,12 @@ function FeaturedEvents() {
     setIsHovered(false);
   };
 
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.changedTouches[0].clientX;
+  const handleTouchStart = (event) => {
+    touchStartX.current = event.changedTouches[0].clientX;
   };
 
-  const handleTouchEnd = (e) => {
-    touchEndX.current = e.changedTouches[0].clientX;
+  const handleTouchEnd = (event) => {
+    touchEndX.current = event.changedTouches[0].clientX;
 
     const diff = touchStartX.current - touchEndX.current;
     const swipeThreshold = 50;
@@ -198,68 +302,6 @@ function FeaturedEvents() {
 
     return distanceBackward < distanceForward ? "hidden-left" : "hidden-right";
   };
-
-  useEffect(() => {
-    hlsRefs.current.forEach((hls) => {
-      if (hls) hls.destroy();
-    });
-    hlsRefs.current = [];
-
-    normalizedSlides.forEach((slide, index) => {
-      const videoEl = videoRefs.current[index];
-      const videoSrc =
-        slide.hoverMediaType === "video" ? slide.hoverMediaUrl : "";
-
-      if (!videoEl || !videoSrc) return;
-
-      if (videoSrc.endsWith(".m3u8")) {
-        if (Hls.isSupported()) {
-          const hls = new Hls({
-            enableWorker: true,
-          });
-
-          hls.loadSource(videoSrc);
-          hls.attachMedia(videoEl);
-
-          hls.on(Hls.Events.ERROR, (_, data) => {
-            console.error("HLS error:", data);
-          });
-
-          hlsRefs.current[index] = hls;
-        } else if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
-          videoEl.src = videoSrc;
-          videoEl.load();
-        }
-      } else {
-        videoEl.src = videoSrc;
-        videoEl.load();
-      }
-    });
-
-    return () => {
-      hlsRefs.current.forEach((hls) => {
-        if (hls) hls.destroy();
-      });
-      hlsRefs.current = [];
-    };
-  }, [normalizedSlides]);
-
-  useEffect(() => {
-    videoRefs.current.forEach((video, index) => {
-      if (!video) return;
-
-      if (index === currentSlide && isHovered) {
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-        try {
-          video.currentTime = 0;
-        } catch {
-          // ignore
-        }
-      }
-    });
-  }, [currentSlide, isHovered]);
 
   if (isLoading || !normalizedSlides.length) return null;
 
@@ -291,10 +333,14 @@ function FeaturedEvents() {
               const subtitle = slide.subtitle;
               const alt = slide.title;
               const hasVideo =
-                slide.hoverMediaType === "video" && Boolean(slide.hoverMediaUrl);
+                canUseHoverVideo &&
+                index === currentSlide &&
+                slide.hoverMediaType === "video" &&
+                Boolean(slide.hoverMediaUrl);
               const href = buildSlideLink(language, slide);
               const isExternal =
                 href.startsWith("http://") || href.startsWith("https://");
+              const isActive = index === currentSlide;
 
               const content = (
                 <>
@@ -303,18 +349,20 @@ function FeaturedEvents() {
                       src={slide.poster}
                       alt={alt || title}
                       className="event-slide-poster"
+                      loading={index === 0 ? "eager" : "lazy"}
+                      decoding="async"
+                      fetchPriority={index === 0 ? "high" : "auto"}
                     />
 
                     {hasVideo ? (
                       <video
-                        ref={(el) => {
-                          videoRefs.current[index] = el;
-                        }}
+                        ref={activeVideoRef}
                         className="event-slide-video"
                         muted
                         loop
                         playsInline
-                        preload="metadata"
+                        preload="none"
+                        aria-hidden="true"
                       />
                     ) : null}
                   </div>
@@ -331,13 +379,13 @@ function FeaturedEvents() {
                   key={slide.id}
                   className={`event-slide ${positionClass}`}
                   onMouseEnter={() => {
-                    if (index === currentSlide) setIsHovered(true);
+                    if (isActive && canUseHoverVideo) setIsHovered(true);
                   }}
                   onMouseLeave={() => {
-                    if (index === currentSlide) setIsHovered(false);
+                    if (isActive && canUseHoverVideo) setIsHovered(false);
                   }}
                   onClick={() => {
-                    if (index !== currentSlide) goToSlide(index);
+                    if (!isActive) goToSlide(index);
                   }}
                 >
                   {isExternal ? (
@@ -347,9 +395,9 @@ function FeaturedEvents() {
                       aria-label={`${t.open}: ${title}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => {
-                        if (index !== currentSlide) {
-                          e.preventDefault();
+                      onClick={(event) => {
+                        if (!isActive) {
+                          event.preventDefault();
                           goToSlide(index);
                         }
                       }}
@@ -361,9 +409,9 @@ function FeaturedEvents() {
                       to={href}
                       className="event-slide-link"
                       aria-label={`${t.open}: ${title}`}
-                      onClick={(e) => {
-                        if (index !== currentSlide) {
-                          e.preventDefault();
+                      onClick={(event) => {
+                        if (!isActive) {
+                          event.preventDefault();
                           goToSlide(index);
                         }
                       }}

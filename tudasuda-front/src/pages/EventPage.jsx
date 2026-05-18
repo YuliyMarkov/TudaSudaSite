@@ -40,8 +40,26 @@ const MONTHS = {
 function formatDate(dateString, language) {
   if (!dateString) return "";
 
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "";
+  const raw = String(dateString).trim();
+
+  const weirdUzMatch = raw.match(/^(\d{4})\s+M(\d{1,2})\s+(\d{1,2})$/i);
+  if (weirdUzMatch) {
+    const [, year, month, day] = weirdUzMatch;
+    const monthIndex = Number(month) - 1;
+
+    if (monthIndex >= 0 && monthIndex < 12) {
+      if (language === "uz") {
+        return `${Number(day)} ${MONTHS.uz[monthIndex]} ${year}`;
+      }
+
+      return `${Number(day)} ${MONTHS.ru[monthIndex]} ${year}`;
+    }
+  }
+
+  const fixedRaw = raw.replace(/M(\d{1,2})/gi, "$1");
+  const date = new Date(fixedRaw);
+
+  if (Number.isNaN(date.getTime())) return raw;
 
   const day = date.getDate();
   const monthIndex = date.getMonth();
@@ -57,7 +75,10 @@ function formatDate(dateString, language) {
 function formatTime(dateString, language) {
   if (!dateString) return "";
 
-  const date = new Date(dateString);
+  const raw = String(dateString).trim();
+  const fixedRaw = raw.replace(/M(\d{1,2})/gi, "$1");
+
+  const date = new Date(fixedRaw);
   if (Number.isNaN(date.getTime())) return "";
 
   return new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {

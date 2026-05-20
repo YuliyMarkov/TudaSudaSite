@@ -13654,3 +13654,65 @@ body.dark-theme .cinema-nav:hover {
     display: none;
   }
 }
+
+/* ===== FINAL FIX: cinema arrows visible ===== */
+
+.cinema-section {
+  position: relative;
+}
+
+.cinema-section .container {
+  overflow: visible;
+}
+
+.cinema-slider-wrap {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+}
+
+.cinema-slider {
+  position: relative;
+  z-index: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.cinema-nav {
+  position: absolute !important;
+  top: 50% !important;
+  z-index: 50 !important;
+  transform: translateY(-50%) !important;
+  width: 32px !important;
+  height: 80px !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--text-color) !important;
+  font-size: 34px !important;
+  font-weight: 300 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  opacity: 0.35 !important;
+  pointer-events: auto !important;
+}
+
+.cinema-nav.prev {
+  left: -28px !important;
+}
+
+.cinema-nav.next {
+  right: -28px !important;
+}
+
+.cinema-nav:hover {
+  opacity: 0.75 !important;
+  transform: translateY(-50%) scale(1.08) !important;
+}
+
+@media (max-width: 900px) {
+  .cinema-nav {
+    display: none !important;
+  }
+}

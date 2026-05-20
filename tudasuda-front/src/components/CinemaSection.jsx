@@ -39,7 +39,7 @@ function CinemaSection() {
 
         const response = await fetch(
           `${API_BASE_URL}/api/movies?status=published&featured=true&lang=${language}`,
-          { signal: controller.signal },
+          { signal: controller.signal }
         );
 
         if (!response.ok) {
@@ -90,6 +90,7 @@ function CinemaSection() {
     if (!slider) return;
 
     const scrollAmount = slider.clientWidth * 0.82;
+
     slider.scrollBy({
       left: direction === "next" ? scrollAmount : -scrollAmount,
       behavior: "smooth",
@@ -136,7 +137,7 @@ function CinemaSection() {
                         className="cinema-poster"
                         loading="lazy"
                         decoding="async"
-                        fetchPriority="low"
+                        fetchPriority="auto"
                         width="320"
                         height="480"
                       />

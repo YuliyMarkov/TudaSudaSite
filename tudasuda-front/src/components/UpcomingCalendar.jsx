@@ -46,10 +46,7 @@ function shuffleArray(array) {
 
   for (let index = result.length - 1; index > 0; index -= 1) {
     const randomIndex = Math.floor(Math.random() * (index + 1));
-    [result[index], result[randomIndex]] = [
-      result[randomIndex],
-      result[index],
-    ];
+    [result[index], result[randomIndex]] = [result[randomIndex], result[index]];
   }
 
   return result;
@@ -210,8 +207,8 @@ function mergeGroupedItems(eventsMap, moviesMap, onlyEvents = false) {
 
     const combined = dedupeItems(
       [...events, ...movies].filter(
-        (item) => item.title && item.image && item.href
-      )
+        (item) => item.title && item.image && item.href,
+      ),
     );
 
     merged.set(dateKey, shuffleArray(combined));
@@ -268,14 +265,17 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
 
         const eventsRequest = fetch(
           `${API_BASE_URL}/api/events?status=published&lang=${language}`,
-          { signal: controller.signal }
+          { signal: controller.signal },
         );
 
         const moviesRequest = onlyEvents
           ? Promise.resolve(null)
-          : fetch(`${API_BASE_URL}/api/movies?status=published&lang=${language}`, {
-              signal: controller.signal,
-            });
+          : fetch(
+              `${API_BASE_URL}/api/movies?status=published&lang=${language}`,
+              {
+                signal: controller.signal,
+              },
+            );
 
         const [eventsResponse, moviesResponse] = await Promise.all([
           eventsRequest,
@@ -317,7 +317,7 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
 
   const groupedItems = useMemo(
     () => mergeGroupedItems(groupedEvents, groupedMovies, onlyEvents),
-    [groupedEvents, groupedMovies, onlyEvents]
+    [groupedEvents, groupedMovies, onlyEvents],
   );
 
   const calendarDates = useMemo(() => {
@@ -431,8 +431,11 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
               key={selectedDate}
             >
               <div className="upcoming-calendar-track">
-                {filteredItems.map((item, index) => {
-                  const category = getEventCategoryLabel(item.category, language);
+                {filteredItems.map((item) => {
+                  const category = getEventCategoryLabel(
+                    item.category,
+                    language,
+                  );
 
                   return (
                     <article key={item.id} className="upcoming-event-card">
@@ -446,9 +449,9 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
                             src={item.image}
                             alt={item.title}
                             className="upcoming-event-image"
-                            loading={index < 2 ? "eager" : "lazy"}
+                            loading="lazy"
                             decoding="async"
-                            fetchPriority={index < 2 ? "high" : "auto"}
+                            fetchPriority="low"
                             width="320"
                             height="220"
                           />

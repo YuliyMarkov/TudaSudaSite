@@ -39,7 +39,7 @@ function CinemaSection() {
 
         const response = await fetch(
           `${API_BASE_URL}/api/movies?status=published&featured=true&lang=${language}`,
-          { signal: controller.signal }
+          { signal: controller.signal },
         );
 
         if (!response.ok) {
@@ -122,7 +122,7 @@ function CinemaSection() {
 
           <div ref={sliderRef} className="cinema-slider">
             <div className="cinema-track">
-              {normalizedMovies.map((movie, index) => (
+              {normalizedMovies.map((movie) => (
                 <article key={movie.id} className="cinema-card">
                   <Link
                     to={`/${language}/movies/${movie.slug}`}
@@ -134,9 +134,9 @@ function CinemaSection() {
                         src={movie.image}
                         alt={movie.title}
                         className="cinema-poster"
-                        loading={index < 2 ? "eager" : "lazy"}
+                        loading="lazy"
                         decoding="async"
-                        fetchPriority={index < 2 ? "high" : "auto"}
+                        fetchPriority="low"
                         width="320"
                         height="480"
                       />

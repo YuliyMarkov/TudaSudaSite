@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import Hls from "hls.js";
 import { useLanguage } from "../context/useLanguage";
 
 const API_BASE_URL = "";
@@ -76,6 +75,11 @@ function isCoarsePointer() {
   return window.matchMedia?.("(hover: none), (pointer: coarse)")?.matches;
 }
 
+async function loadHlsLibrary() {
+  const module = await import("hls.js");
+  return module.default;
+}
+
 function FeaturedEvents() {
   const { language } = useLanguage();
 
@@ -91,6 +95,7 @@ function FeaturedEvents() {
   const activeVideoRef = useRef(null);
   const activeHlsRef = useRef(null);
   const loadedVideoSrcRef = useRef("");
+  const isMountedRef = useRef(true);
 
   const uiText = {
     ru: {
@@ -110,7 +115,12 @@ function FeaturedEvents() {
   const t = uiText[language] || uiText.ru;
 
   useEffect(() => {
+    isMountedRef.current = true;
     setCanUseHoverVideo(!isCoarsePointer());
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -176,6 +186,7 @@ function FeaturedEvents() {
   useEffect(() => {
     setCurrentSlide(0);
     setIsHovered(false);
+    loadedVideoSrcRef.current = "";
   }, [language, totalSlides]);
 
   useEffect(() => {
@@ -188,82 +199,104 @@ function FeaturedEvents() {
   }, []);
 
   useEffect(() => {
-    if (!activeVideoRef.current) return;
+    let cancelled = false;
 
-    const videoEl = activeVideoRef.current;
-    const videoSrc =
-      canUseHoverVideo &&
-      isHovered &&
-      activeSlide?.hoverMediaType === "video"
-        ? activeSlide.hoverMediaUrl
-        : "";
+    async function setupVideo() {
+      if (!activeVideoRef.current) return;
 
-    if (!videoSrc) {
-      videoEl.pause();
+      const videoEl = activeVideoRef.current;
+      const videoSrc =
+        canUseHoverVideo &&
+        isHovered &&
+        activeSlide?.hoverMediaType === "video"
+          ? activeSlide.hoverMediaUrl
+          : "";
 
-      try {
-        videoEl.currentTime = 0;
-      } catch {
-        // ignore
+      if (!videoSrc) {
+        videoEl.pause();
+
+        try {
+          videoEl.currentTime = 0;
+        } catch {
+          // ignore
+        }
+
+        return;
       }
 
-      return;
-    }
-
-    if (loadedVideoSrcRef.current === videoSrc) {
-      videoEl.play().catch(() => {});
-      return;
-    }
-
-    if (activeHlsRef.current) {
-      activeHlsRef.current.destroy();
-      activeHlsRef.current = null;
-    }
-
-    loadedVideoSrcRef.current = videoSrc;
-    videoEl.removeAttribute("src");
-    videoEl.load();
-
-    if (videoSrc.endsWith(".m3u8")) {
-      if (Hls.isSupported()) {
-        const hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: false,
-          maxBufferLength: 8,
-          maxMaxBufferLength: 12,
-          startFragPrefetch: false,
-        });
-
-        hls.loadSource(videoSrc);
-        hls.attachMedia(videoEl);
-
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          videoEl.play().catch(() => {});
-        });
-
-        hls.on(Hls.Events.ERROR, (_, data) => {
-          console.error("HLS error:", data);
-        });
-
-        activeHlsRef.current = hls;
-      } else if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
-        videoEl.src = videoSrc;
-        videoEl.load();
+      if (loadedVideoSrcRef.current === videoSrc) {
         videoEl.play().catch(() => {});
+        return;
       }
-    } else {
+
+      if (activeHlsRef.current) {
+        activeHlsRef.current.destroy();
+        activeHlsRef.current = null;
+      }
+
+      loadedVideoSrcRef.current = videoSrc;
+      videoEl.removeAttribute("src");
+      videoEl.load();
+
+      if (videoSrc.endsWith(".m3u8")) {
+        const Hls = await loadHlsLibrary();
+
+        if (cancelled || !isMountedRef.current || !activeVideoRef.current) {
+          return;
+        }
+
+        if (Hls.isSupported()) {
+          const hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: false,
+            maxBufferLength: 8,
+            maxMaxBufferLength: 12,
+            startFragPrefetch: false,
+          });
+
+          hls.loadSource(videoSrc);
+          hls.attachMedia(videoEl);
+
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            videoEl.play().catch(() => {});
+          });
+
+          hls.on(Hls.Events.ERROR, (_, data) => {
+            console.error("HLS error:", data);
+          });
+
+          activeHlsRef.current = hls;
+        } else if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
+          videoEl.src = videoSrc;
+          videoEl.load();
+          videoEl.play().catch(() => {});
+        }
+
+        return;
+      }
+
       videoEl.src = videoSrc;
       videoEl.load();
       videoEl.play().catch(() => {});
     }
+
+    setupVideo();
+
+    return () => {
+      cancelled = true;
+    };
   }, [activeSlide, canUseHoverVideo, isHovered]);
 
   const goToPrev = () => {
+    if (!totalSlides) return;
+
     setCurrentSlide((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
     setIsHovered(false);
   };
 
   const goToNext = () => {
+    if (!totalSlides) return;
+
     setCurrentSlide((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
     setIsHovered(false);
   };

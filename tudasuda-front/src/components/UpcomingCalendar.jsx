@@ -4,12 +4,52 @@ import { useLanguage } from "../context/useLanguage";
 
 const API_BASE_URL = "";
 
+const MONTH_LABELS = {
+  ru: {
+    weekdays: ["вс", "пн", "вт", "ср", "чт", "пт", "сб"],
+    months: [
+      "янв",
+      "фев",
+      "мар",
+      "апр",
+      "май",
+      "июн",
+      "июл",
+      "авг",
+      "сен",
+      "окт",
+      "ноя",
+      "дек",
+    ],
+  },
+  uz: {
+    weekdays: ["yak", "du", "se", "chor", "pay", "ju", "shan"],
+    months: [
+      "yan",
+      "fev",
+      "mar",
+      "apr",
+      "may",
+      "iyun",
+      "iyul",
+      "avg",
+      "sen",
+      "okt",
+      "noy",
+      "dek",
+    ],
+  },
+};
+
 function shuffleArray(array) {
   const result = [...array];
 
-  for (let i = result.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [result[index], result[randomIndex]] = [
+      result[randomIndex],
+      result[index],
+    ];
   }
 
   return result;
@@ -19,6 +59,7 @@ function toIsoDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 
@@ -30,21 +71,22 @@ function addDays(date, days) {
 
 function formatDateLabel(dateString, language) {
   const date = new Date(`${dateString}T00:00:00`);
+  const labels = MONTH_LABELS[language] || MONTH_LABELS.ru;
 
-  const weekday = new Intl.DateTimeFormat(
-    language === "uz" ? "uz-UZ" : "ru-RU",
-    { weekday: "short" }
-  ).format(date);
+  return {
+    weekday: labels.weekdays[date.getDay()],
+    day: String(date.getDate()),
+    month: labels.months[date.getMonth()],
+  };
+}
 
-  const day = new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
-    day: "numeric",
-  }).format(date);
+function getDateKey(value) {
+  if (!value) return "";
 
-  const month = new Intl.DateTimeFormat(language === "uz" ? "uz-UZ" : "ru-RU", {
-    month: "short",
-  }).format(date);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
 
-  return { weekday, day, month };
+  return date.toISOString().split("T")[0];
 }
 
 function getEventCategoryLabel(category, language) {
@@ -75,9 +117,8 @@ function groupEventsByDate(events = []) {
     const sessions = Array.isArray(event.sessions) ? event.sessions : [];
 
     sessions.forEach((session) => {
-      if (!session?.startAt) return;
-
-      const dateKey = new Date(session.startAt).toISOString().split("T")[0];
+      const dateKey = getDateKey(session?.startAt);
+      if (!dateKey) return;
 
       if (!grouped.has(dateKey)) {
         grouped.set(dateKey, []);
@@ -120,9 +161,8 @@ function groupMoviesByDate(movies = []) {
     const translation = movie.translations?.[0] || null;
 
     dates.forEach((calendarDate) => {
-      if (!calendarDate?.date) return;
-
-      const dateKey = new Date(calendarDate.date).toISOString().split("T")[0];
+      const dateKey = getDateKey(calendarDate?.date);
+      if (!dateKey) return;
 
       if (!grouped.has(dateKey)) {
         grouped.set(dateKey, []);
@@ -152,6 +192,7 @@ function dedupeItems(items = []) {
   return items.filter((item) => {
     const key = `${item.category}-${item.sourceId}-${item.href}`;
     if (seen.has(key)) return false;
+
     seen.add(key);
     return true;
   });
@@ -184,6 +225,9 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
   const activeDateRef = useRef(null);
   const sliderRef = useRef(null);
 
+  const todayIso = useMemo(() => toIsoDate(new Date()), []);
+  const [selectedDate, setSelectedDate] = useState(todayIso);
+
   const [events, setEvents] = useState([]);
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -215,7 +259,7 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
   const t = uiText[language] || uiText.ru;
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadCalendarItems() {
       try {
@@ -223,12 +267,15 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
         setLoadError("");
 
         const eventsRequest = fetch(
-          `${API_BASE_URL}/api/events?status=published&lang=${language}`
+          `${API_BASE_URL}/api/events?status=published&lang=${language}`,
+          { signal: controller.signal }
         );
 
         const moviesRequest = onlyEvents
           ? Promise.resolve(null)
-          : fetch(`${API_BASE_URL}/api/movies?status=published&lang=${language}`);
+          : fetch(`${API_BASE_URL}/api/movies?status=published&lang=${language}`, {
+              signal: controller.signal,
+            });
 
         const [eventsResponse, moviesResponse] = await Promise.all([
           eventsRequest,
@@ -242,19 +289,17 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
         const eventsData = await eventsResponse.json();
         const moviesData = onlyEvents ? [] : await moviesResponse.json();
 
-        if (!isMounted) return;
-
         setEvents(Array.isArray(eventsData) ? eventsData : []);
         setMovies(Array.isArray(moviesData) ? moviesData : []);
       } catch (error) {
-        console.error("LOAD UPCOMING CALENDAR ERROR:", error);
+        if (error.name === "AbortError") return;
 
-        if (!isMounted) return;
+        console.error("LOAD UPCOMING CALENDAR ERROR:", error);
         setEvents([]);
         setMovies([]);
         setLoadError(t.error);
       } finally {
-        if (isMounted) {
+        if (!controller.signal.aborted) {
           setIsLoading(false);
         }
       }
@@ -263,7 +308,7 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
     loadCalendarItems();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [language, t.error, onlyEvents]);
 
@@ -275,8 +320,6 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
     [groupedEvents, groupedMovies, onlyEvents]
   );
 
-  const todayIso = useMemo(() => toIsoDate(new Date()), []);
-
   const calendarDates = useMemo(() => {
     const start = new Date(`${todayIso}T00:00:00`);
 
@@ -285,29 +328,27 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
     });
   }, [todayIso]);
 
-  const [selectedDate, setSelectedDate] = useState(todayIso);
-
   const filteredItems = useMemo(() => {
     return groupedItems.get(selectedDate) || [];
   }, [groupedItems, selectedDate]);
 
   useEffect(() => {
-    if (activeDateRef.current) {
-      activeDateRef.current.scrollIntoView({
-        behavior: "smooth",
-        inline: "center",
-        block: "nearest",
-      });
-    }
+    if (!activeDateRef.current) return;
+
+    activeDateRef.current.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
   }, [selectedDate]);
 
   useEffect(() => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollTo({
-        left: 0,
-        behavior: "auto",
-      });
-    }
+    if (!sliderRef.current) return;
+
+    sliderRef.current.scrollTo({
+      left: 0,
+      behavior: "auto",
+    });
   }, [selectedDate]);
 
   const scrollSlider = (direction) => {
@@ -363,7 +404,7 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
                 <span className="upcoming-calendar-weekday">{weekday}</span>
                 <span className="upcoming-calendar-day">{day}</span>
                 <span className="upcoming-calendar-month">{month}</span>
-                {hasItems && <span className="upcoming-calendar-dot" />}
+                {hasItems ? <span className="upcoming-calendar-dot" /> : null}
               </button>
             );
           })}
@@ -390,7 +431,7 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
               key={selectedDate}
             >
               <div className="upcoming-calendar-track">
-                {filteredItems.map((item) => {
+                {filteredItems.map((item, index) => {
                   const category = getEventCategoryLabel(item.category, language);
 
                   return (
@@ -405,13 +446,18 @@ function UpcomingCalendar({ onlyEvents = false, hideMoreLink = false }) {
                             src={item.image}
                             alt={item.title}
                             className="upcoming-event-image"
+                            loading={index < 2 ? "eager" : "lazy"}
+                            decoding="async"
+                            fetchPriority={index < 2 ? "high" : "auto"}
+                            width="320"
+                            height="220"
                           />
 
-                          {category && (
+                          {category ? (
                             <span className="upcoming-event-badge">
                               {category}
                             </span>
-                          )}
+                          ) : null}
                         </div>
 
                         <div className="upcoming-event-body">

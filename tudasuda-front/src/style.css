@@ -13540,3 +13540,70 @@ body.dark-theme .cinema-nav:hover {
     display: none;
   }
 }
+
+/* ===== FIX: cinema align with calendar ===== */
+
+.cinema-section {
+  width: 100%;
+}
+
+.cinema-section .container {
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.cinema-slider-wrap {
+  position: relative;
+  width: 100%;
+  padding: 0;
+  overflow: visible;
+}
+
+.cinema-slider {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.cinema-track {
+  display: flex;
+  gap: 18px;
+  width: max-content;
+  min-width: 100%;
+}
+
+.cinema-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 10;
+  transform: translateY(-50%);
+}
+
+.cinema-nav.prev {
+  left: -28px;
+}
+
+.cinema-nav.next {
+  right: -28px;
+}
+
+@media (max-width: 900px) {
+  .cinema-section .container {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .cinema-nav {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .cinema-section .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

@@ -13490,3 +13490,52 @@ body.dark-theme .cinema-nav:hover {
   }
 }
 
+/* ===== FIX: cinema slider arrows ===== */
+
+.cinema-slider-wrap {
+  position: relative;
+  padding: 0 42px;
+  overflow: visible;
+}
+
+.cinema-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 10;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 80px;
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 34px;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.35;
+}
+
+.cinema-nav.prev {
+  left: 0;
+}
+
+.cinema-nav.next {
+  right: 0;
+}
+
+.cinema-nav:hover {
+  opacity: 0.75;
+  transform: translateY(-50%) scale(1.08);
+}
+
+@media (max-width: 900px) {
+  .cinema-slider-wrap {
+    padding: 0;
+  }
+
+  .cinema-nav {
+    display: none;
+  }
+}

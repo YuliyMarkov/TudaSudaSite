@@ -13491,60 +13491,12 @@ body.dark-theme .cinema-nav:hover {
   }
 }
 
-/* ===== FIX: cinema slider arrows ===== */
-
-.cinema-slider-wrap {
-  position: relative;
-  padding: 0 42px;
-  overflow: visible;
-}
-
-.cinema-nav {
-  position: absolute;
-  top: 50%;
-  z-index: 10;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 80px;
-  border: none;
-  background: transparent;
-  color: var(--text-color);
-  font-size: 34px;
-  font-weight: 300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0.35;
-}
-
-.cinema-nav.prev {
-  left: 0;
-}
-
-.cinema-nav.next {
-  right: 0;
-}
-
-.cinema-nav:hover {
-  opacity: 0.75;
-  transform: translateY(-50%) scale(1.08);
-}
-
-@media (max-width: 900px) {
-  .cinema-slider-wrap {
-    padding: 0;
-  }
-
-  .cinema-nav {
-    display: none;
-  }
-}
-
-/* ===== FIX: cinema align with calendar ===== */
+/* ===== FINAL FIX: cinema section alignment and arrows ===== */
 
 .cinema-section {
   width: 100%;
+  position: relative;
+  overflow: visible;
 }
 
 .cinema-section .container {
@@ -13553,19 +13505,32 @@ body.dark-theme .cinema-nav:hover {
   margin: 0 auto;
   padding-left: 32px;
   padding-right: 32px;
-}
-
-.cinema-slider-wrap {
-  position: relative;
-  width: 100%;
-  padding: 0;
   overflow: visible;
 }
 
+.cinema-slider-wrap {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 372px;
+  padding: 0 !important;
+  overflow: visible !important;
+  contain: none !important;
+}
+
 .cinema-slider {
+  position: relative;
+  z-index: 1;
   width: 100%;
+  min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.cinema-slider::-webkit-scrollbar {
+  display: none;
 }
 
 .cinema-track {
@@ -13573,21 +13538,52 @@ body.dark-theme .cinema-nav:hover {
   gap: 18px;
   width: max-content;
   min-width: 100%;
+  padding-bottom: 4px;
 }
 
 .cinema-nav {
-  position: absolute;
-  top: 50%;
-  z-index: 10;
-  transform: translateY(-50%);
+  position: absolute !important;
+  top: 50% !important;
+  z-index: 30 !important;
+  transform: translateY(-50%) !important;
+  width: 32px !important;
+  height: 80px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #8b8b8b !important;
+  font-size: 34px !important;
+  font-weight: 300 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  opacity: 0.5 !important;
+  pointer-events: auto !important;
 }
 
 .cinema-nav.prev {
-  left: -28px;
+  left: -36px !important;
 }
 
 .cinema-nav.next {
-  right: -28px;
+  right: -36px !important;
+}
+
+.cinema-nav:hover {
+  opacity: 1 !important;
+  color: #666 !important;
+  transform: translateY(-50%) scale(1.08) !important;
+}
+
+body.dark-theme .cinema-nav {
+  color: #8b8b8b !important;
+  opacity: 0.6 !important;
+}
+
+body.dark-theme .cinema-nav:hover {
+  color: #b3b3b3 !important;
+  opacity: 1 !important;
 }
 
 @media (max-width: 900px) {
@@ -13596,8 +13592,12 @@ body.dark-theme .cinema-nav:hover {
     padding-right: 18px;
   }
 
+  .cinema-slider-wrap {
+    min-height: 342px;
+  }
+
   .cinema-nav {
-    display: none;
+    display: none !important;
   }
 }
 
@@ -13606,113 +13606,9 @@ body.dark-theme .cinema-nav:hover {
     padding-left: 16px;
     padding-right: 16px;
   }
-}
 
-/* ===== FIX: cinema arrows like calendar ===== */
-
-.cinema-slider-wrap {
-  position: relative;
-  width: 100%;
-  padding: 0;
-  overflow: visible;
-}
-
-.cinema-nav {
-  position: absolute;
-  top: 50%;
-  z-index: 20;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 80px;
-  border: none;
-  background: transparent;
-  color: var(--text-color);
-  font-size: 34px;
-  font-weight: 300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0.35;
-}
-
-.cinema-nav.prev {
-  left: -28px;
-}
-
-.cinema-nav.next {
-  right: -28px;
-}
-
-.cinema-nav:hover {
-  opacity: 0.75;
-  transform: translateY(-50%) scale(1.08);
-}
-
-@media (max-width: 900px) {
-  .cinema-nav {
-    display: none;
+  .cinema-slider-wrap {
+    min-height: 305px;
   }
 }
 
-/* ===== FINAL FIX: cinema arrows visible ===== */
-
-.cinema-section {
-  position: relative;
-}
-
-.cinema-section .container {
-  overflow: visible;
-}
-
-.cinema-slider-wrap {
-  position: relative;
-  width: 100%;
-  overflow: visible;
-}
-
-.cinema-slider {
-  position: relative;
-  z-index: 1;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-.cinema-nav {
-  position: absolute !important;
-  top: 50% !important;
-  z-index: 50 !important;
-  transform: translateY(-50%) !important;
-  width: 32px !important;
-  height: 80px !important;
-  border: none !important;
-  background: transparent !important;
-  color: var(--text-color) !important;
-  font-size: 34px !important;
-  font-weight: 300 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
-  opacity: 0.35 !important;
-  pointer-events: auto !important;
-}
-
-.cinema-nav.prev {
-  left: -28px !important;
-}
-
-.cinema-nav.next {
-  right: -28px !important;
-}
-
-.cinema-nav:hover {
-  opacity: 0.75 !important;
-  transform: translateY(-50%) scale(1.08) !important;
-}
-
-@media (max-width: 900px) {
-  .cinema-nav {
-    display: none !important;
-  }
-}

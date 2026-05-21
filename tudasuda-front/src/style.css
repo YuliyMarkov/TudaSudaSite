@@ -13835,18 +13835,10 @@ body.dark-theme .cinema-nav:hover {
   }
 }
 
-/* =========================================================
-
 @media (max-width: 560px) {
   .upcoming-event-card {
     flex: 0 0 78vw;
   }
-}
-
-/* ---------- image rendering optimization ---------- */
-
-img {
-  content-visibility: auto;
 }
 
 /* ---------- mobile performance ---------- */
@@ -13933,4 +13925,18 @@ body.dark-theme .page-loader {
       rgba(0, 0, 0, 0) 100%
     ) !important;
   }
+}
+
+/* ===== FIX: featured side slides image rendering ===== */
+
+.event-slide-poster {
+  content-visibility: visible !important;
+}
+
+.event-slide.prev .event-slide-poster,
+.event-slide.next .event-slide-poster {
+  opacity: 1 !important;
+  visibility: visible !important;
+  content-visibility: visible !important;
+  filter: brightness(0.72) saturate(0.92) !important;
 }

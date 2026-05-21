@@ -13825,3 +13825,71 @@ body.dark-theme .cinema-nav:hover {
     transition: none !important;
   }
 }
+
+/* =========================================================
+
+@media (max-width: 560px) {
+  .upcoming-event-card {
+    flex: 0 0 78vw;
+  }
+}
+
+/* ---------- image rendering optimization ---------- */
+
+img {
+  content-visibility: auto;
+}
+
+/* ---------- mobile performance ---------- */
+
+@media (max-width: 700px) {
+  .featured-events-carousel {
+    perspective: none;
+  }
+
+  .event-slide.prev,
+  .event-slide.next {
+    opacity: 0.55;
+  }
+
+  .event-slide.hidden-left,
+  .event-slide.hidden-right {
+    display: none;
+  }
+
+  .reels-track,
+  .cinema-track,
+  .upcoming-calendar-track {
+    gap: 14px;
+  }
+
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ---------- reduce repainting ---------- */
+
+.news-card img,
+.more-news-card img,
+.category-news-card img,
+.cinema-poster,
+.upcoming-event-image,
+.event-slide-poster {
+  will-change: auto;
+}
+
+/* ---------- loading placeholders ---------- */
+
+.home-section-loader,
+.page-loader {
+  min-height: 120px;
+  border-radius: 18px;
+  background: rgba(0, 0, 96, 0.04);
+}
+
+body.dark-theme .home-section-loader,
+body.dark-theme .page-loader {
+  background: rgba(255, 255, 255, 0.04);
+}

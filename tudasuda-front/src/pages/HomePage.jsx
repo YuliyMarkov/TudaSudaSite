@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import FeaturedEvents from "../components/FeaturedEvents";
 import YandexAdBlock from "../components/YandexAdBlock";
 import { useLanguage } from "../context/useLanguage";
@@ -13,6 +13,37 @@ const TudaStories = lazy(() => import("../components/TudaStories"));
 
 function HomeSectionLoader() {
   return <div className="home-section-loader" aria-hidden="true" />;
+}
+
+function LazyHomeBlock({ children, minHeight = 320 }) {
+  const ref = useRef(null);
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    if (shouldRender) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldRender(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: "500px 0px",
+      }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+
+    return () => observer.disconnect();
+  }, [shouldRender]);
+
+  return (
+    <div ref={ref} style={{ minHeight: shouldRender ? undefined : minHeight }}>
+      {shouldRender ? children : null}
+    </div>
+  );
 }
 
 function HomePage({ onOpenReel }) {
@@ -44,29 +75,43 @@ function HomePage({ onOpenReel }) {
 
         <UpcomingCalendar />
 
-        <YandexAdBlock />
+        <LazyHomeBlock minHeight={120}>
+          <YandexAdBlock />
+        </LazyHomeBlock>
 
         <CinemaSection />
 
-        <Suspense fallback={<HomeSectionLoader />}>
-          <TheatreSection />
-        </Suspense>
+        <LazyHomeBlock minHeight={360}>
+          <Suspense fallback={<HomeSectionLoader />}>
+            <TheatreSection />
+          </Suspense>
+        </LazyHomeBlock>
 
-        <YandexAdBlock />
+        <LazyHomeBlock minHeight={120}>
+          <YandexAdBlock />
+        </LazyHomeBlock>
 
-        <Suspense fallback={<HomeSectionLoader />}>
-          <ReelsSection onOpenReel={onOpenReel} />
-        </Suspense>
+        <LazyHomeBlock minHeight={420}>
+          <Suspense fallback={<HomeSectionLoader />}>
+            <ReelsSection onOpenReel={onOpenReel} />
+          </Suspense>
+        </LazyHomeBlock>
 
-        <Suspense fallback={<HomeSectionLoader />}>
-          <PlacesSection />
-        </Suspense>
+        <LazyHomeBlock minHeight={360}>
+          <Suspense fallback={<HomeSectionLoader />}>
+            <PlacesSection />
+          </Suspense>
+        </LazyHomeBlock>
 
-        <YandexAdBlock />
+        <LazyHomeBlock minHeight={120}>
+          <YandexAdBlock />
+        </LazyHomeBlock>
 
-        <Suspense fallback={<HomeSectionLoader />}>
-          <TudaStories />
-        </Suspense>
+        <LazyHomeBlock minHeight={360}>
+          <Suspense fallback={<HomeSectionLoader />}>
+            <TudaStories />
+          </Suspense>
+        </LazyHomeBlock>
       </div>
     </main>
   );

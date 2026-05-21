@@ -1,10 +1,11 @@
 import { Suspense, lazy, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import ReelsModal from "./components/ReelsModal";
 import ScrollToTop from "./components/ScrollToTop";
+
+const Header = lazy(() => import("./components/Header"));
+const Footer = lazy(() => import("./components/Footer"));
+const ReelsModal = lazy(() => import("./components/ReelsModal"));
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -46,7 +47,10 @@ function App() {
   return (
     <>
       <ScrollToTop />
-      <Header />
+
+      <Suspense fallback={null}>
+        <Header />
+      </Suspense>
 
       <Suspense fallback={<PageLoader />}>
         <Routes>
@@ -77,9 +81,15 @@ function App() {
         </Routes>
       </Suspense>
 
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
 
-      <ReelsModal isOpen={isOpen} reel={selectedReel} onClose={close} />
+      {isOpen ? (
+        <Suspense fallback={null}>
+          <ReelsModal isOpen={isOpen} reel={selectedReel} onClose={close} />
+        </Suspense>
+      ) : null}
     </>
   );
 }

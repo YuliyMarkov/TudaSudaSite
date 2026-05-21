@@ -13612,3 +13612,216 @@ body.dark-theme .cinema-nav:hover {
   }
 }
 
+.home-section-loader {
+  min-height: 260px;
+}
+
+@media (max-width: 900px) {
+  .event-slide {
+    will-change: auto;
+    transition: none;
+    filter: none;
+  }
+
+  .event-slide.active {
+    transform: translate3d(-50%, -50%, 0) scale(1);
+  }
+
+  .event-slide-video {
+    display: none;
+  }
+}
+
+
+/* ===== FINAL FIX: lightweight mobile hero slider ===== */
+/* Desktop hero remains 3D. On mobile FeaturedEvents renders only the active slide,
+   so we remove 3D transforms, hover-video layers and expensive transitions. */
+
+@media (max-width: 900px) {
+  .featured-events {
+    min-height: 0 !important;
+    margin: 16px 0 20px !important;
+    overflow: visible !important;
+  }
+
+  .featured-events .container {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .featured-events-header {
+    max-width: 1240px !important;
+    margin: 0 auto 10px !important;
+    padding: 0 18px !important;
+  }
+
+  .featured-events-header h2 {
+    font-size: 24px !important;
+    line-height: 1.18 !important;
+  }
+
+  .featured-events-carousel-wrap {
+    display: block !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    perspective: none !important;
+    perspective-origin: initial !important;
+    contain: layout !important;
+  }
+
+  .featured-events-carousel {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    transform-style: flat !important;
+    touch-action: pan-y !important;
+  }
+
+  .event-slide {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: calc(100vw - 36px) !important;
+    max-width: 560px !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    aspect-ratio: 16 / 9 !important;
+    transform: none !important;
+    transform-style: flat !important;
+    transition: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    filter: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+    contain: layout paint !important;
+  }
+
+  .event-slide.active,
+  .event-slide.prev,
+  .event-slide.next,
+  .event-slide.hidden-left,
+  .event-slide.hidden-right {
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+
+  .event-slide-link {
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 16 / 9 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 12px 24px rgba(0, 0, 96, 0.12) !important;
+    transform-style: flat !important;
+  }
+
+  body.dark-theme .event-slide-link {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  .event-slide-media {
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  .event-slide-poster {
+    transform: none !important;
+    transition: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+  }
+
+  .event-slide-video {
+    display: none !important;
+  }
+
+  .event-slide.active:hover .event-slide-poster {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .event-slide-overlay {
+    min-height: 96px !important;
+    padding: 42px 14px 14px !important;
+  }
+
+  .event-slide-overlay h3,
+  .event-slide.prev .event-slide-overlay h3,
+  .event-slide.next .event-slide-overlay h3 {
+    font-size: 18px !important;
+    line-height: 1.16 !important;
+  }
+
+  .event-slide-overlay p,
+  .event-slide.prev .event-slide-overlay p,
+  .event-slide.next .event-slide-overlay p {
+    display: -webkit-box !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .featured-events-nav {
+    display: none !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .featured-events {
+    margin: 14px 0 18px !important;
+  }
+
+  .featured-events-header {
+    margin-bottom: 8px !important;
+    padding: 0 16px !important;
+  }
+
+  .featured-events-header h2 {
+    font-size: 22px !important;
+  }
+
+  .event-slide {
+    width: calc(100vw - 32px) !important;
+    max-width: none !important;
+  }
+
+  .event-slide-link {
+    border-radius: 16px !important;
+  }
+
+  .event-slide-overlay {
+    min-height: 90px !important;
+    padding: 38px 12px 12px !important;
+  }
+
+  .event-slide-overlay h3 {
+    font-size: 17px !important;
+  }
+
+  .event-slide-overlay p {
+    font-size: 12px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-slide,
+  .event-slide-poster,
+  .event-slide-video,
+  .featured-events-nav,
+  .category-chip,
+  .news-card,
+  .more-news-card,
+  .category-news-card,
+  .reels-track {
+    transition: none !important;
+  }
+}

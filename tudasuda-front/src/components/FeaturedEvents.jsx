@@ -19,51 +19,24 @@ function buildSlideLink(language, slide) {
 
   switch (linkType) {
     case "stories":
-      return slide.linkUrl
-        ? `/${language}/stories/${slide.linkUrl}`
-        : `/${language}/stories`;
-
+      return slide.linkUrl ? `/${language}/stories/${slide.linkUrl}` : `/${language}/stories`;
     case "movies":
     case "cinema":
-      return slide.linkUrl
-        ? `/${language}/movies/${slide.linkUrl}`
-        : `/${language}/cinema`;
-
+      return slide.linkUrl ? `/${language}/movies/${slide.linkUrl}` : `/${language}/cinema`;
     case "event":
-      return slide.linkUrl
-        ? `/${language}/events/${slide.linkUrl}`
-        : `/${language}/events`;
-
+      return slide.linkUrl ? `/${language}/events/${slide.linkUrl}` : `/${language}/events`;
     case "concerts":
-      return slide.linkUrl
-        ? `/${language}/events/${slide.linkUrl}`
-        : `/${language}/events?filter=concert`;
-
+      return slide.linkUrl ? `/${language}/events/${slide.linkUrl}` : `/${language}/events?filter=concert`;
     case "theatre":
-      return slide.linkUrl
-        ? `/${language}/events/${slide.linkUrl}`
-        : `/${language}/events?filter=theatre`;
-
+      return slide.linkUrl ? `/${language}/events/${slide.linkUrl}` : `/${language}/events?filter=theatre`;
     case "exhibitions":
-      return slide.linkUrl
-        ? `/${language}/events/${slide.linkUrl}`
-        : `/${language}/events?filter=exhibition`;
-
+      return slide.linkUrl ? `/${language}/events/${slide.linkUrl}` : `/${language}/events?filter=exhibition`;
     case "kids":
-      return slide.linkUrl
-        ? `/${language}/events/${slide.linkUrl}`
-        : `/${language}/events?filter=kids`;
-
+      return slide.linkUrl ? `/${language}/events/${slide.linkUrl}` : `/${language}/events?filter=kids`;
     case "restaurants":
-      return slide.linkUrl
-        ? `/${language}/restaurants/${slide.linkUrl}`
-        : `/${language}/restaurants`;
-
+      return slide.linkUrl ? `/${language}/restaurants/${slide.linkUrl}` : `/${language}/restaurants`;
     case "places":
-      return slide.linkUrl
-        ? `/${language}/places/${slide.linkUrl}`
-        : `/${language}/places`;
-
+      return slide.linkUrl ? `/${language}/places/${slide.linkUrl}` : `/${language}/places`;
     default:
       return `/${language}`;
   }
@@ -71,8 +44,12 @@ function buildSlideLink(language, slide) {
 
 function isCoarsePointer() {
   if (typeof window === "undefined") return false;
-
   return window.matchMedia?.("(hover: none), (pointer: coarse)")?.matches;
+}
+
+function isMobileViewport() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(max-width: 900px)")?.matches;
 }
 
 async function loadHlsLibrary() {
@@ -88,6 +65,7 @@ function FeaturedEvents() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [canUseHoverVideo, setCanUseHoverVideo] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
@@ -116,10 +94,20 @@ function FeaturedEvents() {
 
   useEffect(() => {
     isMountedRef.current = true;
-    setCanUseHoverVideo(!isCoarsePointer());
+
+    const updateMode = () => {
+      const mobile = isMobileViewport();
+      setIsMobile(mobile);
+      setCanUseHoverVideo(!mobile && !isCoarsePointer());
+    };
+
+    updateMode();
+
+    window.addEventListener("resize", updateMode);
 
     return () => {
       isMountedRef.current = false;
+      window.removeEventListener("resize", updateMode);
     };
   }, []);
 
@@ -202,7 +190,7 @@ function FeaturedEvents() {
     let cancelled = false;
 
     async function setupVideo() {
-      if (!activeVideoRef.current) return;
+      if (isMobile || !activeVideoRef.current) return;
 
       const videoEl = activeVideoRef.current;
       const videoSrc =
@@ -285,7 +273,7 @@ function FeaturedEvents() {
     return () => {
       cancelled = true;
     };
-  }, [activeSlide, canUseHoverVideo, isHovered]);
+  }, [activeSlide, canUseHoverVideo, isHovered, isMobile]);
 
   const goToPrev = () => {
     if (!totalSlides) return;
@@ -326,6 +314,8 @@ function FeaturedEvents() {
   };
 
   const getSlidePosition = (index) => {
+    if (isMobile) return index === currentSlide ? "active" : "hidden-right";
+
     if (index === currentSlide) return "active";
     if (index === (currentSlide - 1 + totalSlides) % totalSlides) return "prev";
     if (index === (currentSlide + 1) % totalSlides) return "next";
@@ -337,6 +327,12 @@ function FeaturedEvents() {
   };
 
   if (isLoading || !normalizedSlides.length) return null;
+
+  const slidesToRender = isMobile
+    ? normalizedSlides
+        .map((slide, index) => ({ slide, index }))
+        .filter(({ index }) => index === currentSlide)
+    : normalizedSlides.map((slide, index) => ({ slide, index }));
 
   return (
     <section className="featured-events">
@@ -360,12 +356,12 @@ function FeaturedEvents() {
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            {normalizedSlides.map((slide, index) => {
+            {slidesToRender.map(({ slide, index }) => {
               const positionClass = getSlidePosition(index);
               const title = slide.title;
               const subtitle = slide.subtitle;
-              const alt = slide.title;
               const hasVideo =
+                !isMobile &&
                 canUseHoverVideo &&
                 index === currentSlide &&
                 slide.hoverMediaType === "video" &&
@@ -380,11 +376,11 @@ function FeaturedEvents() {
                   <div className="event-slide-media">
                     <img
                       src={slide.poster}
-                      alt={alt || title}
+                      alt={title}
                       className="event-slide-poster"
-                      loading={index === 0 ? "eager" : "lazy"}
+                      loading={isActive ? "eager" : "lazy"}
                       decoding="async"
-                      fetchPriority={index === 0 ? "high" : "auto"}
+                      fetchPriority={isActive ? "high" : "auto"}
                     />
 
                     {hasVideo ? (

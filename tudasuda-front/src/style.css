@@ -13903,4 +13903,34 @@ body.dark-theme .page-loader {
   background: rgba(255, 255, 255, 0.04);
 }
 
+/* ===== FIX: desktop featured side slides images ===== */
 
+@media (min-width: 901px) {
+  .event-slide.prev,
+  .event-slide.next {
+    opacity: 1 !important;
+    filter: none !important;
+  }
+
+  .event-slide.prev .event-slide-poster,
+  .event-slide.next .event-slide-poster {
+    opacity: 1 !important;
+    filter: brightness(0.9) saturate(0.95) !important;
+  }
+
+  .event-slide.prev .event-slide-video,
+  .event-slide.next .event-slide-video {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+  .event-slide.prev .event-slide-overlay,
+  .event-slide.next .event-slide-overlay {
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.45) 0%,
+      rgba(0, 0, 0, 0.16) 48%,
+      rgba(0, 0, 0, 0) 100%
+    ) !important;
+  }
+}
